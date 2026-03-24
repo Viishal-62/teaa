@@ -1,65 +1,362 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
+import { ArrowRight, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
+  const publicBoards = useQuery(api.boards.listPublic);
+  const globalFeed = useQuery(api.confessions.globalFeed, {});
+
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 60);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Scroll reveal
+  const sectionsRef = useRef<HTMLDivElement[]>([]);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting)
+            (e.target as HTMLElement).classList.add("revealed-scroll");
+        });
+      },
+      { threshold: 0.12 },
+    );
+    sectionsRef.current.forEach((el) => el && obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  const addRef = (el: HTMLDivElement | null) => {
+    if (el && !sectionsRef.current.includes(el)) sectionsRef.current.push(el);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-[#faf8f5] text-black font-sans selection:bg-accent/10">
+      {/* ── NAV ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-4 bg-[#faf8f5]/80 backdrop-blur-xl">
+        <span className="text-sm font-black serif tracking-tight">
+          🫖 teaaa
+        </span>
+        <div className="flex items-center gap-5">
+          <Link
+            href="/explore"
+            className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+          >
+            Explore
+          </Link>
+          <Link
+            href="/confess"
+            className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+          >
+            Confess
+          </Link>
+          <Link
+            href="/create"
+            className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transition-all"
+          >
+            Create Board
+          </Link>
+        </div>
+      </nav>
+
+      {/* ── HERO ── */}
+      <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-16 relative">
+        {/* Soft ambient blurs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[15%] left-[10%] w-72 h-72 bg-rose-200/20 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[20%] right-[8%] w-64 h-64 bg-amber-200/15 rounded-full blur-[100px]" />
+          <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-rose-100/10 rounded-full blur-[150px]" />
+        </div>
+
+        <div
+          className={`relative z-10 text-center max-w-2xl transition-all duration-1000 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+        >
+          {/* Pill */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-black/5 text-[9px] font-bold uppercase tracking-[0.25em] mb-8 text-black/30 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            Anonymous · No sign up
+          </div>
+
+          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight serif leading-[0.9] text-black">
+            Say the thing
+            <br />
+            <span className="text-accent">you haven&apos;t said.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="text-sm md:text-base text-black/35 max-w-md mx-auto mb-10 font-medium leading-relaxed">
+            Create a board, share the link, and let anonymous confessions pour
+            in. No accounts. No trace. Just truth.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/create"
+              className="group flex items-center justify-center gap-2 px-8 py-4 bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10"
+            >
+              <Plus size={15} />
+              Create Your Board
+              <ArrowRight
+                size={14}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+            <Link
+              href="/confess"
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-black/8 text-[11px] text-black/50 font-bold uppercase tracking-widest rounded-xl hover:bg-black/[0.02] hover:text-black transition-all"
+            >
+              🫖 Just Confess
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Scroll hint */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-15">
+          <div className="w-px h-10 bg-black" />
         </div>
-      </main>
+      </section>
+
+      {/* ── STATS STRIP ── */}
+      <div
+        ref={addRef}
+        className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0"
+      >
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-3 gap-0 bg-white border border-black/5 rounded-2xl overflow-hidden shadow-sm shadow-black/[0.02]">
+            <div className="p-6 text-center border-r border-black/5">
+              <p className="text-3xl font-black serif text-black">
+                {publicBoards?.length ?? "—"}
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-black/20 mt-1">
+                Boards
+              </p>
+            </div>
+            <div className="p-6 text-center border-r border-black/5">
+              <p className="text-3xl font-black serif text-black">
+                {globalFeed?.length ?? "—"}
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-black/20 mt-1">
+                Confessions
+              </p>
+            </div>
+            <div className="p-6 text-center">
+              <p className="text-3xl font-black serif text-black">100%</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-black/20 mt-1">
+                Anonymous
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-20 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto">
+          <div
+            ref={addRef}
+            className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0 text-center mb-12"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mb-2">
+              How it works
+            </p>
+            <h2 className="text-3xl font-black serif tracking-tight">
+              Three steps. That&apos;s it.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              {
+                n: "01",
+                icon: "✨",
+                title: "Create",
+                desc: "Set up your board in seconds. Pick a name, choose a vibe.",
+              },
+              {
+                n: "02",
+                icon: "🔗",
+                title: "Share",
+                desc: "Copy the link. Drop it in any group chat, story, or bio.",
+              },
+              {
+                n: "03",
+                icon: "🫖",
+                title: "Receive",
+                desc: "Watch anonymous confessions roll in. React and comment.",
+              },
+            ].map((s, i) => (
+              <div
+                key={s.n}
+                ref={addRef}
+                className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0 bg-white border border-black/5 rounded-2xl p-6 text-center hover:shadow-md hover:shadow-black/[0.02] transition-shadow"
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <span className="text-2xl block mb-3">{s.icon}</span>
+                <p className="text-[9px] font-bold text-black/15 uppercase tracking-widest mb-1">
+                  {s.n}
+                </p>
+                <h3 className="text-base font-black serif mb-2">{s.title}</h3>
+                <p className="text-[11px] text-black/35 leading-relaxed font-medium">
+                  {s.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── RECENT CONFESSIONS ── */}
+      {globalFeed && globalFeed.length > 0 && (
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto">
+            <div
+              ref={addRef}
+              className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0 flex items-center justify-between mb-8"
+            >
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mb-1">
+                  Live
+                </p>
+                <h2 className="text-2xl font-black serif">
+                  People are confessing
+                </h2>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {globalFeed.slice(0, 2).map((confession: any, i: number) => {
+                const catInfo = CATEGORY_INFO[confession.category];
+                return (
+                  <div
+                    key={confession._id}
+                    ref={addRef}
+                    className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0"
+                    style={{ transitionDelay: `${i * 60}ms` }}
+                  >
+                    <Link
+                      href="/explore"
+                      className="flex items-center gap-4 p-5 bg-white border border-black/5 rounded-xl hover:shadow-md hover:shadow-black/[0.02] transition-all group"
+                    >
+                      {/* Category dot */}
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: catInfo?.color ?? "#ccc" }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        {/* Blurred text - hidden on purpose */}
+                        <p className="text-sm serif text-black/60 leading-relaxed blur-[5px] select-none mb-1">
+                          {confession.text.slice(0, 60)}...
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {catInfo && (
+                            <span
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                              style={{
+                                background: `${catInfo.color}10`,
+                                color: catInfo.color,
+                              }}
+                            >
+                              {catInfo.label}
+                            </span>
+                          )}
+                          <span className="text-[9px] text-black/15 font-medium">
+                            {timeAgo(confession.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold text-black/15 group-hover:text-accent uppercase tracking-widest flex-shrink-0 transition-colors">
+                        Reveal →
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* +X more link */}
+            {globalFeed.length > 2 && (
+              <Link
+                href="/explore"
+                className="flex items-center justify-center gap-2 mt-4 py-4 bg-white border border-black/5 rounded-xl text-[11px] font-bold text-black/25 hover:text-black hover:border-black/15 transition-all group"
+              >
+                <span>+{globalFeed.length - 2} more secrets</span>
+                <ArrowRight
+                  size={12}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── CTA ── */}
+      <section className="py-24 px-4 sm:px-6">
+        <div
+          ref={addRef}
+          className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0 max-w-lg mx-auto text-center"
+        >
+          <div className="bg-white border border-black/5 rounded-2xl p-10 shadow-sm shadow-black/[0.02]">
+            <span className="text-4xl block mb-4">🫖</span>
+            <h2 className="text-2xl font-black serif tracking-tight mb-2">
+              Ready to spill?
+            </h2>
+            <p className="text-xs text-black/30 font-medium mb-6">
+              Create a board in seconds. Share the link. Let the tea flow.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
+              <Link
+                href="/create"
+                className="px-8 py-3.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all"
+              >
+                Start My Board
+              </Link>
+              <Link
+                href="/confess"
+                className="px-8 py-3.5 border border-black/8 text-[10px] text-black/40 font-bold uppercase tracking-widest rounded-xl hover:text-black hover:border-black/15 transition-all"
+              >
+                Just Confess
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="py-10 border-t border-black/5 px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <span className="text-sm font-black serif">🫖 teaaa</span>
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/10">
+            Anonymous. Unfiltered. Always.
+          </p>
+          <div className="flex gap-6">
+            <Link
+              href="/explore"
+              className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
+            >
+              Explore
+            </Link>
+            <Link
+              href="/confess"
+              className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
+            >
+              Confess
+            </Link>
+            <Link
+              href="/create"
+              className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
+            >
+              Create
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

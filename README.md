@@ -1,36 +1,177 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🫖 Teaaa — Anonymous Confession Platform
 
-## Getting Started
+A modern, anonymous confession platform where people can create boards, share links, and receive anonymous confessions. Built with Next.js 16, Convex, and TailwindCSS 4.
 
-First, run the development server:
+> **No sign‑up. No trace. Just truth.**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## ✨ Features
+
+### Core
+- **Anonymous Confessions** — Post confessions without any account or sign-up
+- **Confession Boards** — Create themed boards and share links to collect anonymous confessions
+- **Global Feed** — A universal confession feed for everyone
+- **Category System** — 11 confession categories: Regret, Love, Guilt, Relief, Longing, Mischief, Obsession, Pride, Fear, Envy, Deep Dark
+
+### UI / UX
+- **3D Coverflow Carousel** — Interactive card carousel with:
+  - Trackpad / mousewheel scroll navigation
+  - Keyboard arrow key support (← → ↑ ↓)
+  - Click-to-jump on side cards
+  - Centered start position (cards balanced on both sides)
+- **Flip Cards** — Tap to reveal confession text, reactions, and comments on the back
+- **Theme System** — 6 visual themes for confession cards (Midnight Rose, Moonlit, Forest Whisper, Violet Hour, Noir, Chai Spill)
+- **Clean White Design** — Minimalist cream/white (`#faf8f5`) aesthetic throughout
+
+### Interactions
+- **Reactions** — 4 reaction types: "Holding You", "Feels Heavy", "You'll Be OK", "No It Burns"
+- **Comments** — Anonymous threaded comments on confessions
+- **GIF Replies** — Reply with GIFs via Tenor integration (search + trending)
+- **Emoji Picker** — Emoji support in comments
+- **Visitor Tracking** — localStorage-based fingerprinting for reaction uniqueness (no accounts)
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 16 (App Router) |
+| **Language** | TypeScript |
+| **Backend / DB** | Convex (real-time, serverless) |
+| **Styling** | TailwindCSS 4 (`@theme inline`) |
+| **Animations** | Framer Motion |
+| **Icons** | Lucide React |
+| **Emoji** | emoji-mart |
+| **GIFs** | Tenor API (v2) |
+| **Linting** | Biome |
+| **Package Manager** | pnpm |
+
+---
+
+## 📁 Project Structure
+
+```
+teaaa/
+├── app/
+│   ├── page.tsx                    # Landing page
+│   ├── layout.tsx                  # Root layout
+│   ├── globals.css                 # Design tokens + utilities
+│   ├── ConvexClientProvider.tsx     # Convex provider wrapper
+│   ├── create/page.tsx             # Create board page
+│   ├── confess/page.tsx            # Global confess page
+│   ├── explore/page.tsx            # Explore all confessions + boards
+│   ├── b/[slug]/                   # Board pages
+│   │   ├── page.tsx                # Board view with carousel
+│   │   ├── confess/page.tsx        # Board-specific confess page
+│   │   └── c/[confessionId]/page.tsx  # Confession detail (reactions + comments)
+│   ├── components/
+│   │   ├── ConfessionFlipCard.tsx   # 3D flip card component
+│   │   ├── EmojiPicker.tsx         # Emoji picker wrapper
+│   │   └── GifPicker.tsx           # Tenor GIF picker
+│   └── lib/
+│       └── utils.ts                # Utilities, constants, helpers
+├── convex/
+│   ├── schema.ts                   # Database schema
+│   ├── boards.ts                   # Board mutations/queries
+│   ├── confessions.ts              # Confession mutations/queries
+│   ├── reactions.ts                # Reaction mutations/queries
+│   ├── comments.ts                 # Comment mutations/queries
+│   └── helpers.ts                  # Anonymous name generator
+└── package.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
+- Node.js 18+
+- pnpm
 
-## Learn More
+### Setup
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Clone the repo
+git clone <repo-url>
+cd teaaa
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Install dependencies
+pnpm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Set up Convex (follow prompts to create a project)
+npx convex dev
 
-## Deploy on Vercel
+# Start the dev server
+pnpm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Create a `.env.local` file:
+
+```env
+CONVEX_DEPLOYMENT=<your-convex-deployment>
+NEXT_PUBLIC_CONVEX_URL=<your-convex-url>
+```
+
+### Development
+
+Run both servers simultaneously:
+
+```bash
+# Terminal 1 — Convex backend
+pnpm run db
+
+# Terminal 2 — Next.js frontend
+pnpm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 📄 Database Schema
+
+| Table | Purpose |
+|-------|---------|
+| **boards** | Confession boards with slug, name, tagline, theme, visibility |
+| **confessions** | Anonymous confessions linked to boards with category and display name |
+| **reactions** | Visitor-based reactions on confessions (4 types) |
+| **comments** | Anonymous comments on confessions with optional GIF support |
+
+---
+
+## 🧭 User Flow
+
+1. **Landing** → Hero + blurred confession previews + CTA
+2. **Create Board** → Pick name, tagline, theme → Get shareable link
+3. **Share Link** → Friends open the board link
+4. **Confess** → Pick category, write confession → Submit anonymously
+5. **Explore** → 3D carousel of all confessions, filter by category
+6. **Interact** → Flip cards to reveal, react, comment, reply with GIFs
+
+---
+
+## 📜 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start Next.js dev server |
+| `pnpm run db` | Start Convex dev server |
+| `pnpm build` | Build for production |
+| `pnpm lint` | Run Biome linter |
+| `pnpm format` | Format code with Biome |
+
+---
+
+## 📝 License
+
+MIT
+
+---
+
+<p align="center">
+  Built with 🫖 and anonymous courage
+</p>

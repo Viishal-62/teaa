@@ -1,0 +1,331 @@
+"use client";
+
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { CATEGORY_INFO } from "@/app/lib/utils";
+import EmojiPicker from "@/app/components/EmojiPicker";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
+const CATEGORIES = [
+  "regret",
+  "love",
+  "guilt",
+  "relief",
+  "longing",
+  "mischief",
+  "obsession",
+  "pride",
+  "fear",
+  "envy",
+  "deep-dark",
+];
+
+export default function ConfessPage() {
+  const params = useParams();
+  const router = useRouter();
+  const slug = params.slug as string;
+
+  const board = useQuery(api.boards.getBySlug, { slug });
+  const createConfession = useMutation(api.confessions.create);
+
+  const [text, setText] = useState("");
+  const [category, setCategory] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [isGlobal, setIsGlobal] = useState(true);
+
+  const handleSubmit = async () => {
+    if (!text.trim() || !category || !board) return;
+    setIsSubmitting(true);
+    try {
+      await createConfession({
+        boardId: board._id,
+        text: text.trim(),
+        category,
+        isGlobal,
+      });
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Failed to submit confession:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfessAgain = () => {
+    setText("");
+    setCategory("");
+    setSubmitted(false);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    if (text.length + emoji.length <= 500) {
+      setText((prev) => prev + emoji);
+    }
+  };
+
+  if (board === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (board === null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-white">
+        <span className="text-5xl mb-4">🫣</span>
+        <h1 className="text-2xl font-bold mb-2 serif">Board not found</h1>
+        <Link
+          href="/"
+          className="px-6 py-3 bg-black text-white rounded-xl text-sm font-medium mt-4"
+        >
+          Go Home
+        </Link>
+      </div>
+    );
+  }
+
+  const successMessages: Record<
+    string,
+    { emoji: string; line: string; sub: string }
+  > = {
+    love: {
+      emoji: "💗",
+      line: "Brave of you.",
+      sub: "Love is always worth saying, even anonymously.",
+    },
+    regret: {
+      emoji: "🌊",
+      line: "Let it wash away.",
+      sub: "Naming it is the first step to leaving it behind.",
+    },
+    guilt: {
+      emoji: "⚖️",
+      line: "Weight lifted.",
+      sub: "You don't have to carry that alone anymore.",
+    },
+    mischief: {
+      emoji: "😈",
+      line: "Noted. Quietly.",
+      sub: "Your chaos is safe in our little vault.",
+    },
+    "deep-dark": {
+      emoji: "🕳️",
+      line: "Swallowed whole.",
+      sub: "It's gone. No one will know it came from you.",
+    },
+    longing: {
+      emoji: "🥺",
+      line: "Felt that.",
+      sub: "Some things you just have to say out loud.",
+    },
+    relief: {
+      emoji: "😮‍💨",
+      line: "Exhale.",
+      sub: "Some truths are lighter once they're out.",
+    },
+    obsession: {
+      emoji: "🫠",
+      line: "We get it.",
+      sub: "At least you're being honest about it.",
+    },
+    pride: {
+      emoji: "💪",
+      line: "As you should.",
+      sub: "This one goes in the hall of fame.",
+    },
+    fear: {
+      emoji: "😰",
+      line: "You're not alone.",
+      sub: "Fear shared is fear halved.",
+    },
+    envy: {
+      emoji: "👀",
+      line: "Seen.",
+      sub: "We've all looked at someone and wished.",
+    },
+    default: {
+      emoji: "✨",
+      line: "It's out there now.",
+      sub: "Your truth lives in the library of secrets.",
+    },
+  };
+
+  const success = successMessages[category] || successMessages.default;
+
+  // ── Success screen ──
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-5 page-enter bg-[#faf8f5]">
+        <div className="max-w-sm w-full text-center">
+          <div className="bg-white rounded-2xl border border-black/5 p-8 shadow-xl shadow-black/[0.03]">
+            <span className="text-5xl block mb-4">{success.emoji}</span>
+            <h1 className="text-xl font-black serif tracking-tight text-black mb-1">
+              {success.line}
+            </h1>
+            <p className="text-xs text-black/35 font-medium mb-7">
+              {success.sub}
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleConfessAgain}
+                className="w-full py-3.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
+              >
+                Drop Another One
+              </button>
+              <Link
+                href={`/b/${slug}`}
+                className="w-full py-3.5 text-[10px] text-black/30 font-bold uppercase tracking-widest hover:text-black transition-colors block"
+              >
+                Back to Board
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Confess form ──
+  return (
+    <div className="min-h-screen page-enter bg-[#faf8f5] text-black">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center px-5 py-3 bg-[#faf8f5]/85 backdrop-blur-xl border-b border-black/5">
+        <Link
+          href={`/b/${slug}`}
+          className="flex items-center gap-1.5 text-black/30 hover:text-black transition-colors"
+        >
+          <ArrowLeft size={16} />
+        </Link>
+        <span className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.25em] text-black/20">
+          {board.name}
+        </span>
+        <div className="w-4" />
+      </header>
+
+      <main className="max-w-lg mx-auto px-5 py-8">
+        {/* Intro */}
+        <div className="text-center mb-8">
+          <span className="text-3xl block mb-3">🫖</span>
+          <h1 className="text-xl font-black serif tracking-tight text-black mb-1">
+            Got something to say?
+          </h1>
+          <p className="text-[11px] text-black/30 font-medium tracking-wide">
+            No names. No judgment. Just the raw truth.
+          </p>
+        </div>
+
+        {/* Form card */}
+        <div className="bg-white rounded-2xl border border-black/5 shadow-xl shadow-black/[0.03]">
+          {/* Textarea */}
+          <div className="p-5 pb-0">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value.slice(0, 500))}
+              placeholder="write what's been sitting inside you..."
+              rows={5}
+              autoFocus
+              className="w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80"
+            />
+          </div>
+          <div className="flex items-center justify-between px-5 pb-4">
+            <div className="relative">
+              <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+            </div>
+            <span className="text-[10px] font-mono text-black/15">
+              {500 - text.length} left
+            </span>
+          </div>
+
+          <div className="h-px bg-black/5" />
+
+          {/* Public Feed Toggle */}
+          <div className="p-5 flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-black/60">
+                Show in public feed?
+              </div>
+              <div className="text-[9px] text-black/25 font-medium mt-0.5">
+                {isGlobal
+                  ? "Visible in global explore"
+                  : "Visible only on this board"}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsGlobal(!isGlobal)}
+              className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                isGlobal ? "bg-black" : "bg-black/10"
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
+                  isGlobal ? "translate-x-5" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="h-px bg-black/5" />
+
+          {/* Category picker */}
+          <div className="p-5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
+              What does it feel like?
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((cat) => {
+                const catInfo = CATEGORY_INFO[cat];
+                const isSelected = category === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setCategory(cat)}
+                    className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${
+                      isSelected
+                        ? "text-white shadow-sm"
+                        : "bg-black/[0.02] text-black/40 border border-black/5 hover:border-black/10 hover:text-black/60"
+                    }`}
+                    style={
+                      isSelected
+                        ? { background: catInfo?.color ?? "#333" }
+                        : undefined
+                    }
+                  >
+                    {catInfo?.label ?? cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!text.trim() || !category || isSubmitting}
+          className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
+        >
+          {isSubmitting ? (
+            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          ) : (
+            "Leave it here"
+          )}
+        </button>
+
+        <p className="text-center text-[9px] text-black/15 mt-3 font-medium">
+          Completely anonymous · No accounts · No trace
+        </p>
+      </main>
+    </div>
+  );
+}
