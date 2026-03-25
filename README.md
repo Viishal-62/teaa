@@ -94,7 +94,7 @@ teaaa/
 
 ```bash
 # Clone the repo
-git clone <repo-url>
+git clone https://github.com/Viishal-62/teaa.git
 cd teaaa
 
 # Install dependencies
