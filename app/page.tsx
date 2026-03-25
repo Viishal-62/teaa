@@ -17,7 +17,7 @@ export default function Home() {
     return () => clearTimeout(t);
   }, []);
 
-  // Scroll reveal
+  // Scroll reveal — re-run when data loads so late-mounting sections get observed
   const sectionsRef = useRef<HTMLDivElement[]>([]);
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -31,7 +31,7 @@ export default function Home() {
     );
     sectionsRef.current.forEach((el) => el && obs.observe(el));
     return () => obs.disconnect();
-  }, []);
+  }, [globalFeed, publicBoards]);
 
   const addRef = (el: HTMLDivElement | null) => {
     if (el && !sectionsRef.current.includes(el)) sectionsRef.current.push(el);
@@ -241,7 +241,7 @@ export default function Home() {
                   >
                     <Link
                       href="/explore"
-                      className="flex items-center gap-4 p-5 bg-white border border-black/5 rounded-xl hover:shadow-md hover:shadow-black/[0.02] transition-all group"
+                      className="flex items-center gap-4 px-5 py-7 bg-white border border-black/5 rounded-xl hover:shadow-md hover:shadow-black/[0.02] transition-all group"
                     >
                       {/* Category dot */}
                       <div

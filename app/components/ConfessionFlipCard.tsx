@@ -66,7 +66,7 @@ export default function ConfessionFlipCard({
     <div className="perspective-1000 flip-card-container">
       <div
         className={`relative w-full preserve-3d transition-transform duration-700 ease-out ${isFlipped ? "rotate-y-180" : ""}`}
-        style={{ minHeight: "320px" }}
+        style={{ minHeight: "340px" }}
       >
         {/* ── FRONT FACE ── Hidden card */}
         <div
