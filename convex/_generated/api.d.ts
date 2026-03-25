@@ -13,6 +13,7 @@ import type * as comments from "../comments.js";
 import type * as confessions from "../confessions.js";
 import type * as helpers from "../helpers.js";
 import type * as reactions from "../reactions.js";
+import type * as seed from "../seed.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   confessions: typeof confessions;
   helpers: typeof helpers;
   reactions: typeof reactions;
+  seed: typeof seed;
 }>;
 
 /**

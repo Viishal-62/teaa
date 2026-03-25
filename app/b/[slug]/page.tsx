@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { Home, Plus, Lock } from "lucide-react";
+import { Home, Plus, Lock, Share2, Check, Link as LinkIcon } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 
@@ -32,6 +32,7 @@ export default function BoardViewPage() {
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [boardCopied, setBoardCopied] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
@@ -247,12 +248,53 @@ export default function BoardViewPage() {
         <h1 className="text-[10px] font-black uppercase tracking-[0.25em] text-black/25">
           {board.name}
         </h1>
-        <Link
-          href={`/b/${slug}/confess`}
-          className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
-        >
-          Add confession
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={async () => {
+              const url = `${window.location.origin}/b/${slug}`;
+              const shareData = {
+                title: `${board.name} — Teaaa 🫖`,
+                text: board.tagline
+                  ? `"${board.tagline}" — Spill your confessions anonymously!`
+                  : `Check out this confession board and spill your secrets!`,
+                url,
+              };
+              if (navigator.share) {
+                try {
+                  await navigator.share(shareData);
+                } catch {
+                  await navigator.clipboard.writeText(url);
+                  setBoardCopied(true);
+                  setTimeout(() => setBoardCopied(false), 2000);
+                }
+              } else {
+                await navigator.clipboard.writeText(url);
+                setBoardCopied(true);
+                setTimeout(() => setBoardCopied(false), 2000);
+              }
+            }}
+            className="flex items-center gap-1 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+          >
+            {boardCopied ? (
+              <>
+                <Check size={12} className="text-green-500" />
+                <span className="text-green-500">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 size={12} />
+                Share
+              </>
+            )}
+          </button>
+          <Link
+            href={`/b/${slug}/confess`}
+            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+          >
+            Add confession
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-5xl mx-auto">
@@ -414,6 +456,34 @@ export default function BoardViewPage() {
             })}
           </div>
         </div>
+
+        {/* "Got something to confess?" CTA Banner */}
+        {confessions && confessions.length > 0 && (
+          <div className="px-4 pb-10">
+            <Link
+              href={`/b/${slug}/confess`}
+              className="block max-w-md mx-auto relative overflow-hidden rounded-2xl border border-black/5 hover:border-black/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#faf7f2] via-white to-[#f5f0e8]" />
+              <div className="absolute top-3 right-3 w-16 h-16 rounded-full bg-black/[0.02]" />
+              <div className="absolute bottom-2 left-2 w-10 h-10 rounded-full bg-black/[0.02]" />
+              <div className="relative flex flex-col items-center text-center py-8 px-6">
+                <span className="text-3xl mb-3">🫖</span>
+                <h3 className="text-base font-black tracking-tight serif text-black mb-1">
+                  Got something to confess?
+                </h3>
+                <p className="text-[11px] text-black/35 mb-4 max-w-[250px] leading-relaxed">
+                  Spill the tea anonymously. No sign up, no judgement — just you
+                  and the truth.
+                </p>
+                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">
+                  <Plus size={12} />
+                  Confess Now
+                </span>
+              </div>
+            </Link>
+          </div>
+        )}
       </main>
 
       {/* Floating Add Button */}

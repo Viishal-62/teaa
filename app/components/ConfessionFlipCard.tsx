@@ -7,6 +7,7 @@ import { CATEGORY_INFO, REACTION_INFO, getVisitorId } from "@/app/lib/utils";
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import CardActions from "./CardActions";
 
 interface ConfessionFlipCardProps {
   confession: {
@@ -171,6 +172,14 @@ export default function ConfessionFlipCard({
                 );
               })}
             </div>
+
+            {/* Card actions: download, copy link, share */}
+            <CardActions
+              confession={confession}
+              boardSlug={boardSlug}
+              totalReactions={totalReactions}
+              reactionCounts={reactionCounts as Record<string, number> | undefined}
+            />
 
             {/* View thread link */}
             <Link
