@@ -64,16 +64,21 @@ export default function CreateBoard() {
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState("");
-  const [allowedReactions, setAllowedReactions] = useState<string[]>(["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"]);
+  const [allowedReactions, setAllowedReactions] = useState<string[]>([
+    "holding-you",
+    "feels-heavy",
+    "youll-be-ok",
+    "no-it-burns",
+  ]);
   const [sharePrompt, setSharePrompt] = useState(SHARE_PROMPTS[0].id);
   const [result, setResult] = useState<{ slug: string; pin?: string } | null>(
     null,
   );
   const [copied, setCopied] = useState(false);
 
-  const suggestedSlugs = useQuery(api.boards.suggestSlugs, { name: name.trim() }) || [];
+  const suggestedSlugs =
+    useQuery(api.boards.suggestSlugs, { name: name.trim() }) || [];
   const isNameAvailable = useQuery(api.boards.checkName, { name: name.trim() });
-
 
   const selectedTheme = THEMES.find((t) => t.key === theme)!;
 
@@ -106,7 +111,8 @@ export default function CreateBoard() {
   const copyLink = () => {
     if (!result) return;
     const url = `${window.location.origin}/b/${result.slug}`;
-    const selectedPrompt = SHARE_PROMPTS.find(p => p.id === sharePrompt)?.text || "";
+    const selectedPrompt =
+      SHARE_PROMPTS.find((p) => p.id === sharePrompt)?.text || "";
     const textToCopy = selectedPrompt ? `${selectedPrompt} ${url}` : url;
     navigator.clipboard.writeText(textToCopy);
 
@@ -318,33 +324,41 @@ export default function CreateBoard() {
                 Choose 4 Reactions for your board
               </label>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(REACTION_INFO).filter(([k]) => k !== "me-too").map(([k, v]) => {
-                  const isSelected = allowedReactions.includes(k);
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => {
-                        if (isSelected) {
-                          setAllowedReactions(allowedReactions.filter(r => r !== k));
-                        } else if (allowedReactions.length < 4) {
-                          setAllowedReactions([...allowedReactions, k]);
-                        }
-                      }}
-                      className={`px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all ${
-                        isSelected
-                          ? "bg-green-100 text-green-900 border border-green-200"
-                          : "bg-white border border-black/10 text-black/50 hover:border-black/20"
-                      } ${!isSelected && allowedReactions.length >= 4 ? "opacity-50 cursor-not-allowed" : ""}`}
-                    >
-                      <span>{v.emoji}</span>
-                      <span className="font-semibold text-[10px]">{v.label}</span>
-                    </button>
-                  );
-                })}
+                {Object.entries(REACTION_INFO)
+                  .filter(([k]) => k !== "me-too")
+                  .map(([k, v]) => {
+                    const isSelected = allowedReactions.includes(k);
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setAllowedReactions(
+                              allowedReactions.filter((r) => r !== k),
+                            );
+                          } else if (allowedReactions.length < 4) {
+                            setAllowedReactions([...allowedReactions, k]);
+                          }
+                        }}
+                        className={`px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all ${
+                          isSelected
+                            ? "bg-green-100 text-green-900 border border-green-200"
+                            : "bg-white border border-black/10 text-black/50 hover:border-black/20"
+                        } ${!isSelected && allowedReactions.length >= 4 ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <span>{v.emoji}</span>
+                        <span className="font-semibold text-[10px]">
+                          {v.label}
+                        </span>
+                      </button>
+                    );
+                  })}
               </div>
               <p className="text-[9px] text-black/30 font-medium mt-1.5">
-                {allowedReactions.length === 4 ? "✅ 4/4 selected" : `${allowedReactions.length}/4 selected (Must select exactly 4)`}
+                {allowedReactions.length === 4
+                  ? "✅ 4/4 selected"
+                  : `${allowedReactions.length}/4 selected (Must select exactly 4)`}
               </p>
             </div>
 
@@ -462,7 +476,12 @@ export default function CreateBoard() {
           <div className="px-6 pb-6">
             <button
               type="submit"
-              disabled={!name.trim() || isSubmitting || isNameAvailable === false || (!isPublic && pin.length < 4)}
+              disabled={
+                !name.trim() ||
+                isSubmitting ||
+                isNameAvailable === false ||
+                (!isPublic && pin.length < 4)
+              }
               onClick={handleSubmit}
               className="w-full py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
             >

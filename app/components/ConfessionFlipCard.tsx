@@ -20,15 +20,16 @@ interface ConfessionFlipCardProps {
     boardSlug?: string;
     boardName?: string;
   };
-  boardSlug: string;
+  boardSlug?: string;
   boardReactions?: string[];
 }
 
 export default function ConfessionFlipCard({
   confession,
-  boardSlug,
+  boardSlug: propBoardSlug,
   boardReactions,
 }: ConfessionFlipCardProps) {
+  const boardSlug = propBoardSlug || confession.boardSlug || "global";
   const [isFlipped, setIsFlipped] = useState(false);
   const [hasViewed, setHasViewed] = useState(false);
   const catInfo = CATEGORY_INFO[confession.category];
@@ -64,9 +65,10 @@ export default function ConfessionFlipCard({
     setIsFlipped(!isFlipped);
   };
 
-  const activeReactions = boardReactions && boardReactions.length > 0 
-    ? boardReactions 
-    : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+  const activeReactions =
+    boardReactions && boardReactions.length > 0
+      ? boardReactions
+      : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
 
   return (
     <div className="perspective-1000 flip-card-container">
@@ -133,7 +135,7 @@ export default function ConfessionFlipCard({
 
             {/* Confession text */}
             <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative mb-3">
-              <div 
+              <div
                 className="w-full h-full overflow-y-auto no-scrollbar px-3 py-2 text-center flex items-center"
                 onWheel={(e) => e.stopPropagation()}
                 onTouchMove={(e) => e.stopPropagation()}
@@ -192,7 +194,9 @@ export default function ConfessionFlipCard({
               confession={confession}
               boardSlug={boardSlug}
               totalReactions={totalReactions}
-              reactionCounts={reactionCounts as Record<string, number> | undefined}
+              reactionCounts={
+                reactionCounts as Record<string, number> | undefined
+              }
             />
 
             {/* View thread link */}

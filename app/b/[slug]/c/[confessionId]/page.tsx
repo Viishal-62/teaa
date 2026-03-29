@@ -168,9 +168,10 @@ export default function ConfessionDetailPage() {
 
   const catInfo = CATEGORY_INFO[confession.category];
 
-  const activeReactions = board.allowedReactions && board.allowedReactions.length > 0
-    ? board.allowedReactions
-    : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+  const activeReactions =
+    board.allowedReactions && board.allowedReactions.length > 0
+      ? board.allowedReactions
+      : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
 
   return (
     <div className="min-h-screen page-enter bg-white text-[#111]">

@@ -5,7 +5,16 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Home, Plus, Lock, Share2, Check, Link as LinkIcon, Bell, BookOpen } from "lucide-react";
+import {
+  Home,
+  Plus,
+  Lock,
+  Share2,
+  Check,
+  Link as LinkIcon,
+  Bell,
+  BookOpen,
+} from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
@@ -66,11 +75,11 @@ export default function BoardViewPage() {
     api.confessions.listByBoard,
     board && !isLocked
       ? {
-        boardId: board._id,
-        category: selectedCategory,
-        pin: pinToVerify,
-        creatorToken,
-      }
+          boardId: board._id,
+          category: selectedCategory,
+          pin: pinToVerify,
+          creatorToken,
+        }
       : "skip",
   );
 
@@ -86,9 +95,15 @@ export default function BoardViewPage() {
     // Mix in spills cleanly
     if (spills && spills.length > 0) {
       if (selectedCategory === "all") {
-        items.splice(Math.min(2, items.length), 0, { ...spills[0], _type: "spill" });
+        items.splice(Math.min(2, items.length), 0, {
+          ...spills[0],
+          _type: "spill",
+        });
         if (spills.length > 1) {
-          items.splice(Math.min(6, items.length), 0, { ...spills[1], _type: "spill" });
+          items.splice(Math.min(6, items.length), 0, {
+            ...spills[1],
+            _type: "spill",
+          });
         }
       }
     }
@@ -98,22 +113,30 @@ export default function BoardViewPage() {
   // Start in the middle so cards are balanced on both sides
   useEffect(() => {
     if (mixedItems) {
-      if (prevConfessionsLength.current !== 0 && mixedItems.length > prevConfessionsLength.current) {
+      if (
+        prevConfessionsLength.current !== 0 &&
+        mixedItems.length > prevConfessionsLength.current
+      ) {
         // Play pop sound
         try {
-          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const ctx = new (
+            window.AudioContext || (window as any).webkitAudioContext
+          )();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.type = "sine";
           osc.frequency.setValueAtTime(600, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(
+            1000,
+            ctx.currentTime + 0.1,
+          );
           gain.gain.setValueAtTime(0.3, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
           osc.start();
           osc.stop(ctx.currentTime + 0.1);
-        } catch (e) { }
+        } catch (e) {}
 
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3500);
@@ -242,10 +265,11 @@ export default function BoardViewPage() {
                 setPinError(false);
               }}
               placeholder="Enter PIN"
-              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${pinError
-                ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
-                : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                }`}
+              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${
+                pinError
+                  ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
+                  : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+              }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handlePinSubmit();
               }}
@@ -269,7 +293,9 @@ export default function BoardViewPage() {
 
             <div className="relative flex items-center gap-4 py-2">
               <div className="flex-1 h-px bg-black/5" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/20">or</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/20">
+                or
+              </span>
               <div className="flex-1 h-px bg-black/5" />
             </div>
 
@@ -310,7 +336,9 @@ export default function BoardViewPage() {
             type="button"
             onClick={async () => {
               const url = `${window.location.origin}/b/${slug}`;
-              const viralPrompt = board.sharePrompt ? SHARE_PROMPTS.find(p => p.id === board.sharePrompt)?.text : null;
+              const viralPrompt = board.sharePrompt
+                ? SHARE_PROMPTS.find((p) => p.id === board.sharePrompt)?.text
+                : null;
               const shareData = {
                 title: `${board.name} — Teaaa 🫖`,
                 text: viralPrompt
@@ -354,6 +382,12 @@ export default function BoardViewPage() {
           >
             Add confession
           </Link>
+          <Link
+            href={`/b/${slug}/spill`}
+            className="text-[10px] text-rose-900/60 hover:text-rose-900 font-medium transition-colors"
+          >
+            Long gossip
+          </Link>
         </div>
       </header>
 
@@ -393,11 +427,11 @@ export default function BoardViewPage() {
                   Add Confession
                 </Link>
                 <Link
-                  href={`/b/${slug}/spill/create`}
+                  href={`/b/${slug}/spill`}
                   className="inline-flex items-center gap-2 px-6 py-3 border border-black/10 text-black rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black/5 hover:scale-105 transition-all"
                 >
                   <BookOpen size={14} />
-                  Write a Deep Spill
+                  Open Long Gossip
                 </Link>
               </div>
             </div>
@@ -557,7 +591,7 @@ export default function BoardViewPage() {
             </Link>
 
             <Link
-              href={`/b/${slug}/spill/create`}
+              href={`/b/${slug}/spill`}
               className="flex-1 block relative overflow-hidden rounded-2xl border border-rose-900/10 hover:border-rose-900/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-rose-100/30" />
@@ -569,11 +603,11 @@ export default function BoardViewPage() {
                   Got a longer story?
                 </h3>
                 <p className="text-[11px] text-rose-950/40 mb-4 leading-relaxed">
-                  Write a multi-chapter Deep Spill with a custom cover.
+                  Open the long gossip shelf and write a multi-chapter book.
                 </p>
                 <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">
                   <BookOpen size={12} />
-                  Write a Spill
+                  Long Gossip Shelf
                 </span>
               </div>
             </Link>
@@ -585,11 +619,14 @@ export default function BoardViewPage() {
       {confessions && (
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
           <Link
-            href={`/b/${slug}/spill/create`}
+            href={`/b/${slug}/spill`}
             className="w-12 h-12 rounded-full bg-rose-900 border border-white/10 text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group"
-            title="Write a Deep Spill"
+            title="Open Long Gossip shelf"
           >
-            <BookOpen size={20} className="group-hover:-rotate-6 transition-transform" />
+            <BookOpen
+              size={20}
+              className="group-hover:-rotate-6 transition-transform"
+            />
           </Link>
           <Link
             href={`/b/${slug}/confess`}

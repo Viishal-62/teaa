@@ -1,12 +1,45 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { THEMES } from "@/convex/helpers";
-import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Share2, Flame } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { THEMES, SPILL_REACTION_TYPES } from "@/convex/helpers";
+
+/* ─── Slide transition variants ─── */
+const slideVariants = {
+  enter: (dir: number) => ({
+    x: dir > 0 ? "100%" : "-100%",
+    opacity: 0.6,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (dir: number) => ({
+    x: dir > 0 ? "-100%" : "100%",
+    opacity: 0.6,
+  }),
+};
+
+const fadeVariants = {
+  enter: { opacity: 0, scale: 0.98 },
+  center: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.98 },
+};
+
+/* ─── Types ─── */
+type StorySlide =
+  | { kind: "cover" }
+  | { kind: "chapter"; chapterNumber: number; title?: string; text: string }
+  | { kind: "end" };
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════════════════ */
 
 export default function DeepSpillReader() {
   const params = useParams();
@@ -14,195 +47,656 @@ export default function DeepSpillReader() {
   const slug = params.slug as string;
   const spillId = params.spillId as string;
 
-  const board = useQuery(api.boards.getBySlug, { slug });
-  const spill = useQuery(api.spills.getById, { spillId: spillId as any });
-  const chapters = useQuery(api.chapters.listBySpill, { spillId: spillId as any });
+  const spill = useQuery(api.spills.getById, {
+    spillId: spillId as Id<"spills">,
+  });
+  const chapters = useQuery(api.chapters.listBySpill, {
+    spillId: spillId as Id<"spills">,
+  });
+  const incrementView = useMutation(api.spills.incrementView);
 
-  const [currentPage, setCurrentPage] = useState(0); // 0 = Cover, 1 = Ch 1, etc.
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isPaused, setIsPaused] = useState(false);
+  const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasTrackedView = useRef(false);
 
-  // Increment views lazily
-  useEffect(() => {
-    if (spill) {
-      // NOTE: useMutation could be called here via a raw fetch or useEffect wrapper, but
-      // for reading simply, we can skip immediate view increments or fire a server action.
+  /* Build slides from spill + chapters */
+  const slides: StorySlide[] = useMemo(() => {
+    if (!spill || !chapters) return [];
+
+    const result: StorySlide[] = [{ kind: "cover" }];
+
+    for (const chapter of chapters) {
+      result.push({
+        kind: "chapter",
+        chapterNumber: chapter.chapterNumber,
+        title: chapter.title || undefined,
+        text: chapter.text,
+      });
     }
-  }, [spill]);
 
+    result.push({ kind: "end" });
+    return result;
+  }, [spill, chapters]);
+
+  const totalSlides = slides.length;
+
+  /* Track view once */
+  useEffect(() => {
+    if (spill && !hasTrackedView.current) {
+      hasTrackedView.current = true;
+      incrementView({ spillId: spillId as Id<"spills"> });
+    }
+  }, [spill, spillId, incrementView]);
+
+  /* Navigation */
+  const goToSlide = useCallback(
+    (dir: 1 | -1) => {
+      const next = currentSlide + dir;
+      if (next < 0 || next >= totalSlides) return;
+      setDirection(dir);
+      setCurrentSlide(next);
+    },
+    [currentSlide, totalSlides],
+  );
+
+  /* Keyboard nav */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === " ") goToSlide(1);
+      if (e.key === "ArrowLeft") goToSlide(-1);
+      if (e.key === "Escape") router.push(`/b/${slug}`);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [goToSlide, router, slug]);
+
+  /* Touch / click areas */
+  const handleTapLeft = () => goToSlide(-1);
+  const handleTapRight = () => goToSlide(1);
+
+  /* Long press to pause */
+  const handlePointerDown = () => {
+    longPressRef.current = setTimeout(() => setIsPaused(true), 300);
+  };
+  const handlePointerUp = () => {
+    if (longPressRef.current) clearTimeout(longPressRef.current);
+    setIsPaused(false);
+  };
+
+  /* ─── Loading ─── */
   if (spill === undefined || chapters === undefined) {
-    return <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center animate-pulse" />;
+    return (
+      <div className="fixed inset-0 bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-6 h-6 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
+          <p className="text-[10px] text-black/20 uppercase tracking-widest font-bold">
+            Loading spill...
+          </p>
+        </div>
+      </div>
+    );
   }
+
   if (spill === null) {
-    return <div className="min-h-screen flex text-center justify-center pt-24">Spill not found.</div>;
+    return (
+      <div className="fixed inset-0 bg-white flex flex-col gap-4 items-center justify-center text-black/50">
+        <span className="text-4xl">👀</span>
+        <p className="text-sm font-medium">This spill doesn&apos;t exist.</p>
+        <button
+          type="button"
+          onClick={() => router.push(`/b/${slug}`)}
+          className="px-5 py-2.5 rounded-full bg-black/5 text-xs font-bold uppercase tracking-wider hover:bg-black/10 transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    );
   }
 
   const theme = THEMES.find((t) => t.key === spill.coverTheme) || THEMES[0];
-  const totalPages = chapters.length + 1; // 1 cover + N chapters (plus maybe a back cover later)
+  const progress = totalSlides > 1 ? (currentSlide + 1) / totalSlides : 1;
+  const currentSlideData = slides[currentSlide];
 
-  const paginate = (newDirection: number) => {
-    const nextPage = currentPage + newDirection;
-    if (nextPage >= 0 && nextPage < totalPages) {
-      setDirection(newDirection);
-      setCurrentPage(nextPage);
-    }
-  };
-
-  const swipeConfidenceThreshold = 10000;
-  const swipePower = (offset: number, velocity: number) => {
-    return Math.abs(offset) * velocity;
-  };
-
-  const variants = {
-    enter: (direction: number) => {
-      return {
-        // Physical page turn feel: fold out from the spine (left)
-        x: direction > 0 ? 50 : -50,
-        opacity: 0,
-        rotateY: direction > 0 ? 45 : -45,
-        scale: 0.95,
-      };
-    },
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-      rotateY: 0,
-      scale: 1,
-    },
-    exit: (direction: number) => {
-      return {
-        zIndex: 0,
-        x: direction < 0 ? 50 : -50,
-        opacity: 0,
-        rotateY: direction < 0 ? 45 : -45,
-        scale: 0.95,
-      };
-    },
-  };
+  /* ──────────────────────────── RENDER ──────────────────────────── */
 
   return (
-    <div className="fixed inset-0 bg-[#f0eae1] flex items-center justify-center overflow-hidden">
-      
-      {/* Top Navbar */}
-      <div className="absolute top-0 inset-x-0 h-20 flex items-center justify-between px-6 z-50">
-        <button 
-          onClick={() => router.push(`/b/${slug}`)}
-          className="w-10 h-10 rounded-full bg-black/5 hover:bg-black/10 flex items-center justify-center transition-colors"
-        >
-          <X size={20} className="text-black/60" />
-        </button>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-black/30">
-          Page {currentPage + 1} of {totalPages}
+    <div
+      className="fixed inset-0 bg-white flex flex-col select-none overflow-hidden"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      {/* ─── Segmented Progress Bar (Instagram-style) ─── */}
+      <div className="absolute top-0 inset-x-0 z-50 px-2 pt-2 flex gap-[3px]">
+        {slides.map((_, idx) => (
+          <div
+            key={`seg-${idx}`}
+            className="h-[3px] flex-1 rounded-full overflow-hidden bg-black/[0.08]"
+          >
+            <motion.div
+              className="h-full rounded-full"
+              style={{
+                background:
+                  idx < currentSlide
+                    ? "rgba(0,0,0,0.5)"
+                    : idx === currentSlide
+                      ? "rgba(0,0,0,0.5)"
+                      : "transparent",
+                width:
+                  idx < currentSlide
+                    ? "100%"
+                    : idx === currentSlide
+                      ? "100%"
+                      : "0%",
+              }}
+              initial={false}
+              animate={{
+                width:
+                  idx < currentSlide
+                    ? "100%"
+                    : idx === currentSlide
+                      ? "100%"
+                      : "0%",
+              }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Top bar ─── */}
+      <div className="absolute top-3 inset-x-0 z-50 px-4 pt-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/b/${slug}`);
+            }}
+            className="w-8 h-8 rounded-full bg-black/5 backdrop-blur-md flex items-center justify-center hover:bg-black/10 transition-colors"
+          >
+            <X size={16} className="text-black/50" />
+          </button>
+          <div>
+            <p className="text-[11px] font-bold text-black/50 truncate max-w-[200px]">
+              {spill.title}
+            </p>
+            <p className="text-[9px] text-black/25 font-medium">
+              {spill.displayName}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Book Container */}
-      <div 
-        className="relative w-full max-w-lg aspect-[3/4.5] sm:aspect-[3/4] mx-4 perspective-1200"
-      >
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+      {/* ─── STORY CONTENT ─── */}
+      <div className="flex-1 relative">
+        <AnimatePresence mode="wait" custom={direction} initial={false}>
           <motion.div
-            key={currentPage}
+            key={currentSlide}
             custom={direction}
-            variants={variants}
+            variants={slideVariants}
             initial="enter"
             animate="center"
             exit="exit"
             transition={{
-              x: { type: "spring", stiffness: 300, damping: 30 },
+              x: { type: "tween", duration: 0.3, ease: [0.32, 0.72, 0, 1] },
               opacity: { duration: 0.2 },
-              rotateY: { type: "spring", stiffness: 200, damping: 30 }
             }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={1}
-            onDragEnd={(e, { offset, velocity }) => {
-              const swipe = swipePower(offset.x, velocity.x);
-
-              if (swipe < -swipeConfidenceThreshold) {
-                paginate(1);
-              } else if (swipe > swipeConfidenceThreshold) {
-                paginate(-1);
-              }
-            }}
-            className="absolute inset-0 size-full shadow-2xl rounded-r-3xl rounded-l-md border-l-[12px] overflow-hidden transform-style-3d origin-left bg-[#faf8f5]"
-            style={{ 
-              borderColor: currentPage === 0 ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.05)",
-            }}
+            className="absolute inset-0"
           >
-            {currentPage === 0 ? (
-              // COVER PAGE
-              <div 
-                className="size-full flex flex-col justify-between p-12 text-center relative"
-                style={{ background: spill.aiImageUrl ? `url(${spill.aiImageUrl}) center/cover` : theme.bg }}
-              >
-                {!spill.aiImageUrl && <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.1),transparent_50%)]" />}
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.05]" />
-                
-                <div className={`absolute inset-0 flex flex-col items-center justify-between p-12 backdrop-blur-[2px] ${spill.aiImageUrl ? 'bg-black/40' : ''}`}>
-                  <div className="relative z-10 flex flex-col items-center gap-3 mt-8">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.4em] opacity-80" style={{ color: spill.aiImageUrl ? "#fff" : theme.accent }}>Deep Spill</span>
-                    <div className="w-12 h-px bg-current opacity-30" style={{ color: spill.aiImageUrl ? "#fff" : theme.accent }} />
-                  </div>
-
-                  <div className="relative z-10 space-y-8 flex flex-col items-center">
-                    {!spill.aiImageUrl && <span className="text-6xl drop-shadow-lg">{spill.coverEmoji}</span>}
-                    <h1 className="text-4xl sm:text-5xl font-black serif leading-[1.1] tracking-tight text-white mb-8" style={{ color: spill.aiImageUrl ? "#fff" : theme.text }}>
-                      {spill.title}
-                    </h1>
-                  </div>
-
-                  <div className="relative z-10">
-                    <span className="text-xs uppercase tracking-[0.2em] font-medium opacity-80" style={{ color: spill.aiImageUrl ? "#fff" : theme.text }}>
-                      By {spill.displayName}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // CHAPTER PAGE
-              <div className="size-full bg-[#faf8f5] p-8 sm:p-12 flex flex-col">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.02] pointer-events-none" />
-                
-                <div className="flex-1 overflow-y-auto pr-4 scrollbar-hide">
-                   <div className="mb-10 text-center">
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-black/30 mb-2">
-                       Chapter {chapters[currentPage - 1].chapterNumber}
-                    </h3>
-                    <h2 className="text-2xl font-serif font-black text-black/80 leading-tight">
-                      {chapters[currentPage - 1].title || `Chapter ${chapters[currentPage - 1].chapterNumber}`}
-                    </h2>
-                    <div className="w-8 h-px bg-black/10 mx-auto mt-6" />
-                   </div>
-
-                   <p className="font-serif text-[17px] leading-[2.2] text-black/75 whitespace-pre-wrap">
-                    {chapters[currentPage - 1].text}
-                   </p>
-                </div>
-              </div>
+            {currentSlideData.kind === "cover" && (
+              <CoverSlide spill={spill} theme={theme} />
+            )}
+            {currentSlideData.kind === "chapter" && (
+              <ChapterSlide
+                slide={currentSlideData}
+                theme={theme}
+                spillTitle={spill.title}
+              />
+            )}
+            {currentSlideData.kind === "end" && (
+              <EndSlide spill={spill} theme={theme} slug={slug} />
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* Tap zones — only cover top area so text can scroll */}
+        <button
+          type="button"
+          onClick={handleTapLeft}
+          className="absolute top-0 left-0 w-[30%] h-[60%] z-30"
+          aria-label="Previous"
+        />
+        <button
+          type="button"
+          onClick={handleTapRight}
+          className="absolute top-0 right-0 w-[55%] h-[60%] z-30"
+          aria-label="Next"
+        />
+
+        {/* Pause overlay */}
+        {isPaused && (
+          <div className="absolute inset-0 z-40 bg-white/30 flex items-center justify-center">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-black/30 font-bold">
+              Paused
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Navigation Controls */}
-      <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-12 z-50">
-        <button
-          onClick={() => paginate(-1)}
-          disabled={currentPage === 0}
-          className="w-14 h-14 rounded-full bg-white/50 backdrop-blur-md shadow-lg border border-black/5 flex items-center justify-center hover:bg-white text-black/40 hover:text-black transition-all disabled:opacity-0 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <button
-          onClick={() => paginate(1)}
-          disabled={currentPage === totalPages - 1}
-          className="w-14 h-14 rounded-full bg-white backdrop-blur-md shadow-lg border border-black/5 flex items-center justify-center hover:scale-105 text-black transition-all disabled:opacity-0 disabled:cursor-not-allowed"
-        >
-          <ChevronRight size={24} />
-        </button>
-      </div>
+      {/* ─── Bottom bar ─── */}
+      <div className="absolute bottom-0 inset-x-0 z-50 px-4 pb-6 flex items-center justify-center">
+        <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToSlide(-1);
+            }}
+            disabled={currentSlide === 0}
+            className="w-10 h-10 rounded-full bg-black/5 backdrop-blur-md flex items-center justify-center transition-all hover:bg-black/10 disabled:opacity-0"
+          >
+            <ChevronLeft size={18} className="text-black/40" />
+          </button>
 
+          <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/20 tabular-nums min-w-[60px] text-center">
+            {currentSlide + 1} / {totalSlides}
+          </span>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToSlide(1);
+            }}
+            disabled={currentSlide === totalSlides - 1}
+            className="w-10 h-10 rounded-full bg-black/5 backdrop-blur-md flex items-center justify-center transition-all hover:bg-black/10 disabled:opacity-0"
+          >
+            <ChevronRight size={18} className="text-black/40" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COVER SLIDE
+   ═══════════════════════════════════════════════════════════════ */
+
+function CoverSlide({
+  spill,
+  theme,
+}: {
+  spill: {
+    title: string;
+    coverEmoji: string;
+    aiImageUrl?: string;
+    displayName: string;
+  };
+  theme: (typeof THEMES)[number];
+}) {
+  return (
+    <div className="size-full flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Background */}
+      {spill.aiImageUrl ? (
+        <>
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${spill.aiImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0" style={{ background: theme.bg }} />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.06),transparent_60%)]" />
+        </>
+      )}
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-6 px-8 text-center max-w-md">
+        {/* Label */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="flex flex-col items-center gap-2"
+        >
+          <span
+            className="text-[9px] font-black uppercase tracking-[0.5em]"
+            style={{ color: spill.aiImageUrl ? "#fff" : theme.accent }}
+          >
+            Deep Spill
+          </span>
+          <div
+            className="w-10 h-px opacity-30"
+            style={{
+              background: spill.aiImageUrl ? "#fff" : theme.accent,
+            }}
+          />
+        </motion.div>
+
+        {/* Emoji */}
+        <motion.span
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.5, type: "spring" }}
+          className="text-6xl drop-shadow-2xl"
+        >
+          {spill.coverEmoji}
+        </motion.span>
+
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="text-3xl sm:text-4xl font-black serif leading-[1.1] tracking-tight text-balance"
+          style={{ color: spill.aiImageUrl ? "#fff" : theme.text }}
+        >
+          {spill.title}
+        </motion.h1>
+
+        {/* Author */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="text-[11px] uppercase tracking-[0.25em] font-medium opacity-50"
+          style={{ color: spill.aiImageUrl ? "#fff" : theme.text }}
+        >
+          By {spill.displayName}
+        </motion.p>
+
+        {/* Tap hint */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="text-[10px] font-medium tracking-wide mt-8"
+          style={{
+            color: spill.aiImageUrl
+              ? "rgba(255,255,255,0.4)"
+              : `${theme.text}50`,
+          }}
+        >
+          Tap to start reading →
+        </motion.p>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAPTER SLIDE
+   ═══════════════════════════════════════════════════════════════ */
+
+function ChapterSlide({
+  slide,
+  theme,
+  spillTitle,
+}: {
+  slide: {
+    chapterNumber: number;
+    title?: string;
+    text: string;
+  };
+  theme: (typeof THEMES)[number];
+  spillTitle: string;
+}) {
+  return (
+    <div className="size-full flex flex-col relative overflow-hidden">
+      {/* White background with subtle theme accent glow */}
+      <div className="absolute inset-0 bg-white" />
+      <div
+        className="absolute inset-0 opacity-[0.05]"
+        style={{
+          background: `radial-gradient(circle at 50% 0%, ${theme.accent}, transparent 70%)`,
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col pt-20 pb-24 px-6 sm:px-10 overflow-hidden">
+        {/* Chapter header */}
+        {slide.title && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="mb-6 text-center flex-shrink-0"
+          >
+            <p className="text-[9px] font-black uppercase tracking-[0.4em] mb-2 text-black/25">
+              Chapter {slide.chapterNumber}
+            </p>
+            <h2 className="text-xl sm:text-2xl font-black serif leading-tight text-black">
+              {slide.title}
+            </h2>
+            <div
+              className="w-8 h-px mx-auto mt-4 opacity-30"
+              style={{ background: theme.accent }}
+            />
+          </motion.div>
+        )}
+
+        {!slide.title && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-[9px] font-bold uppercase tracking-[0.3em] mb-4 text-center flex-shrink-0 text-black/20"
+          >
+            Chapter {slide.chapterNumber}
+          </motion.p>
+        )}
+
+        {/* Story text — scrollable */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="flex-1 overflow-y-auto scrollbar-hide min-h-0"
+        >
+          <p className="font-serif text-[16px] sm:text-[17px] leading-[2] whitespace-pre-wrap max-w-lg mx-auto pb-8 text-black/60">
+            {slide.text}
+          </p>
+        </motion.div>
+
+        {/* Bottom spill title watermark */}
+        <div className="mt-2 text-center flex-shrink-0">
+          <p className="text-[8px] uppercase tracking-[0.3em] font-bold text-black/8">
+            {spillTitle}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   END SLIDE
+   ═══════════════════════════════════════════════════════════════ */
+
+function EndSlide({
+  spill,
+  theme,
+  slug,
+}: {
+  spill: {
+    _id: Id<"spills">;
+    title: string;
+    displayName: string;
+    views?: number;
+  };
+  theme: (typeof THEMES)[number];
+  slug: string;
+}) {
+  const router = useRouter();
+
+  // Reactions
+  const [visitorId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    let id = localStorage.getItem("teaaa-visitor-id");
+    if (!id) {
+      id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      localStorage.setItem("teaaa-visitor-id", id);
+    }
+    return id;
+  });
+
+  const reactionCounts = useQuery(api.spillReactions.getCounts, {
+    spillId: spill._id,
+  });
+  const myReactions = useQuery(
+    api.spillReactions.getVisitorReactions,
+    visitorId ? { spillId: spill._id, visitorId } : "skip",
+  );
+  const toggleReaction = useMutation(api.spillReactions.toggle);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: spill.title,
+          text: `Read "${spill.title}" — an anonymous Deep Spill on Teaaa 🫖`,
+          url,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      alert("Link copied!");
+    }
+  };
+
+  return (
+    <div className="size-full flex flex-col items-center justify-center relative overflow-hidden">
+      {/* White background with accent glow */}
+      <div className="absolute inset-0 bg-white" />
+      <div
+        className="absolute inset-0 opacity-[0.06]"
+        style={{
+          background: `radial-gradient(circle at 50% 50%, ${theme.accent}, transparent 60%)`,
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center gap-6 px-8 text-center">
+        <motion.span
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, type: "spring", damping: 10 }}
+          className="text-5xl"
+        >
+          ✨
+        </motion.span>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="text-2xl sm:text-3xl font-black serif tracking-tight text-black"
+        >
+          The End
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="space-y-1"
+        >
+          <p className="text-xs font-medium text-black/40">{spill.title}</p>
+          <p className="text-[10px] text-black/25">By {spill.displayName}</p>
+          {spill.views != null && spill.views > 0 && (
+            <p className="text-[9px] text-black/15 mt-2">
+              👁 {spill.views} views
+            </p>
+          )}
+        </motion.div>
+
+        {/* ─── Reaction Row ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="flex items-center gap-2 mt-4"
+        >
+          {SPILL_REACTION_TYPES.map((r) => {
+            const count = reactionCounts?.[r.key] ?? 0;
+            const isActive = myReactions?.includes(r.key) ?? false;
+            return (
+              <motion.button
+                key={r.key}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (visitorId) {
+                    toggleReaction({
+                      spillId: spill._id,
+                      type: r.key,
+                      visitorId,
+                    });
+                  }
+                }}
+                whileTap={{ scale: 1.3 }}
+                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all ${
+                  isActive
+                    ? "bg-black/8 scale-105"
+                    : "bg-black/[0.03] hover:bg-black/5"
+                }`}
+              >
+                <span className="text-xl">{r.emoji}</span>
+                {count > 0 && (
+                  <span
+                    className={`text-[9px] font-bold tabular-nums ${
+                      isActive ? "text-black/60" : "text-black/20"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex items-center gap-3 mt-6"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleShare();
+            }}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-black/5 text-black/40 text-[10px] font-black uppercase tracking-[0.15em] hover:bg-black/8 transition-all"
+          >
+            <Share2 size={13} /> Share
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/b/${slug}`);
+            }}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-orange-500/80 to-rose-500/80 text-white text-[10px] font-black uppercase tracking-[0.15em] hover:scale-[1.03] transition-all shadow-lg shadow-orange-500/10"
+          >
+            <Flame size={13} /> More Spills
+          </button>
+        </motion.div>
+      </div>
     </div>
   );
 }

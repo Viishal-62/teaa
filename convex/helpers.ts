@@ -177,3 +177,14 @@ export const THEMES = [
 ] as const;
 
 export type ThemeKey = (typeof THEMES)[number]["key"];
+
+// ─── Spill Reaction Types ───
+export const SPILL_REACTION_TYPES = [
+  { key: "fire", emoji: "🔥", label: "Fire" },
+  { key: "mind-blown", emoji: "🤯", label: "Mind Blown" },
+  { key: "crying", emoji: "😭", label: "Crying" },
+  { key: "tea", emoji: "☕", label: "Spill More" },
+  { key: "heart", emoji: "❤️", label: "Love" },
+] as const;
+
+export type SpillReactionKey = (typeof SPILL_REACTION_TYPES)[number]["key"];

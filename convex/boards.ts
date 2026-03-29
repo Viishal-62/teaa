@@ -7,7 +7,7 @@ export const suggestSlugs = query({
   args: { name: v.string() },
   handler: async (ctx, args) => {
     if (!args.name.trim()) return [];
-    
+
     const base = args.name
       .toLowerCase()
       .trim()
@@ -50,7 +50,6 @@ export const checkName = query({
     return !existing;
   },
 });
-
 
 // ─── Create a new board ───
 export const create = mutation({
@@ -203,9 +202,14 @@ export const listPublicWithCounts = query({
           .query("confessions")
           .withIndex("by_boardId", (q) => q.eq("boardId", board._id))
           .collect();
+        const spills = await ctx.db
+          .query("spills")
+          .withIndex("by_boardId", (q) => q.eq("boardId", board._id))
+          .collect();
         return {
           ...board,
           confessionCount: confessions.length,
+          spillCount: spills.length,
         };
       }),
     );
@@ -250,7 +254,8 @@ export const update = mutation({
     if (args.name !== undefined) updates.name = args.name;
     if (args.tagline !== undefined) updates.tagline = args.tagline;
     if (args.theme !== undefined) updates.theme = args.theme;
-    if (args.allowedReactions !== undefined) updates.allowedReactions = args.allowedReactions;
+    if (args.allowedReactions !== undefined)
+      updates.allowedReactions = args.allowedReactions;
     if (args.sharePrompt !== undefined) updates.sharePrompt = args.sharePrompt;
 
     await ctx.db.patch(args.boardId, updates);

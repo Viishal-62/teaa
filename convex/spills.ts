@@ -37,14 +37,14 @@ export const incrementGeneration = mutation({
     const spill = await ctx.db.get(args.spillId);
     if (!spill) throw new Error("Spill not found");
 
-    if (spill.generationsUsed >= 10) {
-      throw new Error("Maximum of 10 AI generations reached per spill.");
+    if (spill.generationsUsed >= 5) {
+      throw new Error("Maximum of 5 AI generations reached per spill.");
     }
 
     await ctx.db.patch(args.spillId, {
       generationsUsed: spill.generationsUsed + 1,
     });
-    
+
     return spill.generationsUsed + 1;
   },
 });
@@ -78,6 +78,30 @@ export const listByBoard = query({
   },
 });
 
+// ─── List All Spills (for explore/global feed) ───
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const spills = await ctx.db.query("spills").order("desc").take(20);
+    // Attach board slug + reaction count for each spill
+    const enriched = await Promise.all(
+      spills.map(async (spill) => {
+        const board = await ctx.db.get(spill.boardId);
+        const reactions = await ctx.db
+          .query("spillReactions")
+          .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
+          .collect();
+        return {
+          ...spill,
+          boardSlug: board?.slug ?? "global",
+          totalReactions: reactions.length,
+        };
+      }),
+    );
+    return enriched;
+  },
+});
+
 // ─── Increment Views ───
 export const incrementView = mutation({
   args: { spillId: v.id("spills") },
@@ -88,5 +112,71 @@ export const incrementView = mutation({
         views: (spill.views || 0) + 1,
       });
     }
+  },
+});
+
+// ─── Spill of the Day ───
+export const spillOfTheDay = query({
+  args: {},
+  handler: async (ctx) => {
+    const spills = await ctx.db.query("spills").order("desc").take(50);
+
+    if (spills.length === 0) return null;
+
+    // Score each by reactions + views
+    const scored = await Promise.all(
+      spills.map(async (spill) => {
+        const reactions = await ctx.db
+          .query("spillReactions")
+          .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
+          .collect();
+        const board = await ctx.db.get(spill.boardId);
+        return {
+          ...spill,
+          totalReactions: reactions.length,
+          score: reactions.length * 2 + (spill.views ?? 0),
+          boardSlug: board?.slug ?? "global",
+        };
+      }),
+    );
+
+    // Sort by score, take top 5
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, Math.max(5, scored.length));
+
+    // Deterministic daily pick
+    const daySeed = Math.floor(Date.now() / 86400000);
+    const pick = top[daySeed % top.length];
+
+    return pick;
+  },
+});
+
+// ─── List Trending (Ranked by Score) ───
+export const listTrending = query({
+  args: {},
+  handler: async (ctx) => {
+    const spills = await ctx.db.query("spills").order("desc").take(100);
+
+    // Score: reactions have double weight over views
+    const scored = await Promise.all(
+      spills.map(async (spill) => {
+        const reactions = await ctx.db
+          .query("spillReactions")
+          .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
+          .collect();
+        const board = await ctx.db.get(spill.boardId);
+        return {
+          ...spill,
+          totalReactions: reactions.length,
+          score: reactions.length * 2 + (spill.views ?? 0),
+          boardSlug: board?.slug ?? "global",
+        };
+      }),
+    );
+
+    // Sort by score descending and take top 10
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 10);
   },
 });

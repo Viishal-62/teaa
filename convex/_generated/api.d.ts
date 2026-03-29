@@ -12,8 +12,10 @@ import type * as boards from "../boards.js";
 import type * as chapters from "../chapters.js";
 import type * as comments from "../comments.js";
 import type * as confessions from "../confessions.js";
+import type * as files from "../files.js";
 import type * as helpers from "../helpers.js";
 import type * as reactions from "../reactions.js";
+import type * as spillReactions from "../spillReactions.js";
 import type * as spills from "../spills.js";
 
 import type {
@@ -27,8 +29,10 @@ declare const fullApi: ApiFromModules<{
   chapters: typeof chapters;
   comments: typeof comments;
   confessions: typeof confessions;
+  files: typeof files;
   helpers: typeof helpers;
   reactions: typeof reactions;
+  spillReactions: typeof spillReactions;
   spills: typeof spills;
 }>;
 

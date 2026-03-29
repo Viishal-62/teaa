@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Plus, BookOpen, Flame } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { THEMES } from "@/convex/helpers";
 
 export default function Home() {
   const publicBoards = useQuery(api.boards.listPublic);
   const globalFeed = useQuery(api.confessions.globalFeed, {});
+  const recentSpills = useQuery(api.spills.listAll);
 
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -31,7 +34,7 @@ export default function Home() {
     );
     sectionsRef.current.forEach((el) => el && obs.observe(el));
     return () => obs.disconnect();
-  }, [globalFeed, publicBoards]);
+  }, [globalFeed, publicBoards, recentSpills]);
 
   const addRef = (el: HTMLDivElement | null) => {
     if (el && !sectionsRef.current.includes(el)) sectionsRef.current.push(el);
@@ -56,6 +59,12 @@ export default function Home() {
             className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
           >
             Confess
+          </Link>
+          <Link
+            href="/spill/create"
+            className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+          >
+            Write Spill
           </Link>
           <Link
             href="/create"
@@ -92,7 +101,8 @@ export default function Home() {
 
           <p className="text-sm md:text-base text-black/35 max-w-md mx-auto mb-10 font-medium leading-relaxed">
             Create a board, share the link, and let anonymous confessions pour
-            in. No accounts. No trace. Just truth.
+            in. Or write a Deep Spill — full-length anonymous stories with
+            chapters and cover art.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -112,6 +122,12 @@ export default function Home() {
               className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-black/8 text-[11px] text-black/50 font-bold uppercase tracking-widest rounded-xl hover:bg-black/[0.02] hover:text-black transition-all"
             >
               🫖 Just Confess
+            </Link>
+            <Link
+              href="/spill/create"
+              className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-black/8 text-[11px] text-black/50 font-bold uppercase tracking-widest rounded-xl hover:bg-black/[0.02] hover:text-black transition-all"
+            >
+              <Flame size={14} /> Write a Spill
             </Link>
           </div>
         </div>
@@ -146,9 +162,11 @@ export default function Home() {
               </p>
             </div>
             <div className="p-6 text-center">
-              <p className="text-3xl font-black serif text-black">100%</p>
+              <p className="text-3xl font-black serif text-black">
+                {recentSpills?.length ?? "—"}
+              </p>
               <p className="text-[9px] font-bold uppercase tracking-widest text-black/20 mt-1">
-                Anonymous
+                Deep Spills
               </p>
             </div>
           </div>
@@ -296,6 +314,139 @@ export default function Home() {
         </section>
       )}
 
+      {/* ── RECENT DEEP SPILLS ── */}
+      {recentSpills && recentSpills.length > 0 && (
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto">
+            <div
+              ref={addRef}
+              className="opacity-0 translate-y-6 transition-all duration-700 [&.revealed-scroll]:opacity-100 [&.revealed-scroll]:translate-y-0 flex items-center justify-between mb-8"
+            >
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mb-1">
+                  Stories
+                </p>
+                <h2 className="text-2xl font-black serif">Deep Spills</h2>
+              </div>
+              <Link
+                href="/explore"
+                className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black transition-colors"
+              >
+                View all →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {recentSpills.slice(0, 3).map((spill, i) => {
+                const spillTheme =
+                  THEMES.find((t) => t.key === spill.coverTheme) || THEMES[0];
+                return (
+                  <motion.div
+                    key={spill._id}
+                    initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{
+                      delay: i * 0.12,
+                      duration: 0.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  >
+                    <Link
+                      href={`/b/${spill.boardSlug}/s/${spill._id}`}
+                      className="group block"
+                    >
+                      <div className="bg-white border border-black/5 rounded-2xl p-4 hover:shadow-lg hover:shadow-black/5 transition-all">
+                        <div
+                          className="relative mx-auto aspect-[3/4] rounded-xl overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-1deg]"
+                          style={{
+                            background: spill.aiImageUrl
+                              ? `url(${spill.aiImageUrl}) center/cover`
+                              : spillTheme.bg,
+                          }}
+                        >
+                          <div
+                            className={`absolute inset-0 flex flex-col justify-between p-5 text-center ${
+                              spill.aiImageUrl ? "bg-black/35" : ""
+                            }`}
+                          >
+                            <span
+                              className="text-[8px] font-black uppercase tracking-[0.3em]"
+                              style={{
+                                color: spill.aiImageUrl
+                                  ? "#fff"
+                                  : spillTheme.accent,
+                              }}
+                            >
+                              Deep Spill
+                            </span>
+                            <div>
+                              {!spill.aiImageUrl && (
+                                <div className="text-3xl mb-2">
+                                  {spill.coverEmoji}
+                                </div>
+                              )}
+                              <h3
+                                className="serif text-lg font-black leading-tight"
+                                style={{
+                                  color: spill.aiImageUrl
+                                    ? "#fff"
+                                    : spillTheme.text,
+                                }}
+                              >
+                                {spill.title}
+                              </h3>
+                            </div>
+                            <span
+                              className="text-[8px] uppercase tracking-[0.15em] font-medium opacity-50"
+                              style={{
+                                color: spill.aiImageUrl
+                                  ? "#fff"
+                                  : spillTheme.text,
+                              }}
+                            >
+                              {spill.displayName}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between px-1">
+                          <div className="flex flex-col">
+                            <p className="text-[9px] font-bold text-black/20 uppercase tracking-wider">
+                              {(spill.views ?? 0).toLocaleString()} reads
+                            </p>
+                            {spill.totalReactions > 0 && (
+                              <p className="text-[9px] font-bold text-orange-500/40 uppercase tracking-wider mt-0.5">
+                                {spill.totalReactions} reactions 🔥
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-[9px] font-bold text-black/15 group-hover:text-accent uppercase tracking-widest transition-colors">
+                            Read →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {recentSpills.length > 3 && (
+              <Link
+                href="/explore"
+                className="flex items-center justify-center gap-2 mt-4 py-4 bg-white border border-black/5 rounded-xl text-[11px] font-bold text-black/25 hover:text-black hover:border-black/15 transition-all group"
+              >
+                <span>+{recentSpills.length - 3} more stories</span>
+                <ArrowRight
+                  size={12}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* ── CTA ── */}
       <section className="py-24 px-4 sm:px-6">
         <div
@@ -308,7 +459,7 @@ export default function Home() {
               Ready to spill?
             </h2>
             <p className="text-xs text-black/30 font-medium mb-6">
-              Create a board in seconds. Share the link. Let the tea flow.
+              Create a board, write a Deep Spill, or just confess anonymously.
             </p>
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center">
               <Link
@@ -316,6 +467,12 @@ export default function Home() {
                 className="px-8 py-3.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all"
               >
                 Start My Board
+              </Link>
+              <Link
+                href="/spill/create"
+                className="px-8 py-3.5 border border-black/8 text-[10px] text-black/40 font-bold uppercase tracking-widest rounded-xl hover:text-black hover:border-black/15 transition-all"
+              >
+                Write a Spill
               </Link>
               <Link
                 href="/confess"
@@ -347,6 +504,12 @@ export default function Home() {
               className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
             >
               Confess
+            </Link>
+            <Link
+              href="/spill/create"
+              className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
+            >
+              Write Spill
             </Link>
             <Link
               href="/create"

@@ -202,3 +202,47 @@ export const countByBoard = query({
     return confessions.length;
   },
 });
+
+// ─── Confession / Teaa of the Day ───
+export const confessionOfTheDay = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get recent public confessions (last 100)
+    const confessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .filter((q) => q.eq(q.field("isGlobal"), true))
+      .take(100);
+
+    if (confessions.length === 0) return null;
+
+    // Score each confession by reactions + views
+    const scored = await Promise.all(
+      confessions.map(async (c) => {
+        const reactions = await ctx.db
+          .query("reactions")
+          .withIndex("by_confessionId", (q) => q.eq("confessionId", c._id))
+          .collect();
+        const board = await ctx.db.get(c.boardId);
+        return {
+          ...c,
+          score: reactions.length + (c.views ?? 0),
+          reactionCount: reactions.length,
+          boardName: board?.name ?? "",
+          boardSlug: board?.slug ?? "",
+        };
+      }),
+    );
+
+    // Sort by score descending, take top 10
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, Math.max(10, scored.length));
+
+    // Deterministic daily pick: day number mod top length
+    const daySeed = Math.floor(Date.now() / 86400000);
+    const pick = top[daySeed % top.length];
+
+    return pick;
+  },
+});

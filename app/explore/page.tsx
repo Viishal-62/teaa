@@ -7,6 +7,7 @@ import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
 import { Home, ArrowRight } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
+import { THEMES } from "@/convex/helpers";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -34,6 +35,9 @@ export default function ExplorePage() {
     category: selectedCategory === "all" ? undefined : selectedCategory,
   });
   const publicBoards = useQuery(api.boards.listPublicWithCounts);
+  const allSpills = useQuery(api.spills.listAll);
+  const teaaOfDay = useQuery(api.confessions.confessionOfTheDay);
+  const spillOfDay = useQuery(api.spills.spillOfTheDay);
 
   useEffect(() => {
     if (globalFeed) {
@@ -114,6 +118,12 @@ export default function ExplorePage() {
           className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
         >
           Add confession
+        </Link>
+        <Link
+          href="/spill/create"
+          className="text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
+        >
+          Write a spill
         </Link>
       </header>
 
@@ -271,6 +281,235 @@ export default function ExplorePage() {
           </div>
         </div>
 
+        {/* ── Daily Highlights ── */}
+        {(teaaOfDay || spillOfDay) && (
+          <section className="px-4 mb-16">
+            <div className="max-w-4xl mx-auto space-y-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Teaa of the Day */}
+                {teaaOfDay && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
+                        ☕ Teaa of the Day
+                      </h2>
+                    </div>
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/10 to-rose-500/10 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                      <div className="relative">
+                        <ConfessionFlipCard confession={teaaOfDay} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Spill of the Day */}
+                {spillOfDay && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-1">
+                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
+                        🔥 Spill of the Day
+                      </h2>
+                    </div>
+                    <Link
+                      href={`/b/${spillOfDay.boardSlug}/s/${spillOfDay._id}`}
+                      className="group block relative"
+                    >
+                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-rose-500/20 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                      <article className="relative rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex gap-6">
+                          <div
+                            className="w-24 aspect-[3/4] rounded-xl overflow-hidden shadow-lg flex-shrink-0"
+                            style={{
+                              background: spillOfDay.aiImageUrl
+                                ? `url(${spillOfDay.aiImageUrl}) center/cover`
+                                : THEMES.find(
+                                    (t) => t.key === spillOfDay.coverTheme,
+                                  )?.bg || "#f5f5f5",
+                            }}
+                          >
+                            <div
+                              className={`size-full flex flex-col items-center justify-center p-2 text-center ${spillOfDay.aiImageUrl ? "bg-black/40" : ""}`}
+                            >
+                              {!spillOfDay.aiImageUrl && (
+                                <div className="text-2xl mb-1">
+                                  {spillOfDay.coverEmoji}
+                                </div>
+                              )}
+                              <div className="w-4 h-px bg-white/30" />
+                            </div>
+                          </div>
+                          <div className="flex-1 flex flex-col justify-center">
+                            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-black/20 mb-2">
+                              Deep Spill
+                            </span>
+                            <h3 className="serif text-xl font-black leading-tight text-black mb-3 group-hover:text-orange-600 transition-colors">
+                              {spillOfDay.title}
+                            </h3>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-bold text-black/40">
+                                {spillOfDay.displayName}
+                              </span>
+                              <span className="text-black/10">·</span>
+                              <span className="text-[10px] text-black/20 font-bold uppercase tracking-wider">
+                                {spillOfDay.totalReactions} 🔥
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── All Deep Spills Section (Ranked) ── */}
+        {allSpills && allSpills.length > 0 && (
+          <section className="px-4 pb-8">
+            <div className="border-t border-black/5 pt-8">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-lg">
+                    🔥
+                  </div>
+                  <div>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
+                      Global Ranking
+                    </h2>
+                    <h3 className="serif text-2xl font-black text-black">
+                      Top Stories
+                    </h3>
+                  </div>
+                </div>
+                <span className="text-[10px] text-black/15 font-medium">
+                  {allSpills.length}{" "}
+                  {allSpills.length === 1 ? "story" : "stories"} active
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...allSpills]
+                  .sort((a, b) => {
+                    const scoreA = (a.totalReactions || 0) * 2 + (a.views || 0);
+                    const scoreB = (b.totalReactions || 0) * 2 + (b.views || 0);
+                    return scoreB - scoreA;
+                  })
+                  .map((spill, idx) => {
+                    const spillTheme =
+                      THEMES.find((t) => t.key === spill.coverTheme) ||
+                      THEMES[0];
+                    const isTop3 = idx < 3;
+                    const rankColors = [
+                      "from-amber-400 to-amber-600 shadow-amber-500/20", // 1st: Gold
+                      "from-slate-300 to-slate-500 shadow-slate-400/20", // 2nd: Silver
+                      "from-orange-400 to-orange-700 shadow-orange-600/20", // 3rd: Bronze
+                    ];
+
+                    return (
+                      <Link
+                        key={spill._id}
+                        href={`/b/${spill.boardSlug}/s/${spill._id}`}
+                        className="group block relative"
+                      >
+                        {/* Rank Badge */}
+                        <div
+                          className={`
+                          absolute -top-3 -left-1 w-9 h-9 rounded-2xl flex items-center justify-center text-[12px] font-black text-white shadow-lg z-20 transition-transform group-hover:scale-110
+                          ${isTop3 ? `bg-gradient-to-br ${rankColors[idx]}` : "bg-black text-white/50"}
+                        `}
+                        >
+                          {idx === 0
+                            ? "🥇"
+                            : idx === 1
+                              ? "🥈"
+                              : idx === 2
+                                ? "🥉"
+                                : `#${idx + 1}`}
+                        </div>
+
+                        <article className="rounded-[2rem] border border-black/5 bg-white p-5 transition-all hover:shadow-2xl hover:shadow-black/5 group-hover:-translate-y-1">
+                          <div
+                            className="relative mx-auto aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-inner"
+                            style={{
+                              background: spill.aiImageUrl
+                                ? `url(${spill.aiImageUrl}) center/cover`
+                                : spillTheme.bg,
+                            }}
+                          >
+                            <div
+                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${
+                                spill.aiImageUrl ? "bg-black/35" : ""
+                              }`}
+                            >
+                              <span
+                                className="text-[8px] font-black uppercase tracking-[0.3em]"
+                                style={{
+                                  color: spill.aiImageUrl
+                                    ? "#fff"
+                                    : spillTheme.accent,
+                                }}
+                              >
+                                Deep Spill
+                              </span>
+                              <div>
+                                {!spill.aiImageUrl && (
+                                  <div className="text-3xl mb-2">
+                                    {spill.coverEmoji}
+                                  </div>
+                                )}
+                                <h3
+                                  className="serif text-lg font-black leading-tight"
+                                  style={{
+                                    color: spill.aiImageUrl
+                                      ? "#fff"
+                                      : spillTheme.text,
+                                  }}
+                                >
+                                  {spill.title}
+                                </h3>
+                              </div>
+                              <span
+                                className="text-[8px] uppercase tracking-[0.15em] font-medium opacity-50"
+                                style={{
+                                  color: spill.aiImageUrl
+                                    ? "#fff"
+                                    : spillTheme.text,
+                                }}
+                              >
+                                Read Now
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-3 px-1 flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] font-bold text-black/25 uppercase tracking-wider">
+                                {spill.displayName}
+                              </p>
+                              <p className="text-[10px] text-black/15 mt-0.5">
+                                {(spill.views ?? 0).toLocaleString()} reads
+                              </p>
+                            </div>
+                            {spill.totalReactions > 0 && (
+                              <div className="flex items-center gap-1 bg-orange-500/5 px-2 py-1 rounded-lg">
+                                <span className="text-[10px] font-black text-orange-600/60 tabular-nums">
+                                  {spill.totalReactions}
+                                </span>
+                                <span className="text-[10px]">🔥</span>
+                              </div>
+                            )}
+                          </div>
+                        </article>
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── Boards / Links Section ── */}
         {publicBoards && publicBoards.length > 0 && (
           <section className="px-4 pb-16">
@@ -313,10 +552,12 @@ export default function ExplorePage() {
                     <div className="flex items-center gap-3 flex-shrink-0">
                       <div className="text-right">
                         <span className="text-lg font-black text-black/70 block leading-none">
-                          {board.confessionCount}
+                          {board.confessionCount + (board.spillCount ?? 0)}
                         </span>
                         <span className="text-[8px] font-bold uppercase tracking-wider text-black/20">
-                          confessions
+                          {board.spillCount > 0
+                            ? `${board.confessionCount} confessions · ${board.spillCount} spills`
+                            : "confessions"}
                         </span>
                       </div>
                       <ArrowRight

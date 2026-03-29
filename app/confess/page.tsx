@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronDown } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const CATEGORIES = [
@@ -111,6 +111,13 @@ export default function GlobalConfessPage() {
                 Drop Another One
               </button>
               <Link
+                href="/spill/create"
+                className="w-full py-3.5 bg-rose-50 text-rose-900 border border-rose-200/60 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-rose-100 transition-colors flex items-center justify-center gap-2"
+              >
+                <BookOpen size={12} />
+                Write Long Gossip
+              </Link>
+              <Link
                 href="/explore"
                 className="w-full py-3.5 text-[10px] text-black/30 font-bold uppercase tracking-widest hover:text-black transition-colors block"
               >
@@ -149,6 +156,13 @@ export default function GlobalConfessPage() {
           <p className="text-[11px] text-black/30 font-medium tracking-wide">
             No names. No judgment. Just the raw truth.
           </p>
+          <Link
+            href="/spill/create"
+            className="inline-flex items-center gap-2 px-4 py-2 mt-4 bg-rose-50 text-rose-900 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-rose-200/50 hover:bg-rose-100 transition-colors"
+          >
+            <BookOpen size={12} />
+            Or write a Long Gossip book
+          </Link>
         </div>
 
         {/* Form card */}
@@ -168,8 +182,12 @@ export default function GlobalConfessPage() {
             <div className="relative">
               <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             </div>
-            <span className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/15"}`}>
-              {wordCount > 500 ? `-${wordCount - 500} words` : `${500 - wordCount} words left`}
+            <span
+              className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/15"}`}
+            >
+              {wordCount > 500
+                ? `-${wordCount - 500} words`
+                : `${500 - wordCount} words left`}
             </span>
           </div>
 
@@ -339,7 +357,9 @@ export default function GlobalConfessPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!text.trim() || !category || isSubmitting || wordCount > 500}
+          disabled={
+            !text.trim() || !category || isSubmitting || wordCount > 500
+          }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
           {isSubmitting ? (

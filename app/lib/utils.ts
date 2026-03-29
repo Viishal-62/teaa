@@ -62,15 +62,17 @@ export const REACTION_INFO: Record<string, { label: string; emoji: string }> = {
   "spicy-tea": { label: "Spicy tea", emoji: "🌶️" },
   "sending-love": { label: "Sending love", emoji: "❤️" },
   "crying-with-you": { label: "Crying with you", emoji: "😭" },
-  "shook": { label: "Shook", emoji: "😳" },
-  "laughing": { label: "Laughing", emoji: "😂" },
+  shook: { label: "Shook", emoji: "😳" },
+  laughing: { label: "Laughing", emoji: "😂" },
   "me-too": { label: "Me too", emoji: "🤝" }, // used independently but good to have here
 };
 
 export const SHARE_PROMPTS = [
-  { id: "spill", text: "Spill some tea on me anonymously... ☕ Ask me anything:" },
+  {
+    id: "spill",
+    text: "Spill some tea on me anonymously... ☕ Ask me anything:",
+  },
   { id: "confess", text: "Confess a secret you wouldn't tell me in person:" },
   { id: "roast", text: "Roast me or compliment me... your choice:" },
   { id: "crush", text: "Who's your crush? Tell me anonymously:" },
 ];
-

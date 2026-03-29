@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO } from "@/app/lib/utils";
@@ -25,7 +25,6 @@ const CATEGORIES = [
 
 export default function ConfessPage() {
   const params = useParams();
-  const router = useRouter();
   const slug = params.slug as string;
 
   const board = useQuery(api.boards.getBySlug, { slug });
@@ -183,6 +182,12 @@ export default function ConfessPage() {
                 Drop Another One
               </button>
               <Link
+                href={`/b/${slug}/spill`}
+                className="w-full py-3.5 bg-rose-50 text-rose-900 border border-rose-200/60 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-rose-100 transition-colors block"
+              >
+                Write Long Gossip
+              </Link>
+              <Link
                 href={`/b/${slug}`}
                 className="w-full py-3.5 text-[10px] text-black/30 font-bold uppercase tracking-widest hover:text-black transition-colors block"
               >
@@ -223,11 +228,11 @@ export default function ConfessPage() {
             No names. No judgment. Just the raw truth.
           </p>
           <Link
-            href={`/b/${slug}/spill/create`}
+            href={`/b/${slug}/spill`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-900 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-rose-200/50 hover:bg-rose-100 transition-colors"
           >
             <BookOpen size={12} />
-            Or write a Deep Spill book
+            Or open Long Gossip books
           </Link>
         </div>
 
@@ -248,8 +253,12 @@ export default function ConfessPage() {
             <div className="relative">
               <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             </div>
-            <span className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/25"}`}>
-              {wordCount > 500 ? `-${wordCount - 500} words` : `${500 - wordCount} words left`}
+            <span
+              className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/25"}`}
+            >
+              {wordCount > 500
+                ? `-${wordCount - 500} words`
+                : `${500 - wordCount} words left`}
             </span>
           </div>
 
@@ -321,7 +330,9 @@ export default function ConfessPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!text.trim() || !category || isSubmitting || wordCount > 500}
+          disabled={
+            !text.trim() || !category || isSubmitting || wordCount > 500
+          }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
@@ -341,14 +352,14 @@ export default function ConfessPage() {
             Got a longer story?
           </h2>
           <p className="text-[10px] text-black/40 mb-4 max-w-[220px] mx-auto leading-relaxed">
-            Create a multi-chapter "Deep Spill" with a customized cover instead.
+            Create a multi-chapter Long Gossip book with a custom cover.
           </p>
           <Link
-            href={`/b/${slug}/spill/create`}
+            href={`/b/${slug}/spill`}
             className="inline-flex items-center gap-2 px-6 py-3 border border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5 transition-all text-black active:scale-[0.98]"
           >
             <BookOpen size={14} />
-            Write a Deep Spill
+            Long Gossip Shelf
           </Link>
         </div>
       </main>
