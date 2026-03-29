@@ -54,10 +54,23 @@ export const CATEGORY_INFO: Record<
   "deep-dark": { label: "Deep Dark", color: "#2c3e50", emoji: "🕳️" },
 };
 
-// Reaction display info
 export const REACTION_INFO: Record<string, { label: string; emoji: string }> = {
   "holding-you": { label: "Holding you", emoji: "🤝" },
   "feels-heavy": { label: "Feels heavy", emoji: "🫂" },
   "youll-be-ok": { label: "You'll be ok", emoji: "🌸" },
   "no-it-burns": { label: "No it burns", emoji: "🔥" },
+  "spicy-tea": { label: "Spicy tea", emoji: "🌶️" },
+  "sending-love": { label: "Sending love", emoji: "❤️" },
+  "crying-with-you": { label: "Crying with you", emoji: "😭" },
+  "shook": { label: "Shook", emoji: "😳" },
+  "laughing": { label: "Laughing", emoji: "😂" },
+  "me-too": { label: "Me too", emoji: "🤝" }, // used independently but good to have here
 };
+
+export const SHARE_PROMPTS = [
+  { id: "spill", text: "Spill some tea on me anonymously... ☕ Ask me anything:" },
+  { id: "confess", text: "Confess a secret you wouldn't tell me in person:" },
+  { id: "roast", text: "Roast me or compliment me... your choice:" },
+  { id: "crush", text: "Who's your crush? Tell me anonymously:" },
+];
+

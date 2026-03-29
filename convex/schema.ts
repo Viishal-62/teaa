@@ -13,6 +13,8 @@ export default defineSchema({
     visibility: v.string(), // "public" | "private"
     pin: v.optional(v.string()), // 4-6 digit PIN for private boards
     creatorToken: v.string(), // random token stored in creator's localStorage
+    allowedReactions: v.optional(v.array(v.string())), // Chosen 4 custom reactions
+    sharePrompt: v.optional(v.string()), // Custom viral share text
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
@@ -55,4 +57,41 @@ export default defineSchema({
   })
     .index("by_confessionId", ["confessionId"])
     .index("by_createdAt", ["createdAt"]),
+
+  // ─── Spills (Deep Gossip Books) ───
+  spills: defineTable({
+    boardId: v.id("boards"),
+    title: v.string(),
+    coverTheme: v.string(), // key from THEMES
+    coverEmoji: v.string(),
+    aiImageUrl: v.optional(v.string()), // OpenRouter generated cover
+    generationsUsed: v.number(), // Limit strictly to 10
+    displayName: v.string(), // Authored pseudo name
+    views: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_boardId", ["boardId"])
+    .index("by_createdAt", ["createdAt"]),
+
+  // ─── Spill Chapters ───
+  chapters: defineTable({
+    spillId: v.id("spills"),
+    chapterNumber: v.number(), // 1, 2, 3...
+    title: v.optional(v.string()),
+    text: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_spillId", ["spillId"])
+    .index("by_spillId_chapterNumber", ["spillId", "chapterNumber"]),
+
+  // ─── Spill Reactions ───
+  spillReactions: defineTable({
+    spillId: v.id("spills"),
+    type: v.string(),
+    visitorId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_spillId", ["spillId"])
+    .index("by_spillId_type", ["spillId", "type"])
+    .index("by_spillId_visitorId", ["spillId", "visitorId"]),
 });

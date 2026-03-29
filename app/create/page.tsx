@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { getCreatorToken } from "@/app/lib/utils";
+import { getCreatorToken, REACTION_INFO, SHARE_PROMPTS } from "@/app/lib/utils";
 import { ArrowRight, Check, Copy, Home, Lock } from "lucide-react";
 import Link from "next/link";
 
@@ -63,16 +63,23 @@ export default function CreateBoard() {
   const [isPublic, setIsPublic] = useState(true);
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedSlug, setSelectedSlug] = useState("");
+  const [allowedReactions, setAllowedReactions] = useState<string[]>(["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"]);
+  const [sharePrompt, setSharePrompt] = useState(SHARE_PROMPTS[0].id);
   const [result, setResult] = useState<{ slug: string; pin?: string } | null>(
     null,
   );
   const [copied, setCopied] = useState(false);
 
+  const suggestedSlugs = useQuery(api.boards.suggestSlugs, { name: name.trim() }) || [];
+  const isNameAvailable = useQuery(api.boards.checkName, { name: name.trim() });
+
+
   const selectedTheme = THEMES.find((t) => t.key === theme)!;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -84,6 +91,9 @@ export default function CreateBoard() {
         visibility: isPublic ? "public" : "private",
         pin: !isPublic ? pin : undefined,
         creatorToken,
+        slug: selectedSlug || undefined,
+        allowedReactions,
+        sharePrompt,
       });
       setResult({ slug: res.slug, pin: !isPublic ? pin : undefined });
     } catch (error) {
@@ -96,7 +106,10 @@ export default function CreateBoard() {
   const copyLink = () => {
     if (!result) return;
     const url = `${window.location.origin}/b/${result.slug}`;
-    navigator.clipboard.writeText(url);
+    const selectedPrompt = SHARE_PROMPTS.find(p => p.id === sharePrompt)?.text || "";
+    const textToCopy = selectedPrompt ? `${selectedPrompt} ${url}` : url;
+    navigator.clipboard.writeText(textToCopy);
+
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -140,7 +153,7 @@ export default function CreateBoard() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
-                    <Copy size={11} /> Copy
+                    <Copy size={11} /> Copy Share
                   </span>
                 )}
               </button>
@@ -179,6 +192,7 @@ export default function CreateBoard() {
                   setResult(null);
                   setName("");
                   setTagline("");
+                  setSelectedSlug("");
                 }}
                 className="py-3 text-[10px] text-black/30 font-bold uppercase tracking-widest hover:text-black transition-colors"
               >
@@ -242,11 +256,47 @@ export default function CreateBoard() {
                 required
                 autoFocus
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (selectedSlug) setSelectedSlug("");
+                }}
                 placeholder="e.g. Midnight Whispers"
-                className="w-full text-sm font-semibold bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15"
+                className={`w-full text-sm font-semibold bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all placeholder:text-black/15 ${
+                  name.trim().length > 0 && isNameAvailable === false
+                    ? "border-red-300 focus:ring-2 focus:ring-red-100"
+                    : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                }`}
               />
+              {name.trim().length > 0 && isNameAvailable === false && (
+                <p className="text-[10px] text-red-500 font-bold mt-2 ml-1">
+                  This board name is already taken. Try adding some flair!
+                </p>
+              )}
             </div>
+            {/* Slug Suggestions */}
+            {name.trim().length > 2 && suggestedSlugs.length > 0 && (
+              <div className="mt-[-12px]">
+                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                  Pick a catchy link (optional)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedSlugs.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSelectedSlug(s)}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        selectedSlug === s
+                          ? "bg-black text-white"
+                          : "bg-black/5 text-black/50 hover:bg-black/10 hover:text-black"
+                      }`}
+                    >
+                      teaaa.app/b/{s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Tagline */}
             <div>
@@ -260,6 +310,73 @@ export default function CreateBoard() {
                 placeholder="e.g. Tell me anything, stay anonymous..."
                 className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15 italic"
               />
+            </div>
+
+            {/* Custom Reactions */}
+            <div>
+              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                Choose 4 Reactions for your board
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(REACTION_INFO).filter(([k]) => k !== "me-too").map(([k, v]) => {
+                  const isSelected = allowedReactions.includes(k);
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setAllowedReactions(allowedReactions.filter(r => r !== k));
+                        } else if (allowedReactions.length < 4) {
+                          setAllowedReactions([...allowedReactions, k]);
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all ${
+                        isSelected
+                          ? "bg-green-100 text-green-900 border border-green-200"
+                          : "bg-white border border-black/10 text-black/50 hover:border-black/20"
+                      } ${!isSelected && allowedReactions.length >= 4 ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <span>{v.emoji}</span>
+                      <span className="font-semibold text-[10px]">{v.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[9px] text-black/30 font-medium mt-1.5">
+                {allowedReactions.length === 4 ? "✅ 4/4 selected" : `${allowedReactions.length}/4 selected (Must select exactly 4)`}
+              </p>
+            </div>
+
+            {/* Share Prompt */}
+            <div>
+              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                Social Media sharing text
+              </label>
+              <div className="space-y-2">
+                {SHARE_PROMPTS.map((p) => (
+                  <label
+                    key={p.id}
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      sharePrompt === p.id
+                        ? "bg-black/5 border-black/20"
+                        : "bg-white border-black/5 hover:border-black/15"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="sharePrompt"
+                      value={p.id}
+                      checked={sharePrompt === p.id}
+                      onChange={() => setSharePrompt(p.id)}
+                      className="mt-1"
+                    />
+                    <span className="text-[11px] font-medium text-black/70 leading-relaxed">
+                      {p.text}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Theme selector */}
@@ -345,11 +462,9 @@ export default function CreateBoard() {
           <div className="px-6 pb-6">
             <button
               type="submit"
-              disabled={
-                !name.trim() || (!isPublic && pin.length < 4) || isSubmitting
-              }
+              disabled={!name.trim() || isSubmitting || isNameAvailable === false || (!isPublic && pin.length < 4)}
               onClick={handleSubmit}
-              className="w-full py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-black/90 transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />

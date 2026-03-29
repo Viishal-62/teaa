@@ -15,8 +15,9 @@ export const create = mutation({
     if (args.text.trim().length === 0) {
       throw new Error("Confession text cannot be empty");
     }
-    if (args.text.length > 500) {
-      throw new Error("Confession text cannot exceed 500 characters");
+    const wordCount = args.text.trim().split(/\s+/).length;
+    if (wordCount > 500) {
+      throw new Error("Confession text cannot exceed 500 words");
     }
 
     const displayName = generateAnonName();

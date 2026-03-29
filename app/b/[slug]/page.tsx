@@ -3,11 +3,12 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Home, Plus, Lock, Share2, Check, Link as LinkIcon } from "lucide-react";
-import { CATEGORY_INFO, getCreatorToken } from "@/app/lib/utils";
+import { Home, Plus, Lock, Share2, Check, Link as LinkIcon, Bell, BookOpen } from "lucide-react";
+import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
+import DeepSpillCard from "@/app/components/DeepSpillCard";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -36,6 +37,8 @@ export default function BoardViewPage() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
+  const [showToast, setShowToast] = useState(false);
+  const prevConfessionsLength = useRef(0);
 
   const board = useQuery(api.boards.getBySlug, { slug });
 
@@ -63,27 +66,69 @@ export default function BoardViewPage() {
     api.confessions.listByBoard,
     board && !isLocked
       ? {
-          boardId: board._id,
-          category: selectedCategory,
-          pin: pinToVerify,
-          creatorToken,
-        }
+        boardId: board._id,
+        category: selectedCategory,
+        pin: pinToVerify,
+        creatorToken,
+      }
       : "skip",
   );
 
+  const spills = useQuery(
+    api.spills.listByBoard,
+    board && !isLocked ? { boardId: board._id } : "skip",
+  );
+
+  const mixedItems = useMemo(() => {
+    if (!confessions) return undefined;
+    const items: any[] = [...confessions];
+
+    // Mix in spills cleanly
+    if (spills && spills.length > 0) {
+      if (selectedCategory === "all") {
+        items.splice(Math.min(2, items.length), 0, { ...spills[0], _type: "spill" });
+        if (spills.length > 1) {
+          items.splice(Math.min(6, items.length), 0, { ...spills[1], _type: "spill" });
+        }
+      }
+    }
+    return items;
+  }, [confessions, spills, selectedCategory]);
+
   // Start in the middle so cards are balanced on both sides
   useEffect(() => {
-    if (confessions) {
-      setActiveIndex(Math.floor(confessions.length / 2));
+    if (mixedItems) {
+      if (prevConfessionsLength.current !== 0 && mixedItems.length > prevConfessionsLength.current) {
+        // Play pop sound
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } catch (e) { }
+
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3500);
+      }
+      prevConfessionsLength.current = mixedItems.length;
+      setActiveIndex(Math.floor(mixedItems.length / 2));
     }
-  }, [selectedCategory, confessions?.length]);
+  }, [selectedCategory, mixedItems?.length]);
 
   const scrollToCard = useCallback(
     (index: number) => {
-      if (!confessions || index < 0 || index >= confessions.length) return;
+      if (!mixedItems || index < 0 || index >= mixedItems.length) return;
       setActiveIndex(index);
     },
-    [confessions],
+    [mixedItems],
   );
 
   // Keyboard nav
@@ -197,11 +242,10 @@ export default function BoardViewPage() {
                 setPinError(false);
               }}
               placeholder="Enter PIN"
-              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${
-                pinError
-                  ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
-                  : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-              }`}
+              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${pinError
+                ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
+                : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handlePinSubmit();
               }}
@@ -218,16 +262,29 @@ export default function BoardViewPage() {
               type="button"
               onClick={handlePinSubmit}
               disabled={pinInput.length < 4}
-              className="w-full py-3.5 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-black/90 transition-all active:scale-[0.98] disabled:opacity-15"
+              className="w-full py-3.5 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-black/90 transition-all active:scale-[0.98] disabled:opacity-15 mb-4"
             >
-              Unlock
+              Unlock Board
             </button>
+
+            <div className="relative flex items-center gap-4 py-2">
+              <div className="flex-1 h-px bg-black/5" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/20">or</span>
+              <div className="flex-1 h-px bg-black/5" />
+            </div>
+
+            <Link
+              href={`/b/${slug}/confess`}
+              className="mt-4 w-full flex items-center justify-center py-3.5 border border-black/10 text-black rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-black/5 transition-all active:scale-[0.98]"
+            >
+              Drop a Confession
+            </Link>
 
             <Link
               href="/"
               className="block mt-4 text-[10px] text-black/20 font-bold uppercase tracking-widest hover:text-black transition-colors"
             >
-              Go Home
+              Back to Home
             </Link>
           </div>
         </div>
@@ -253,11 +310,14 @@ export default function BoardViewPage() {
             type="button"
             onClick={async () => {
               const url = `${window.location.origin}/b/${slug}`;
+              const viralPrompt = board.sharePrompt ? SHARE_PROMPTS.find(p => p.id === board.sharePrompt)?.text : null;
               const shareData = {
                 title: `${board.name} — Teaaa 🫖`,
-                text: board.tagline
-                  ? `"${board.tagline}" — Spill your confessions anonymously!`
-                  : `Check out this confession board and spill your secrets!`,
+                text: viralPrompt
+                  ? `${viralPrompt} ${url}`
+                  : board.tagline
+                    ? `"${board.tagline}" — Spill your confessions anonymously! ${url}`
+                    : `Check out this confession board and spill your secrets! ${url}`,
                 url,
               };
               if (navigator.share) {
@@ -312,34 +372,43 @@ export default function BoardViewPage() {
 
         {/* Carousel */}
         <div className="relative px-4 pb-4">
-          {confessions === undefined ? (
-            <div className="flex justify-center py-24">
-              <div className="w-8 h-8 border-3 border-black/5 border-t-black/40 rounded-full animate-spin" />
+          {/* Carousel View */}
+          {!mixedItems ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
             </div>
-          ) : confessions.length === 0 ? (
+          ) : mixedItems.length === 0 ? (
             <div className="text-center py-16">
               <span className="text-4xl block mb-4">🤫</span>
               <p className="text-lg font-bold serif mb-1">No confessions yet</p>
               <p className="text-xs text-black/35 mb-6">
                 Be the first to spill the tea!
               </p>
-              <Link
-                href={`/b/${slug}/confess`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
-              >
-                <Plus size={14} />
-                Add Confession
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Link
+                  href={`/b/${slug}/confess`}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                >
+                  <Plus size={14} />
+                  Add Confession
+                </Link>
+                <Link
+                  href={`/b/${slug}/spill/create`}
+                  className="inline-flex items-center gap-2 px-6 py-3 border border-black/10 text-black rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black/5 hover:scale-105 transition-all"
+                >
+                  <BookOpen size={14} />
+                  Write a Deep Spill
+                </Link>
+              </div>
             </div>
           ) : (
             <>
               {/* Coverflow carousel */}
               <div
                 ref={carouselRef}
-                className="relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
-                style={{ height: "420px", perspective: "1200px" }}
+                className="relative h-[500px] flex items-center justify-center -mx-5 overflow-hidden"
               >
-                {confessions.map((confession, i) => {
+                {mixedItems.map((item, i) => {
                   const offset = i - activeIndex;
                   const absOffset = Math.abs(offset);
 
@@ -361,8 +430,8 @@ export default function BoardViewPage() {
 
                   return (
                     <div
-                      key={confession._id}
-                      className="absolute transition-all duration-500 ease-out"
+                      key={item._id}
+                      className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
                       style={{
                         width: "280px",
                         transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
@@ -378,10 +447,15 @@ export default function BoardViewPage() {
                           pointerEvents: absOffset === 0 ? "auto" : "none",
                         }}
                       >
-                        <ConfessionFlipCard
-                          confession={confession}
-                          boardSlug={slug}
-                        />
+                        {item._type === "spill" ? (
+                          <DeepSpillCard slug={slug} spill={item} />
+                        ) : (
+                          <ConfessionFlipCard
+                            confession={item}
+                            boardSlug={slug}
+                            boardReactions={board.allowedReactions}
+                          />
+                        )}
                       </div>
                       {absOffset !== 0 && (
                         <div
@@ -400,7 +474,7 @@ export default function BoardViewPage() {
               </p>
 
               {/* Arrow navigation */}
-              {confessions.length > 1 && (
+              {mixedItems.length > 1 && (
                 <div className="flex justify-center gap-4 mb-4">
                   <button
                     type="button"
@@ -411,12 +485,12 @@ export default function BoardViewPage() {
                     ←
                   </button>
                   <span className="text-[10px] font-mono text-black/20 self-center">
-                    {activeIndex + 1} / {confessions.length}
+                    {activeIndex + 1} / {mixedItems.length}
                   </span>
                   <button
                     type="button"
                     onClick={() => scrollToCard(activeIndex + 1)}
-                    disabled={activeIndex === confessions.length - 1}
+                    disabled={activeIndex === mixedItems.length - 1}
                     className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                   >
                     →
@@ -459,10 +533,10 @@ export default function BoardViewPage() {
 
         {/* "Got something to confess?" CTA Banner */}
         {confessions && confessions.length > 0 && (
-          <div className="px-4 pb-10">
+          <div className="px-4 pb-10 flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
             <Link
               href={`/b/${slug}/confess`}
-              className="block max-w-md mx-auto relative overflow-hidden rounded-2xl border border-black/5 hover:border-black/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              className="flex-1 block relative overflow-hidden rounded-2xl border border-black/5 hover:border-black/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-[#faf7f2] via-white to-[#f5f0e8]" />
               <div className="absolute top-3 right-3 w-16 h-16 rounded-full bg-black/[0.02]" />
@@ -472,9 +546,8 @@ export default function BoardViewPage() {
                 <h3 className="text-base font-black tracking-tight serif text-black mb-1">
                   Got something to confess?
                 </h3>
-                <p className="text-[11px] text-black/35 mb-4 max-w-[250px] leading-relaxed">
-                  Spill the tea anonymously. No sign up, no judgement — just you
-                  and the truth.
+                <p className="text-[11px] text-black/35 mb-4 leading-relaxed">
+                  Spill the tea anonymously. No sign up, no judgement.
                 </p>
                 <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">
                   <Plus size={12} />
@@ -482,18 +555,60 @@ export default function BoardViewPage() {
                 </span>
               </div>
             </Link>
+
+            <Link
+              href={`/b/${slug}/spill/create`}
+              className="flex-1 block relative overflow-hidden rounded-2xl border border-rose-900/10 hover:border-rose-900/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-rose-100/30" />
+              <div className="absolute top-3 right-3 w-16 h-16 rounded-full bg-rose-900/[0.02]" />
+              <div className="absolute bottom-2 left-2 w-10 h-10 rounded-full bg-rose-900/[0.02]" />
+              <div className="relative flex flex-col items-center text-center py-8 px-6">
+                <span className="text-3xl mb-3">📖</span>
+                <h3 className="text-base font-black tracking-tight serif text-rose-950 mb-1">
+                  Got a longer story?
+                </h3>
+                <p className="text-[11px] text-rose-950/40 mb-4 leading-relaxed">
+                  Write a multi-chapter Deep Spill with a custom cover.
+                </p>
+                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">
+                  <BookOpen size={12} />
+                  Write a Spill
+                </span>
+              </div>
+            </Link>
           </div>
         )}
       </main>
 
-      {/* Floating Add Button */}
-      {confessions && confessions.length > 0 && (
-        <Link
-          href={`/b/${slug}/confess`}
-          className="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-lg shadow-black/10 hover:scale-110 active:scale-95 transition-all z-50"
-        >
-          <Plus size={22} />
-        </Link>
+      {/* Floating Add Buttons */}
+      {confessions && (
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+          <Link
+            href={`/b/${slug}/spill/create`}
+            className="w-12 h-12 rounded-full bg-rose-900 border border-white/10 text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group"
+            title="Write a Deep Spill"
+          >
+            <BookOpen size={20} className="group-hover:-rotate-6 transition-transform" />
+          </Link>
+          <Link
+            href={`/b/${slug}/confess`}
+            className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
+            title="Drop a Confession"
+          >
+            <Plus size={22} />
+          </Link>
+        </div>
+      )}
+
+      {/* Real-time Toast */}
+      {showToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 bg-black text-white rounded-full shadow-xl shadow-black/20 flex items-center gap-3 z-50 animate-[slideUp_0.3s_ease-out]">
+          <Bell size={14} className="text-green-400 rotate-12" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-green-50">
+            Someone spilled new tea!
+          </span>
+        </div>
       )}
     </div>
   );

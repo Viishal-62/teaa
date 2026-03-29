@@ -21,11 +21,13 @@ interface ConfessionFlipCardProps {
     boardName?: string;
   };
   boardSlug: string;
+  boardReactions?: string[];
 }
 
 export default function ConfessionFlipCard({
   confession,
   boardSlug,
+  boardReactions,
 }: ConfessionFlipCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [hasViewed, setHasViewed] = useState(false);
@@ -61,6 +63,10 @@ export default function ConfessionFlipCard({
     }
     setIsFlipped(!isFlipped);
   };
+
+  const activeReactions = boardReactions && boardReactions.length > 0 
+    ? boardReactions 
+    : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
 
   return (
     <div className="perspective-1000 flip-card-container">
@@ -126,10 +132,16 @@ export default function ConfessionFlipCard({
             </div>
 
             {/* Confession text */}
-            <div className="flex-1 flex items-center justify-center px-2">
-              <p className="text-center serif text-sm leading-relaxed text-[#2a2a2a] line-clamp-6">
-                {confession.text}
-              </p>
+            <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative mb-3">
+              <div 
+                className="w-full h-full overflow-y-auto no-scrollbar px-3 py-2 text-center flex items-center"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+              >
+                <p className="w-full serif text-sm leading-relaxed text-[#2a2a2a] whitespace-pre-wrap my-auto">
+                  {confession.text}
+                </p>
+              </div>
             </div>
 
             {/* Interaction count */}
@@ -147,7 +159,9 @@ export default function ConfessionFlipCard({
 
             {/* Reactions row */}
             <div className="flex items-center justify-center gap-3 mb-3">
-              {Object.entries(REACTION_INFO).map(([type, info]) => {
+              {activeReactions.map((type) => {
+                const info = REACTION_INFO[type];
+                if (!info) return null;
                 const count = reactionCounts?.[type] ?? 0;
                 const isActive = visitorReactions?.includes(type);
                 return (

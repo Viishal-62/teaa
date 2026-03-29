@@ -9,11 +9,12 @@
  */
 
 import type * as boards from "../boards.js";
+import type * as chapters from "../chapters.js";
 import type * as comments from "../comments.js";
 import type * as confessions from "../confessions.js";
 import type * as helpers from "../helpers.js";
 import type * as reactions from "../reactions.js";
-import type * as seed from "../seed.js";
+import type * as spills from "../spills.js";
 
 import type {
   ApiFromModules,
@@ -23,11 +24,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   boards: typeof boards;
+  chapters: typeof chapters;
   comments: typeof comments;
   confessions: typeof confessions;
   helpers: typeof helpers;
   reactions: typeof reactions;
-  seed: typeof seed;
+  spills: typeof spills;
 }>;
 
 /**

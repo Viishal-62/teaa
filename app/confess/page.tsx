@@ -40,8 +40,10 @@ export default function GlobalConfessPage() {
 
   const selectedBoard = publicBoards?.find((b) => b._id === selectedBoardId);
 
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+
   const handleSubmit = async () => {
-    if (!text.trim() || !category) return;
+    if (!text.trim() || !category || wordCount > 500) return;
     setIsSubmitting(true);
     try {
       // If no board picked, use the global board
@@ -65,7 +67,8 @@ export default function GlobalConfessPage() {
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    if (text.length + emoji.length <= 500) {
+    const currentWords = text.trim() ? text.trim().split(/\s+/).length : 0;
+    if (currentWords <= 500) {
       setText((prev) => prev + emoji);
     }
   };
@@ -154,7 +157,7 @@ export default function GlobalConfessPage() {
           <div className="p-5 pb-0">
             <textarea
               value={text}
-              onChange={(e) => setText(e.target.value.slice(0, 500))}
+              onChange={(e) => setText(e.target.value)}
               placeholder="write what's been sitting inside you..."
               rows={5}
               autoFocus
@@ -165,8 +168,8 @@ export default function GlobalConfessPage() {
             <div className="relative">
               <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             </div>
-            <span className="text-[10px] font-mono text-black/15">
-              {500 - text.length} left
+            <span className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/15"}`}>
+              {wordCount > 500 ? `-${wordCount - 500} words` : `${500 - wordCount} words left`}
             </span>
           </div>
 
@@ -336,7 +339,7 @@ export default function GlobalConfessPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!text.trim() || !category || isSubmitting}
+          disabled={!text.trim() || !category || isSubmitting || wordCount > 500}
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
           {isSubmitting ? (

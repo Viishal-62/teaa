@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 
 const CATEGORIES = [
   "regret",
@@ -36,9 +36,10 @@ export default function ConfessPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isGlobal, setIsGlobal] = useState(true);
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   const handleSubmit = async () => {
-    if (!text.trim() || !category || !board) return;
+    if (!text.trim() || !category || !board || wordCount > 500) return;
     setIsSubmitting(true);
     try {
       await createConfession({
@@ -62,7 +63,8 @@ export default function ConfessPage() {
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    if (text.length + emoji.length <= 500) {
+    const currentWords = text.trim() ? text.trim().split(/\s+/).length : 0;
+    if (currentWords <= 500) {
       setText((prev) => prev + emoji);
     }
   };
@@ -217,9 +219,16 @@ export default function ConfessPage() {
           <h1 className="text-xl font-black serif tracking-tight text-black mb-1">
             Got something to say?
           </h1>
-          <p className="text-[11px] text-black/30 font-medium tracking-wide">
+          <p className="text-[11px] text-black/30 font-medium tracking-wide mb-4">
             No names. No judgment. Just the raw truth.
           </p>
+          <Link
+            href={`/b/${slug}/spill/create`}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-900 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-rose-200/50 hover:bg-rose-100 transition-colors"
+          >
+            <BookOpen size={12} />
+            Or write a Deep Spill book
+          </Link>
         </div>
 
         {/* Form card */}
@@ -228,7 +237,7 @@ export default function ConfessPage() {
           <div className="p-5 pb-0">
             <textarea
               value={text}
-              onChange={(e) => setText(e.target.value.slice(0, 500))}
+              onChange={(e) => setText(e.target.value)}
               placeholder="write what's been sitting inside you..."
               rows={5}
               autoFocus
@@ -239,8 +248,8 @@ export default function ConfessPage() {
             <div className="relative">
               <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             </div>
-            <span className="text-[10px] font-mono text-black/15">
-              {500 - text.length} left
+            <span className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/25"}`}>
+              {wordCount > 500 ? `-${wordCount - 500} words` : `${500 - wordCount} words left`}
             </span>
           </div>
 
@@ -312,7 +321,7 @@ export default function ConfessPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!text.trim() || !category || isSubmitting}
+          disabled={!text.trim() || !category || isSubmitting || wordCount > 500}
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
@@ -325,6 +334,23 @@ export default function ConfessPage() {
         <p className="text-center text-[9px] text-black/15 mt-3 font-medium">
           Completely anonymous · No accounts · No trace
         </p>
+
+        <div className="mt-8 text-center pt-8 border-t border-black/5">
+          <span className="text-2xl block mb-2">📖</span>
+          <h2 className="text-base font-bold tracking-tight text-black mb-1">
+            Got a longer story?
+          </h2>
+          <p className="text-[10px] text-black/40 mb-4 max-w-[220px] mx-auto leading-relaxed">
+            Create a multi-chapter "Deep Spill" with a customized cover instead.
+          </p>
+          <Link
+            href={`/b/${slug}/spill/create`}
+            className="inline-flex items-center gap-2 px-6 py-3 border border-black/10 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-black/5 transition-all text-black active:scale-[0.98]"
+          >
+            <BookOpen size={14} />
+            Write a Deep Spill
+          </Link>
+        </div>
       </main>
     </div>
   );

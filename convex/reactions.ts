@@ -46,18 +46,11 @@ export const getCounts = query({
       )
       .collect();
 
-    // Group by type and count
-    const counts: Record<string, number> = {
-      "holding-you": 0,
-      "feels-heavy": 0,
-      "youll-be-ok": 0,
-      "no-it-burns": 0,
-    };
+    // Group by type dynamically
+    const counts: Record<string, number> = {};
 
     for (const r of reactions) {
-      if (r.type in counts) {
-        counts[r.type]++;
-      }
+      counts[r.type] = (counts[r.type] || 0) + 1;
     }
 
     return counts;
