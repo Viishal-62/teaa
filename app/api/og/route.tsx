@@ -48,10 +48,14 @@ async function renderConfessionOG(confessionId: string) {
   if (!confession) return renderDefaultOG();
 
   const cat = CATEGORY_COLORS[confession.category];
+  const safeText =
+    typeof confession.text === "string" && confession.text.trim().length > 0
+      ? confession.text
+      : confession.type === "voice"
+        ? "Voice confession"
+        : "Anonymous confession";
   const truncatedText =
-    confession.text.length > 200
-      ? `${confession.text.slice(0, 200)}...`
-      : confession.text;
+    safeText.length > 200 ? `${safeText.slice(0, 200)}...` : safeText;
 
   return new ImageResponse(
     <div

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -15,6 +15,7 @@ import EmojiPicker from "@/app/components/EmojiPicker";
 import GifPicker from "@/app/components/GifPicker";
 import Link from "next/link";
 import { ArrowLeft, MessageCircle, Send, X } from "lucide-react";
+import { motion } from "framer-motion";
 
 function ReactionButton({
   type,
@@ -103,10 +104,13 @@ export default function ConfessionDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const confessionId = params.confessionId as Id<"confessions">;
+  const router = useRouter();
 
   const [commentText, setCommentText] = useState("");
   const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDisappearing, setIsDisappearing] = useState(false);
+  const [displayedConfession, setDisplayedConfession] = useState<any>(null);
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const confession = useQuery(api.confessions.getById, { confessionId });
@@ -115,6 +119,27 @@ export default function ConfessionDetailPage() {
     confessionId,
   });
   const addComment = useMutation(api.comments.create);
+  const incrementView = useMutation(api.confessions.incrementView);
+
+  // Store confession when loaded, auto-increment views
+  useEffect(() => {
+    if (confession && !displayedConfession) {
+      setDisplayedConfession(confession);
+      // Auto-increment view
+      incrementView({ confessionId })
+        .then((result) => {
+          if (result.deleted) {
+            // Max views reached - trigger disappear animation
+            setIsDisappearing(true);
+            const timer = setTimeout(() => {
+              router.push(`/b/${slug}`);
+            }, 1200);
+            return () => clearTimeout(timer);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [confession, displayedConfession, confessionId, incrementView, slug, router]);
 
   const handleAddComment = async () => {
     if (!commentText.trim() && !selectedGif) return;
@@ -148,7 +173,7 @@ export default function ConfessionDetailPage() {
     );
   }
 
-  if (board === null || confession === null) {
+  if (board === null || (displayedConfession === null && !isDisappearing)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-white">
         <span className="text-5xl mb-4">🫣</span>
@@ -166,13 +191,6 @@ export default function ConfessionDetailPage() {
     );
   }
 
-  const catInfo = CATEGORY_INFO[confession.category];
-
-  const activeReactions =
-    board.allowedReactions && board.allowedReactions.length > 0
-      ? board.allowedReactions
-      : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
-
   return (
     <div className="min-h-screen page-enter bg-white text-[#111]">
       {/* Header */}
@@ -188,50 +206,76 @@ export default function ConfessionDetailPage() {
 
       <main className="max-w-xl mx-auto px-5 py-8">
         {/* Confession Card */}
-        <div className="p-8 rounded-2xl border border-black/5 bg-[#faf8f5] mb-8">
-          {/* Category */}
-          {catInfo && (
-            <div className="flex items-center gap-2 mb-5">
-              <span
-                className="text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-wider"
-                style={{
-                  background: `${catInfo.color}10`,
-                  color: catInfo.color,
-                }}
-              >
-                {catInfo.emoji} {catInfo.label}
-              </span>
-            </div>
+        <motion.div
+          initial={{ opacity: 1 }}
+          animate={
+            isDisappearing
+              ? { opacity: 0, filter: "blur(12px)", scale: 0.95 }
+              : { opacity: 1, filter: "blur(0px)", scale: 1 }
+          }
+          transition={{ duration: 1, ease: "easeInOut" }}
+          className="p-8 rounded-2xl border border-black/5 bg-[#faf8f5] mb-8"
+        >
+          {(confession || displayedConfession) && (
+            <>
+              {/* Category */}
+              {(() => {
+                const confData = confession || displayedConfession;
+                const catInfo = CATEGORY_INFO[confData?.category];
+                return catInfo ? (
+                  <div className="flex items-center gap-2 mb-5">
+                    <span
+                      className="text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-wider"
+                      style={{
+                        background: `${catInfo.color}10`,
+                        color: catInfo.color,
+                      }}
+                    >
+                      {catInfo.emoji} {catInfo.label}
+                    </span>
+                  </div>
+                ) : null;
+              })()}
+
+              {/* Text */}
+              <p className="text-lg leading-relaxed mb-6 serif text-black/80">
+                {(confession || displayedConfession)?.text}
+              </p>
+
+              {/* Meta */}
+              <div className="flex items-center justify-between mb-6 pt-5 border-t border-black/5">
+                <span className="text-xs text-black/35 italic">
+                  — {(confession || displayedConfession)?.displayName}
+                </span>
+                <span className="text-xs text-black/20">
+                  {timeAgo((confession || displayedConfession)?.createdAt || 0)}
+                </span>
+              </div>
+
+              {/* Only show reactions if confession still exists */}
+              {confession && (
+                <div className="flex gap-2.5 justify-center flex-wrap">
+                  {(() => {
+                    const confData = confession || displayedConfession;
+                    const activeReactions =
+                      board?.allowedReactions && board.allowedReactions.length > 0
+                        ? board.allowedReactions
+                        : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+                    return activeReactions.map((type) => (
+                      <ReactionButton
+                        key={type}
+                        type={type}
+                        confessionId={confessionId}
+                      />
+                    ));
+                  })()}
+                </div>
+              )}
+            </>
           )}
+        </motion.div>
 
-          {/* Text */}
-          <p className="text-lg leading-relaxed mb-6 serif text-black/80">
-            {confession.text}
-          </p>
-
-          {/* Meta */}
-          <div className="flex items-center justify-between mb-6 pt-5 border-t border-black/5">
-            <span className="text-xs text-black/35 italic">
-              — {confession.displayName}
-            </span>
-            <span className="text-xs text-black/20">
-              {timeAgo(confession.createdAt)}
-            </span>
-          </div>
-
-          {/* Reactions */}
-          <div className="flex gap-2.5 justify-center flex-wrap">
-            {activeReactions.map((type) => (
-              <ReactionButton
-                key={type}
-                type={type}
-                confessionId={confession._id}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Comments Section */}
+        {!isDisappearing && (
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-5">
             <MessageCircle size={16} className="text-black/30" />
@@ -311,6 +355,7 @@ export default function ConfessionDetailPage() {
             )}
           </div>
         </div>
+        )}
       </main>
     </div>
   );

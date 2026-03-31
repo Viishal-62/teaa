@@ -35,10 +35,43 @@ export default function ConfessPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isGlobal, setIsGlobal] = useState(true);
+  const [disappearMode, setDisappearMode] = useState<
+    | "never"
+    | "5m"
+    | "24h"
+    | "7d"
+    | "views25"
+    | "custom-time"
+    | "custom-views"
+  >("never");
+  const [customExpireAt, setCustomExpireAt] = useState("");
+  const [customViews, setCustomViews] = useState("");
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const parsedCustomExpireAt = customExpireAt
+    ? new Date(customExpireAt).getTime()
+    : NaN;
+  const parsedCustomViews = Number.parseInt(customViews, 10);
+  const isCustomTimeInvalid =
+    disappearMode === "custom-time" &&
+    (!Number.isFinite(parsedCustomExpireAt) ||
+      parsedCustomExpireAt <= Date.now() + 1000);
+  const isCustomViewsInvalid =
+    disappearMode === "custom-views" &&
+    (!Number.isInteger(parsedCustomViews) ||
+      parsedCustomViews < 1 ||
+      parsedCustomViews > 10000);
 
   const handleSubmit = async () => {
-    if (!text.trim() || !category || !board || wordCount > 500) return;
+    if (
+      !text.trim() ||
+      !category ||
+      !board ||
+      wordCount > 500 ||
+      isCustomTimeInvalid ||
+      isCustomViewsInvalid
+    ) {
+      return;
+    }
     setIsSubmitting(true);
     try {
       await createConfession({
@@ -46,6 +79,22 @@ export default function ConfessPage() {
         text: text.trim(),
         category,
         isGlobal,
+        expiresAt:
+          disappearMode === "5m"
+            ? Date.now() + 5 * 60 * 1000
+            : disappearMode === "24h"
+              ? Date.now() + 24 * 60 * 60 * 1000
+              : disappearMode === "7d"
+                ? Date.now() + 7 * 24 * 60 * 60 * 1000
+                : disappearMode === "custom-time"
+                  ? parsedCustomExpireAt
+                  : undefined,
+        maxViews:
+          disappearMode === "views25"
+            ? 25
+            : disappearMode === "custom-views"
+              ? parsedCustomViews
+              : undefined,
       });
       setSubmitted(true);
     } catch (error) {
@@ -293,6 +342,146 @@ export default function ConfessPage() {
 
           <div className="h-px bg-black/5" />
 
+          {/* Disappearing Tea */}
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25">
+                Disappearing Tea
+              </p>
+              <span className="text-[8px] font-medium text-black/15 uppercase tracking-wider">
+                Optional
+              </span>
+            </div>
+
+            {/* Main options */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+              {[
+                { key: "never", label: "Keep Forever", sub: "Default" },
+                { key: "5m", label: "5 Minutes", sub: "Auto-delete" },
+                { key: "24h", label: "24 Hours", sub: "Auto-delete" },
+                { key: "7d", label: "7 Days", sub: "Auto-delete" },
+                { key: "views25", label: "25 Views", sub: "Then vanish" },
+              ].map((opt) => {
+                const active = disappearMode === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() =>
+                      setDisappearMode(opt.key as typeof disappearMode)
+                    }
+                    className={`rounded-xl border p-3 text-left transition-all ${
+                      active
+                        ? "bg-black text-white border-black shadow-md shadow-black/10"
+                        : "bg-[#faf8f5] border-black/5 hover:border-black/15"
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider">
+                      {opt.label}
+                    </p>
+                    <p
+                      className={`text-[9px] mt-0.5 ${active ? "text-white/65" : "text-black/25"}`}
+                    >
+                      {opt.sub}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom options */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setDisappearMode("custom-time")}
+                className={`w-full rounded-xl border p-3 text-left transition-all ${
+                  disappearMode === "custom-time"
+                    ? "bg-black text-white border-black shadow-md shadow-black/10"
+                    : "bg-[#faf8f5] border-black/5 hover:border-black/15"
+                }`}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-wider">
+                  Custom Time
+                </p>
+                <p
+                  className={`text-[9px] mt-0.5 ${disappearMode === "custom-time" ? "text-white/65" : "text-black/25"}`}
+                >
+                  Pick exact date
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDisappearMode("custom-views")}
+                className={`w-full rounded-xl border p-3 text-left transition-all ${
+                  disappearMode === "custom-views"
+                    ? "bg-black text-white border-black shadow-md shadow-black/10"
+                    : "bg-[#faf8f5] border-black/5 hover:border-black/15"
+                }`}
+              >
+                <p className="text-[10px] font-bold uppercase tracking-wider">
+                  Custom Views
+                </p>
+                <p
+                  className={`text-[9px] mt-0.5 ${disappearMode === "custom-views" ? "text-white/65" : "text-black/25"}`}
+                >
+                  Set own limit
+                </p>
+              </button>
+            </div>
+
+            {disappearMode === "custom-time" && (
+              <div className="mt-3">
+                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
+                  Vanish At (Local Time)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={customExpireAt}
+                  onChange={(e) => setCustomExpireAt(e.target.value)}
+                  className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                    isCustomTimeInvalid
+                      ? "border-red-300 focus:ring-2 focus:ring-red-100"
+                      : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                  }`}
+                />
+                {isCustomTimeInvalid && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
+                    Pick a future time. Past times are not allowed.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {disappearMode === "custom-views" && (
+              <div className="mt-3">
+                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
+                  Vanish After Views
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={10000}
+                  value={customViews}
+                  onChange={(e) => setCustomViews(e.target.value)}
+                  placeholder="e.g. 73"
+                  className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                    isCustomViewsInvalid
+                      ? "border-red-300 focus:ring-2 focus:ring-red-100"
+                      : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                  }`}
+                />
+                {isCustomViewsInvalid && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
+                    Use a number between 1 and 10000 views.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="h-px bg-black/5" />
+
           {/* Category picker */}
           <div className="p-5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
@@ -331,7 +520,12 @@ export default function ConfessPage() {
           type="button"
           onClick={handleSubmit}
           disabled={
-            !text.trim() || !category || isSubmitting || wordCount > 500
+            !text.trim() ||
+            !category ||
+            isSubmitting ||
+            wordCount > 500 ||
+            isCustomTimeInvalid ||
+            isCustomViewsInvalid
           }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >

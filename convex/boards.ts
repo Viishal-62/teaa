@@ -2,6 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { generateSlug } from "./helpers";
 
+function isBoardPublic(visibility?: string) {
+  return String(visibility ?? "").toLowerCase() !== "private";
+}
+
 // ─── Suggest Slugs ───
 export const suggestSlugs = query({
   args: { name: v.string() },
@@ -57,6 +61,7 @@ export const create = mutation({
     name: v.string(),
     tagline: v.string(),
     theme: v.string(),
+    boardType: v.optional(v.string()),
     visibility: v.string(),
     pin: v.optional(v.string()),
     creatorToken: v.string(),
@@ -96,11 +101,13 @@ export const create = mutation({
       name: args.name,
       tagline: args.tagline,
       theme: args.theme,
+      boardType: args.boardType || "default",
       visibility: args.visibility,
       pin: args.visibility === "private" ? args.pin : undefined,
       creatorToken: args.creatorToken,
       allowedReactions: args.allowedReactions,
       sharePrompt: args.sharePrompt,
+      inboxLastSeenAt: Date.now(),
       createdAt: Date.now(),
     });
 
@@ -119,7 +126,11 @@ export const getBySlug = query({
     if (!board) return null;
     // Never send PIN to client
     const { pin, ...safeBoard } = board;
-    return { ...safeBoard, isPrivate: board.visibility === "private" };
+    return {
+      ...safeBoard,
+      isPrivate: board.visibility === "private",
+      boardType: board.boardType || "default",
+    };
   },
 });
 
@@ -152,9 +163,8 @@ export const listPublic = query({
       .query("boards")
       .withIndex("by_createdAt")
       .order("desc")
-      .filter((q) => q.eq(q.field("visibility"), "public"))
       .take(50);
-    return boards;
+    return boards.filter((board) => isBoardPublic(board.visibility));
   },
 });
 
@@ -178,6 +188,7 @@ export const getOrCreateGlobal = mutation({
       theme: "noir",
       visibility: "public",
       creatorToken: "system-global",
+      inboxLastSeenAt: Date.now(),
       createdAt: Date.now(),
     });
 
@@ -189,15 +200,18 @@ export const getOrCreateGlobal = mutation({
 export const listPublicWithCounts = query({
   args: {},
   handler: async (ctx) => {
+    const now = Date.now();
     const boards = await ctx.db
       .query("boards")
       .withIndex("by_createdAt")
       .order("desc")
-      .filter((q) => q.eq(q.field("visibility"), "public"))
       .take(50);
+    const publicBoards = boards.filter((board) =>
+      isBoardPublic(board.visibility),
+    );
 
     const enriched = await Promise.all(
-      boards.map(async (board) => {
+      publicBoards.map(async (board) => {
         const confessions = await ctx.db
           .query("confessions")
           .withIndex("by_boardId", (q) => q.eq("boardId", board._id))
@@ -208,7 +222,9 @@ export const listPublicWithCounts = query({
           .collect();
         return {
           ...board,
-          confessionCount: confessions.length,
+          confessionCount: confessions.filter(
+            (c) => c.expiresAt === undefined || c.expiresAt > now,
+          ).length,
           spillCount: spills.length,
         };
       }),
@@ -309,5 +325,23 @@ export const remove = mutation({
 
     await ctx.db.delete(args.boardId);
     return { success: true };
+  },
+});
+
+// ——— Mark board inbox as read (creator only) ———
+export const markInboxSeen = mutation({
+  args: {
+    boardId: v.id("boards"),
+    creatorToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const board = await ctx.db.get(args.boardId);
+    if (!board || board.creatorToken !== args.creatorToken) {
+      throw new Error("Unauthorized: only the board creator can update inbox");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(args.boardId, { inboxLastSeenAt: now });
+    return { seenAt: now };
   },
 });

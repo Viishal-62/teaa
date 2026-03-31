@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
-import { Home, ArrowRight } from "lucide-react";
+import { Home, ArrowRight, Shuffle, Mic } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
+import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
 import { THEMES } from "@/convex/helpers";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -31,9 +33,16 @@ export default function ExplorePage() {
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
 
-  const globalFeed = useQuery(api.confessions.globalFeed, {
+  const rawGlobalFeed = useQuery(api.confessions.globalFeed, {
     category: selectedCategory === "all" ? undefined : selectedCategory,
   });
+
+  // Filter out voice confessions — they live at /explore/voice
+  const globalFeed = useMemo(
+    () => rawGlobalFeed?.filter((c) => c.type !== "voice"),
+    [rawGlobalFeed],
+  );
+
   const publicBoards = useQuery(api.boards.listPublicWithCounts);
   const allSpills = useQuery(api.spills.listAll);
   const teaaOfDay = useQuery(api.confessions.confessionOfTheDay);
@@ -52,6 +61,15 @@ export default function ExplorePage() {
     },
     [globalFeed],
   );
+
+  const shuffleTea = useCallback(() => {
+    if (!globalFeed || globalFeed.length < 2) return;
+    let next = activeIndex;
+    while (next === activeIndex) {
+      next = Math.floor(Math.random() * globalFeed.length);
+    }
+    setActiveIndex(next);
+  }, [activeIndex, globalFeed]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -120,6 +138,13 @@ export default function ExplorePage() {
           Add confession
         </Link>
         <Link
+          href="/explore/voice"
+          className="text-[10px] text-black/40 hover:text-black font-medium transition-colors flex items-center gap-1"
+        >
+          <Mic size={10} />
+          Voice
+        </Link>
+        <Link
           href="/spill/create"
           className="text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
         >
@@ -186,26 +211,38 @@ export default function ExplorePage() {
                   return (
                     <div
                       key={confession._id}
-                      className="absolute transition-all duration-500 ease-out"
+                      className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
                       style={{
                         width: "280px",
                         transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                         opacity,
                         zIndex,
                       }}
-                      onClick={
-                        absOffset !== 0 ? () => scrollToCard(i) : undefined
-                      }
                     >
                       <div
                         style={{
                           pointerEvents: absOffset === 0 ? "auto" : "none",
                         }}
                       >
-                        <ConfessionFlipCard
-                          confession={confession}
-                          boardSlug={confession.boardSlug}
-                        />
+                        {(confession as any).boardType === "secret-admirer" ? (
+                          <AdmirerConfessionCard
+                            confession={confession as any}
+                            boardSlug={confession.boardSlug}
+                          />
+                        ) : (
+                          <ConfessionFlipCard
+                            confession={confession as any}
+                            boardSlug={confession.boardSlug}
+                          />
+                        )}
+                        {teaaOfDay && (
+                          <div className="max-w-[320px] mx-auto scale-90 origin-top">
+                            <ConfessionFlipCard
+                              confession={teaaOfDay as any}
+                              boardSlug={teaaOfDay.boardSlug}
+                            />
+                          </div>
+                        )}
                       </div>
                       {absOffset !== 0 && (
                         <div
@@ -222,6 +259,19 @@ export default function ExplorePage() {
               <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
                 Scroll · ← → keys · tap to flip
               </p>
+
+              {globalFeed.length > 1 && (
+                <div className="flex justify-center mb-3">
+                  <button
+                    type="button"
+                    onClick={shuffleTea}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-black/8 text-[10px] font-bold uppercase tracking-widest text-black/40 hover:text-black hover:border-black/20 transition-all"
+                  >
+                    <Shuffle size={12} />
+                    Shuffle the Tea
+                  </button>
+                </div>
+              )}
 
               {/* Arrow navigation */}
               {globalFeed.length > 1 && (

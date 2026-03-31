@@ -24,10 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
+    const safeText =
+      typeof confession.text === "string" && confession.text.trim().length > 0
+        ? confession.text
+        : confession.type === "voice"
+          ? "Voice confession"
+          : "Anonymous confession";
     const truncatedText =
-      confession.text.length > 120
-        ? `${confession.text.slice(0, 120)}...`
-        : confession.text;
+      safeText.length > 120 ? `${safeText.slice(0, 120)}...` : safeText;
 
     const title = `A confession on ${board.name} — Teaaa 🫖`;
     const description = `"${truncatedText}" — ${confession.displayName}. React, comment, and spill your own secrets anonymously.`;

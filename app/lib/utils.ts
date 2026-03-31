@@ -52,6 +52,13 @@ export const CATEGORY_INFO: Record<
   fear: { label: "Fear", color: "#7f8c8d", emoji: "😰" },
   envy: { label: "Envy", color: "#27ae60", emoji: "👀" },
   "deep-dark": { label: "Deep Dark", color: "#2c3e50", emoji: "🕳️" },
+  // Admirer categories
+  crush: { label: "Crush", color: "#e91e63", emoji: "💘" },
+  compliment: { label: "Compliment", color: "#f1c40f", emoji: "✨" },
+  attraction: { label: "Attraction", color: "#e67e22", emoji: "🔥" },
+  gratitude: { label: "Gratitude", color: "#2ecc71", emoji: "🌸" },
+  admiration: { label: "Admiration", color: "#3498db", emoji: "⭐" },
+  confession: { label: "Confession", color: "#9b59b6", emoji: "💌" },
 };
 
 export const REACTION_INFO: Record<string, { label: string; emoji: string }> = {
@@ -64,7 +71,12 @@ export const REACTION_INFO: Record<string, { label: string; emoji: string }> = {
   "crying-with-you": { label: "Crying with you", emoji: "😭" },
   shook: { label: "Shook", emoji: "😳" },
   laughing: { label: "Laughing", emoji: "😂" },
-  "me-too": { label: "Me too", emoji: "🤝" }, // used independently but good to have here
+  "me-too": { label: "Me too", emoji: "🤝" },
+  // Admirer reactions
+  blushing: { label: "Blushing", emoji: "💝" },
+  butterflies: { label: "Butterflies", emoji: "🦋" },
+  "crying-admirer": { label: "Crying", emoji: "🥺" },
+  giggling: { label: "Giggling", emoji: "🤭" },
 };
 
 export const SHARE_PROMPTS = [

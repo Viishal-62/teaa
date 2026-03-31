@@ -11,13 +11,25 @@ import {
   Lock,
   Share2,
   Check,
-  Link as LinkIcon,
   Bell,
   BookOpen,
+  Shuffle,
+  Inbox,
 } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
+import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
+
+const ADMIRER_CATEGORIES = [
+  { key: "all", label: "All" },
+  { key: "crush", label: "Crush" },
+  { key: "compliment", label: "Compliment" },
+  { key: "attraction", label: "Attraction" },
+  { key: "gratitude", label: "Gratitude" },
+  { key: "admiration", label: "Admiration" },
+  { key: "confession", label: "Confession" },
+];
 
 const CATEGORIES = [
   { key: "all", label: "All" },
@@ -53,6 +65,9 @@ export default function BoardViewPage() {
 
   const creatorToken = typeof window !== "undefined" ? getCreatorToken() : "";
   const isOwner = board?.creatorToken === creatorToken;
+  const isAdmirerMode = board?.boardType === "secret-admirer";
+
+  const categoriesToUse = isAdmirerMode ? ADMIRER_CATEGORIES : CATEGORIES;
 
   const sessionKey = `board-pin-${slug}`;
   const savedPin =
@@ -86,6 +101,10 @@ export default function BoardViewPage() {
   const spills = useQuery(
     api.spills.listByBoard,
     board && !isLocked ? { boardId: board._id } : "skip",
+  );
+  const inboxUnread = useQuery(
+    api.confessions.inboxUnreadCount,
+    board && isOwner ? { boardId: board._id, creatorToken } : "skip",
   );
 
   const mixedItems = useMemo(() => {
@@ -153,6 +172,15 @@ export default function BoardViewPage() {
     },
     [mixedItems],
   );
+
+  const shuffleTea = useCallback(() => {
+    if (!mixedItems || mixedItems.length < 2) return;
+    let next = activeIndex;
+    while (next === activeIndex) {
+      next = Math.floor(Math.random() * mixedItems.length);
+    }
+    setActiveIndex(next);
+  }, [activeIndex, mixedItems]);
 
   // Keyboard nav
   useEffect(() => {
@@ -332,6 +360,21 @@ export default function BoardViewPage() {
           {board.name}
         </h1>
         <div className="flex items-center gap-3">
+          {isOwner && (
+            <Link
+              href={`/b/${slug}/inbox`}
+              className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1"
+              title="Creator inbox"
+            >
+              <Inbox size={12} />
+              Inbox
+              {(inboxUnread ?? 0) > 0 && (
+                <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                  {inboxUnread}
+                </span>
+              )}
+            </Link>
+          )}
           <button
             type="button"
             onClick={async () => {
@@ -377,10 +420,10 @@ export default function BoardViewPage() {
             )}
           </button>
           <Link
-            href={`/b/${slug}/confess`}
-            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
+            className={`text-[10px] ${isAdmirerMode ? "text-[#be185d]" : "text-black/40"} hover:opacity-70 font-medium transition-colors`}
           >
-            Add confession
+            {isAdmirerMode ? "Send Love Letter" : "Add confession"}
           </Link>
           <Link
             href={`/b/${slug}/spill`}
@@ -420,11 +463,11 @@ export default function BoardViewPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Link
-                  href={`/b/${slug}/confess`}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                  href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
+                  className={`inline-flex items-center gap-2 px-6 py-3 ${isAdmirerMode ? "bg-[#be185d]" : "bg-black"} text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all`}
                 >
                   <Plus size={14} />
-                  Add Confession
+                  {isAdmirerMode ? "Send First Letter" : "Add Confession"}
                 </Link>
                 <Link
                   href={`/b/${slug}/spill`}
@@ -483,6 +526,12 @@ export default function BoardViewPage() {
                       >
                         {item._type === "spill" ? (
                           <DeepSpillCard slug={slug} spill={item} />
+                        ) : isAdmirerMode ? (
+                          <AdmirerConfessionCard
+                            confession={item}
+                            boardSlug={slug}
+                            boardReactions={board.allowedReactions}
+                          />
                         ) : (
                           <ConfessionFlipCard
                             confession={item}
@@ -506,6 +555,19 @@ export default function BoardViewPage() {
               <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
                 Scroll · ← → keys · tap to flip
               </p>
+
+              {mixedItems.length > 1 && (
+                <div className="flex justify-center mb-3">
+                  <button
+                    type="button"
+                    onClick={shuffleTea}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-black/8 text-[10px] font-bold uppercase tracking-widest text-black/40 hover:text-black hover:border-black/20 transition-all"
+                  >
+                    <Shuffle size={12} />
+                    Shuffle the Tea
+                  </button>
+                </div>
+              )}
 
               {/* Arrow navigation */}
               {mixedItems.length > 1 && (
@@ -535,10 +597,9 @@ export default function BoardViewPage() {
           )}
         </div>
 
-        {/* Category Filters */}
         <div className="mb-8 overflow-x-auto pb-3 px-4 no-scrollbar">
           <div className="flex gap-1.5 min-w-max justify-center">
-            {CATEGORIES.map((cat) => {
+            {categoriesToUse.map((cat) => {
               const isActive = selectedCategory === cat.key;
               const catInfo = CATEGORY_INFO[cat.key];
               return (

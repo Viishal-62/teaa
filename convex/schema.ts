@@ -10,11 +10,13 @@ export default defineSchema({
     name: v.string(),
     tagline: v.string(),
     theme: v.string(), // theme key
+    boardType: v.optional(v.string()), // "default" | "secret-admirer"
     visibility: v.string(), // "public" | "private"
     pin: v.optional(v.string()), // 4-6 digit PIN for private boards
     creatorToken: v.string(), // random token stored in creator's localStorage
     allowedReactions: v.optional(v.array(v.string())), // Chosen 4 custom reactions
     sharePrompt: v.optional(v.string()), // Custom viral share text
+    inboxLastSeenAt: v.optional(v.number()), // Creator inbox watermark for unread/read
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
@@ -24,17 +26,26 @@ export default defineSchema({
   // ─── Confessions ───
   confessions: defineTable({
     boardId: v.id("boards"),
-    text: v.string(),
+    type: v.optional(v.string()), // "text" | "voice" | "canvas" (optional for backwards compatibility)
+    text: v.optional(v.string()), // For text confessions
+    audioUrl: v.optional(v.string()), // For voice confessions (Cloudinary URL)
+    voiceTitle: v.optional(v.string()), // User-given title for voice confessions
+    isAnonymousVoice: v.optional(v.boolean()), // deprecated — kept for backward compat
+    canvasImageUrl: v.optional(v.string()), // For drawing confessions
     category: v.string(), // "regret" | "love" | "guilt" | "relief" | "longing" | "mischief" | "obsession" | "pride" | "fear" | "envy" | "deep-dark"
     displayName: v.string(), // auto-generated anonymous name
     isGlobal: v.boolean(), // true = posted to global feed (no specific board)
     views: v.optional(v.number()), // tracked when a user flips the card
+    expiresAt: v.optional(v.number()), // timed confession auto-expiry timestamp
+    maxViews: v.optional(v.number()), // optional auto-delete after X views
     createdAt: v.number(),
   })
     .index("by_boardId", ["boardId"])
     .index("by_boardId_category", ["boardId", "category"])
     .index("by_createdAt", ["createdAt"])
-    .index("by_isGlobal", ["isGlobal"]),
+    .index("by_expiresAt", ["expiresAt"])
+    .index("by_isGlobal", ["isGlobal"])
+    .index("by_type", ["type"]),
 
   // ─── Reactions ───
   reactions: defineTable({

@@ -53,9 +53,13 @@ export default function CardActions({
   }, [confessionUrl]);
 
   const handleShare = useCallback(async () => {
+    const safeText =
+      typeof confession.text === "string" && confession.text.trim().length > 0
+        ? confession.text
+        : "Anonymous confession";
     const shareData = {
       title: "A confession on Teaaa 🫖",
-      text: `"${confession.text.slice(0, 100)}${confession.text.length > 100 ? "..." : ""}" — spill your secrets anonymously`,
+      text: `"${safeText.slice(0, 100)}${safeText.length > 100 ? "..." : ""}" — spill your secrets anonymously`,
       url: confessionUrl,
     };
 

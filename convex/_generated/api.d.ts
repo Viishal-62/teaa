@@ -12,6 +12,7 @@ import type * as boards from "../boards.js";
 import type * as chapters from "../chapters.js";
 import type * as comments from "../comments.js";
 import type * as confessions from "../confessions.js";
+import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as helpers from "../helpers.js";
 import type * as reactions from "../reactions.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   chapters: typeof chapters;
   comments: typeof comments;
   confessions: typeof confessions;
+  crons: typeof crons;
   files: typeof files;
   helpers: typeof helpers;
   reactions: typeof reactions;

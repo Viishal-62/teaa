@@ -60,6 +60,9 @@ export default function CreateBoard() {
   const [name, setName] = useState("");
   const [tagline, setTagline] = useState("");
   const [theme, setTheme] = useState("noir");
+  const [boardType, setBoardType] = useState<"default" | "secret-admirer">(
+    "default",
+  );
   const [isPublic, setIsPublic] = useState(true);
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +96,7 @@ export default function CreateBoard() {
         name: name.trim(),
         tagline: tagline.trim(),
         theme,
+        boardType,
         visibility: isPublic ? "public" : "private",
         pin: !isPublic ? pin : undefined,
         creatorToken,
@@ -250,6 +254,50 @@ export default function CreateBoard() {
             </span>
           </div>
 
+          {/* Mode Selector */}
+          <div className="flex p-1 bg-[#faf8f5] border border-black/5 rounded-2xl mx-6 mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                setBoardType("default");
+                setTheme("noir");
+                setAllowedReactions([
+                  "holding-you",
+                  "feels-heavy",
+                  "youll-be-ok",
+                  "no-it-burns",
+                ]);
+              }}
+              className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
+                boardType === "default"
+                  ? "bg-white text-black shadow-sm"
+                  : "text-black/30 hover:text-black/50"
+              }`}
+            >
+              Standard Board
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBoardType("secret-admirer");
+                setTheme("midnight-rose");
+                setAllowedReactions([
+                  "blushing",
+                  "butterflies",
+                  "crying-admirer",
+                  "giggling",
+                ]);
+              }}
+              className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
+                boardType === "secret-admirer"
+                  ? "bg-white text-[#be185d] shadow-sm"
+                  : "text-black/30 hover:text-black/50"
+              }`}
+            >
+              💝 Secret Admirer
+            </button>
+          </div>
+
           {/* Form body */}
           <div className="p-6 space-y-6">
             {/* Board Name */}
@@ -313,7 +361,11 @@ export default function CreateBoard() {
                 type="text"
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
-                placeholder="e.g. Tell me anything, stay anonymous..."
+                placeholder={
+                  boardType === "secret-admirer"
+                    ? "e.g. Tell your crush how you feel..."
+                    : "e.g. Tell me anything, stay anonymous..."
+                }
                 className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15 italic"
               />
             </div>
