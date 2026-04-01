@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
-import { Home, ArrowRight, Shuffle, Mic } from "lucide-react";
+import { Home, ArrowRight, Shuffle, Mic, Sparkles } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
+import SummaryCard from "@/app/components/SummaryCard";
 import { THEMES } from "@/convex/helpers";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Id } from "@/convex/_generated/dataModel";
 
 const CATEGORIES = [
@@ -29,6 +31,8 @@ const CATEGORIES = [
 export default function ExplorePage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeIndex, setActiveIndex] = useState(0);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
@@ -36,6 +40,8 @@ export default function ExplorePage() {
   const rawGlobalFeed = useQuery(api.confessions.globalFeed, {
     category: selectedCategory === "all" ? undefined : selectedCategory,
   });
+
+  const summarize = useAction(api.ai.summarizeGlobal);
 
   // Filter out voice confessions — they live at /explore/voice
   const globalFeed = useMemo(
@@ -70,6 +76,20 @@ export default function ExplorePage() {
     }
     setActiveIndex(next);
   }, [activeIndex, globalFeed]);
+
+  const handleSummarize = async () => {
+    setIsGenerating(true);
+    try {
+      const summary = await summarize({});
+      setAiSummary(summary);
+    } catch (err: any) {
+      console.error("Summarization failed", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const hasEnoughForSummary = (globalFeed?.length ?? 0) >= 10;
 
   // Keyboard navigation
   useEffect(() => {
@@ -131,26 +151,71 @@ export default function ExplorePage() {
         <h1 className="text-[10px] font-black uppercase tracking-[0.25em] text-black/25">
           Confessions
         </h1>
-        <Link
-          href="/confess"
-          className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
-        >
-          Add confession
-        </Link>
-        <Link
-          href="/explore/voice"
-          className="text-[10px] text-black/40 hover:text-black font-medium transition-colors flex items-center gap-1"
-        >
-          <Mic size={10} />
-          Voice
-        </Link>
-        <Link
-          href="/spill/create"
-          className="text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
-        >
-          Write a spill
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/confess"
+            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+          >
+            Add confession
+          </Link>
+          <Link
+            href="/explore/voice"
+            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors flex items-center gap-1"
+          >
+            <Mic size={10} />
+            Voice
+          </Link>
+          <Link
+            href="/spill/create"
+            className="text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
+          >
+            Write a spill
+          </Link>
+          {/* Premium Shine Summarize Button */}
+          {hasEnoughForSummary && (
+            <button
+              onClick={handleSummarize}
+              disabled={isGenerating}
+              className="group relative h-10 px-8 min-w-[150px] cursor-pointer rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60"
+              style={{
+                background: "linear-gradient(135deg, #1a0e0e, #2d1515)",
+                boxShadow: "0 4px 16px rgba(196, 58, 58, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
+              }}
+            >
+              {/* Animated shimmer sweep */}
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+                  backgroundSize: "200% 100%",
+                  animation: "shimmerSweep 3s ease-in-out infinite",
+                }}
+              />
+              <span className="relative z-10 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#f5e6e0" }}>
+                {isGenerating ? (
+                  <>
+                    <div className="w-2.5 h-2.5 border-[1.5px] border-pink-200/30 border-t-pink-300 rounded-full animate-spin" />
+                    Brewing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={11} style={{ color: "#c43a3a" }} />
+                    Summarization
+                  </>
+                )}
+              </span>
+            </button>
+          )}
+        </div>
       </header>
+
+      {/* Shimmer animation */}
+      <style jsx>{`
+        @keyframes shimmerSweep {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
 
       <main className="max-w-5xl mx-auto">
         {/* Compact hero */}
@@ -159,6 +224,20 @@ export default function ExplorePage() {
             Teaaa!
           </h1>
         </div>
+
+        {/* AI Vibe Summary Result */}
+        <AnimatePresence mode="wait">
+          {aiSummary && (
+            <div className="px-4 mb-6">
+              <SummaryCard
+                key="summary"
+                summary={aiSummary}
+                type="global"
+                onClose={() => setAiSummary(null)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Carousel */}
         <div className="relative px-4 pb-4">
@@ -234,14 +313,6 @@ export default function ExplorePage() {
                             confession={confession as any}
                             boardSlug={confession.boardSlug}
                           />
-                        )}
-                        {teaaOfDay && (
-                          <div className="max-w-[320px] mx-auto scale-90 origin-top">
-                            <ConfessionFlipCard
-                              confession={teaaOfDay as any}
-                              boardSlug={teaaOfDay.boardSlug}
-                            />
-                          </div>
                         )}
                       </div>
                       {absOffset !== 0 && (

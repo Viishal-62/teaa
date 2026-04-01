@@ -68,6 +68,7 @@ export const create = mutation({
     slug: v.optional(v.string()),
     allowedReactions: v.optional(v.array(v.string())),
     sharePrompt: v.optional(v.string()),
+    bannedWords: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     if (
@@ -107,6 +108,7 @@ export const create = mutation({
       creatorToken: args.creatorToken,
       allowedReactions: args.allowedReactions,
       sharePrompt: args.sharePrompt,
+      bannedWords: args.bannedWords,
       inboxLastSeenAt: Date.now(),
       createdAt: Date.now(),
     });
@@ -259,6 +261,7 @@ export const update = mutation({
     theme: v.optional(v.string()),
     allowedReactions: v.optional(v.array(v.string())),
     sharePrompt: v.optional(v.string()),
+    bannedWords: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const board = await ctx.db.get(args.boardId);
@@ -273,6 +276,7 @@ export const update = mutation({
     if (args.allowedReactions !== undefined)
       updates.allowedReactions = args.allowedReactions;
     if (args.sharePrompt !== undefined) updates.sharePrompt = args.sharePrompt;
+    if (args.bannedWords !== undefined) updates.bannedWords = args.bannedWords;
 
     await ctx.db.patch(args.boardId, updates);
     return { success: true };

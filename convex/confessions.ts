@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { generateAnonName } from "./helpers";
+import { moderateText } from "./moderation";
 
 function isExpired(expiresAt?: number, now = Date.now()) {
   return typeof expiresAt === "number" && expiresAt <= now;
@@ -9,6 +10,8 @@ function isExpired(expiresAt?: number, now = Date.now()) {
 function isBoardPublic(visibility?: string) {
   return String(visibility ?? "").toLowerCase() !== "private";
 }
+
+// Moderation is handled via shared moderation.ts utility
 
 async function deleteConfessionCascade(ctx: any, confessionId: any) {
   const reactions = await ctx.db
@@ -49,6 +52,7 @@ export const create = mutation({
     isGlobal: v.optional(v.boolean()),
     expiresAt: v.optional(v.number()),
     maxViews: v.optional(v.number()),
+    visitorId: v.string(), // Required for rate limiting
   },
   handler: async (ctx, args) => {
     // Default type to "text" for backwards compatibility
@@ -91,6 +95,49 @@ export const create = mutation({
       throw new Error("maxViews must be between 1 and 10000");
     }
 
+    // ─── Rate Limiting ───
+    const TEN_MINS = 10 * 60 * 1000;
+    const recentConfessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_visitorId_createdAt", (q) => 
+        q.eq("visitorId", args.visitorId).gt("createdAt", Date.now() - TEN_MINS)
+      )
+      .collect();
+
+    if (recentConfessions.length >= 5) {
+      throw new Error(JSON.stringify({
+        type: "rate_limit_error",
+        message: "Whoa! You're spilling too much tea. Take a 10-minute break."
+      }));
+    }
+
+    // ─── Content Moderation ───
+    const board = await ctx.db.get(args.boardId);
+
+    if (args.text) {
+      const moderation = moderateText(args.text, board?.bannedWords ?? []);
+      if (!moderation.isClean) {
+        // Hard reject — do NOT create the confession
+        throw new Error(JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: moderation.flaggedWords,
+          message: moderation.message,
+        }));
+      }
+    }
+
+    // Voice title check
+    if (args.voiceTitle) {
+      const titleMod = moderateText(args.voiceTitle, board?.bannedWords ?? []);
+      if (!titleMod.isClean) {
+        throw new Error(JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: titleMod.flaggedWords,
+          message: "Your voice title contains restricted words. Please change it.",
+        }));
+      }
+    }
+
     const displayName = generateAnonName();
 
     const confessionId = await ctx.db.insert("confessions", {
@@ -102,13 +149,37 @@ export const create = mutation({
       isAnonymousVoice: confessionType === "voice" ? (args.isAnonymousVoice ?? false) : undefined,
       category: args.category,
       displayName,
-      isGlobal: args.isGlobal !== false, // Default to true
+      isGlobal: args.isGlobal !== false,
       expiresAt: args.expiresAt,
       maxViews: args.maxViews ? args.maxViews + 1 : undefined,
+      isFlagged: false,
+      flagReason: "",
+      visitorId: args.visitorId,
       createdAt: Date.now(),
     });
 
     return { confessionId, displayName };
+  },
+});
+
+// ——— Real-time content moderation check ———
+export const checkModeration = query({
+  args: {
+    text: v.string(),
+    boardId: v.optional(v.id("boards")),
+  },
+  handler: async (ctx, args) => {
+    if (!args.text || args.text.trim().length === 0) {
+      return { isClean: true, flaggedWords: [], message: "" };
+    }
+
+    let customWords: string[] = [];
+    if (args.boardId) {
+      const board = await ctx.db.get(args.boardId);
+      customWords = board?.bannedWords ?? [];
+    }
+
+    return moderateText(args.text, customWords);
   },
 });
 
@@ -117,7 +188,7 @@ export const getById = query({
   args: { confessionId: v.id("confessions") },
   handler: async (ctx, args) => {
     const confession = await ctx.db.get(args.confessionId);
-    if (!confession) return null;
+    if (!confession || confession.isFlagged) return null;
     if (isExpired(confession.expiresAt)) return null;
     return confession;
   },
@@ -162,7 +233,21 @@ export const listByBoard = query({
         .take(100);
     }
 
-    return confessions.filter((c) => !isExpired(c.expiresAt, now));
+    return confessions.filter((c) => !isExpired(c.expiresAt, now) && !c.isFlagged);
+  },
+});
+
+// ——— List all recent confessions (for AI summarization) ———
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const confessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(100);
+    return confessions.filter((c) => !isExpired(c.expiresAt, now) && !c.isFlagged);
   },
 });
 
@@ -246,7 +331,7 @@ export const globalFeed = query({
       }
 
       const board = await ctx.db.get(confession.boardId);
-      if (!board) continue;
+      if (!board || confession.isFlagged) continue;
       const shouldShow = confession.isGlobal || isBoardPublic(board.visibility);
       if (!shouldShow) continue;
 

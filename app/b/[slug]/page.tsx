@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import Link from "next/link";
@@ -15,11 +15,15 @@ import {
   BookOpen,
   Shuffle,
   Inbox,
+  Heart,
+  Sparkles,
 } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
+import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ADMIRER_CATEGORIES = [
   { key: "all", label: "All" },
@@ -59,9 +63,13 @@ export default function BoardViewPage() {
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
   const [showToast, setShowToast] = useState(false);
+  const [pippedConfession, setPippedConfession] = useState<any>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const prevConfessionsLength = useRef(0);
 
   const board = useQuery(api.boards.getBySlug, { slug });
+  const summarize = useAction(api.ai.summarizeBoard);
 
   const creatorToken = typeof window !== "undefined" ? getCreatorToken() : "";
   const isOwner = board?.creatorToken === creatorToken;
@@ -75,7 +83,7 @@ export default function BoardViewPage() {
       ? sessionStorage.getItem(`board-pin-value-${slug}`)
       : null;
 
-  const pinToVerify = unlocked ? pinInput : savedPin || "";
+  const [pinToVerify, setPinToVerify] = useState(savedPin || "");
   const pinVerified = useQuery(
     api.boards.verifyPin,
     board?.isPrivate && !isOwner && pinToVerify.length >= 4
@@ -90,11 +98,11 @@ export default function BoardViewPage() {
     api.confessions.listByBoard,
     board && !isLocked
       ? {
-          boardId: board._id,
-          category: selectedCategory,
-          pin: pinToVerify,
-          creatorToken,
-        }
+        boardId: board._id,
+        category: selectedCategory,
+        pin: pinToVerify,
+        creatorToken,
+      }
       : "skip",
   );
 
@@ -155,7 +163,7 @@ export default function BoardViewPage() {
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
           osc.start();
           osc.stop(ctx.currentTime + 0.1);
-        } catch (e) {}
+        } catch (e) { }
 
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3500);
@@ -235,10 +243,26 @@ export default function BoardViewPage() {
   }, [unlocked, pinVerified, slug]);
 
   const handlePinSubmit = () => {
+    setPinToVerify(pinInput);
     if (pinInput.length < 4) return;
     sessionStorage.setItem(`board-pin-value-${slug}`, pinInput);
     setUnlocked(true);
   };
+
+  const handleSummarize = async () => {
+    if (!board) return;
+    setIsGenerating(true);
+    try {
+      const summary = await summarize({ boardId: board._id });
+      setAiSummary(summary);
+    } catch (err: any) {
+      console.error("Summarization failed", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const hasEnoughForSummary = !isAdmirerMode && board?.visibility === "public" && (confessions?.length ?? 0) >= 10;
 
   if (board === undefined) {
     return (
@@ -293,11 +317,10 @@ export default function BoardViewPage() {
                 setPinError(false);
               }}
               placeholder="Enter PIN"
-              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${
-                pinError
+              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${pinError
                   ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
                   : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-              }`}
+                }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handlePinSubmit();
               }}
@@ -347,17 +370,35 @@ export default function BoardViewPage() {
   }
 
   return (
-    <div className="min-h-screen page-enter bg-white text-[#111]">
+    <div
+      className={`min-h-screen page-enter text-[#111]`}
+      style={{
+        background: isAdmirerMode
+          ? "linear-gradient(180deg, #FFF5F5 0%, #FFF0EE 30%, #FFF5F2 60%, #FFFAF8 100%)"
+          : "#fff",
+      }}
+    >
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 bg-white/85 backdrop-blur-xl border-b border-black/5">
+      <header
+        className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 backdrop-blur-xl border-b"
+        style={{
+          background: isAdmirerMode ? "rgba(255, 248, 243, 0.85)" : "rgba(255,255,255,0.85)",
+          borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.12)" : "rgba(0,0,0,0.05)",
+        }}
+      >
         <Link
           href="/"
           className="flex items-center gap-1.5 text-black/35 hover:text-black transition-colors"
         >
           <Home size={16} />
         </Link>
-        <h1 className="text-[10px] font-black uppercase tracking-[0.25em] text-black/25">
+        <h1
+          className={`text-[10px] font-black uppercase tracking-[0.25em] ${isAdmirerMode ? "flex items-center gap-1.5" : "text-black/25"}`}
+          style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.35)" : undefined }}
+        >
+          {isAdmirerMode && <Heart size={8} fill="currentColor" />}
           {board.name}
+          {isAdmirerMode && <Heart size={8} fill="currentColor" />}
         </h1>
         <div className="flex items-center gap-3">
           {isOwner && (
@@ -431,21 +472,94 @@ export default function BoardViewPage() {
           >
             Long gossip
           </Link>
+          {/* Premium Shine Summarize Button */}
+          {hasEnoughForSummary && (
+            <button
+              onClick={handleSummarize}
+              disabled={isGenerating}
+              className="group relative h-8 px-4 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60"
+              style={{
+                background: "linear-gradient(135deg, #1a0e0e, #2d1515)",
+                boxShadow: "0 2px 12px rgba(196, 58, 58, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+            >
+              {/* Animated shimmer sweep */}
+              <div
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+                  backgroundSize: "200% 100%",
+                  animation: "shimmerSweep 3s ease-in-out infinite",
+                }}
+              />
+              <span className="relative z-10 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: "#f5e6e0" }}>
+                {isGenerating ? (
+                  <>
+                    <div className="w-2.5 h-2.5 border-[1.5px] border-pink-200/30 border-t-pink-300 rounded-full animate-spin" />
+                    Brewing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={10} style={{ color: "#c43a3a" }} />
+                    Vibe
+                  </>
+                )}
+              </span>
+            </button>
+          )}
         </div>
       </header>
+
+      {/* Shimmer animation */}
+      <style jsx>{`
+        @keyframes shimmerSweep {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
 
       <main className="max-w-5xl mx-auto">
         {/* Board info */}
         <div className="pt-10 pb-2 text-center">
-          <h1 className="text-3xl font-black tracking-tight serif text-black mb-1">
-            Teaaa!
+          <h1
+            className="text-3xl font-black tracking-tight serif mb-1"
+            style={{ color: isAdmirerMode ? "#5C1A2A" : "#000" }}
+          >
+            {isAdmirerMode ? "Secret Admirer" : "Teaaa!"}
           </h1>
           {board.tagline && (
-            <p className="text-xs text-black/30 italic font-medium">
+            <p
+              className="text-xs italic font-medium"
+              style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.4)" : "rgba(0,0,0,0.3)" }}
+            >
               &quot;{board.tagline}&quot;
             </p>
           )}
+          {isAdmirerMode && (
+            <p
+              className="text-[10px] font-medium mt-1.5 tracking-wide flex items-center justify-center gap-1.5"
+              style={{ color: "rgba(155, 58, 92, 0.25)" }}
+            >
+              <span style={{ color: "rgba(201, 169, 110, 0.4)" }}>✦</span>
+              anonymous love letters
+              <span style={{ color: "rgba(201, 169, 110, 0.4)" }}>✦</span>
+            </p>
+          )}
         </div>
+
+        {/* AI Vibe Summary Result */}
+        <AnimatePresence mode="wait">
+          {aiSummary && !isAdmirerMode && (
+            <div className="px-4 mb-6">
+              <SummaryCard
+                key="summary"
+                summary={aiSummary}
+                type="board"
+                onClose={() => setAiSummary(null)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Carousel */}
         <div className="relative px-4 pb-4">
@@ -456,22 +570,44 @@ export default function BoardViewPage() {
             </div>
           ) : mixedItems.length === 0 ? (
             <div className="text-center py-16">
-              <span className="text-4xl block mb-4">🤫</span>
-              <p className="text-lg font-bold serif mb-1">No confessions yet</p>
-              <p className="text-xs text-black/35 mb-6">
-                Be the first to spill the tea!
+              <span className="text-4xl block mb-4">{isAdmirerMode ? "💌" : "🤫"}</span>
+              <p
+                className="text-lg font-bold serif mb-1"
+                style={{ color: isAdmirerMode ? "#5C1A2A" : undefined }}
+              >
+                {isAdmirerMode ? "No love letters yet" : "No confessions yet"}
+              </p>
+              <p
+                className="text-xs mb-6"
+                style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.4)" : "rgba(0,0,0,0.35)" }}
+              >
+                {isAdmirerMode
+                  ? "Be the first to pour your heart out anonymously..."
+                  : "Be the first to spill the tea!"}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Link
                   href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
-                  className={`inline-flex items-center gap-2 px-6 py-3 ${isAdmirerMode ? "bg-[#be185d]" : "bg-black"} text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all`}
+                  className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                  style={{
+                    background: isAdmirerMode
+                      ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
+                      : "#000",
+                    boxShadow: isAdmirerMode
+                      ? "0 8px 24px rgba(155, 58, 92, 0.25)"
+                      : undefined,
+                  }}
                 >
-                  <Plus size={14} />
+                  {isAdmirerMode ? <Heart size={14} /> : <Plus size={14} />}
                   {isAdmirerMode ? "Send First Letter" : "Add Confession"}
                 </Link>
                 <Link
                   href={`/b/${slug}/spill`}
-                  className="inline-flex items-center gap-2 px-6 py-3 border border-black/10 text-black rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black/5 hover:scale-105 transition-all"
+                  className="inline-flex items-center gap-2 px-6 py-3 border rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                  style={{
+                    borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.2)" : "rgba(0,0,0,0.1)",
+                    color: isAdmirerMode ? "#5C1A2A" : "#000",
+                  }}
                 >
                   <BookOpen size={14} />
                   Open Long Gossip
@@ -483,7 +619,11 @@ export default function BoardViewPage() {
               {/* Coverflow carousel */}
               <div
                 ref={carouselRef}
-                className="relative h-[500px] flex items-center justify-center -mx-5 overflow-hidden"
+                className={`relative flex items-center justify-center -mx-5 ${isAdmirerMode ? "overflow-visible" : "overflow-hidden"}`}
+                style={{
+                  height: isAdmirerMode ? "560px" : "500px",
+                  perspective: "1200px",
+                }}
               >
                 {mixedItems.map((item, i) => {
                   const offset = i - activeIndex;
@@ -491,7 +631,12 @@ export default function BoardViewPage() {
 
                   if (absOffset > 4) return null;
 
-                  const translateX = offset * 160;
+                  // Bigger cards & wider spacing for admirer mode
+                  const cardWidth = isAdmirerMode ? 420 : 280;
+                  const spacing = isAdmirerMode ? 240 : 160;
+                  const rotateAmount = isAdmirerMode ? 15 : 30;
+
+                  const translateX = offset * spacing;
                   const translateZ =
                     absOffset === 0 ? 60 : -100 - absOffset * 40;
                   const scale =
@@ -502,7 +647,7 @@ export default function BoardViewPage() {
                     absOffset === 0
                       ? 1
                       : Math.max(0.65 - absOffset * 0.12, 0.15);
-                  const rotateY = offset > 0 ? -30 : offset < 0 ? 30 : 0;
+                  const rotateY = offset > 0 ? -rotateAmount : offset < 0 ? rotateAmount : 0;
                   const zIndex = 20 - absOffset;
 
                   return (
@@ -510,7 +655,7 @@ export default function BoardViewPage() {
                       key={item._id}
                       className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
                       style={{
-                        width: "280px",
+                        width: `${cardWidth}px`,
                         transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                         opacity,
                         zIndex,
@@ -626,27 +771,61 @@ export default function BoardViewPage() {
           </div>
         </div>
 
-        {/* "Got something to confess?" CTA Banner */}
+        {/* CTA Banners */}
         {confessions && confessions.length > 0 && (
           <div className="px-4 pb-10 flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto">
             <Link
-              href={`/b/${slug}/confess`}
-              className="flex-1 block relative overflow-hidden rounded-2xl border border-black/5 hover:border-black/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
+              className="flex-1 block relative overflow-hidden rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99]"
+              style={{
+                borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.15)" : "rgba(0,0,0,0.05)",
+              }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-[#faf7f2] via-white to-[#f5f0e8]" />
-              <div className="absolute top-3 right-3 w-16 h-16 rounded-full bg-black/[0.02]" />
-              <div className="absolute bottom-2 left-2 w-10 h-10 rounded-full bg-black/[0.02]" />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: isAdmirerMode
+                    ? "linear-gradient(135deg, #FFF8F3 0%, #FFF2EC 50%, #FFFAF5 100%)"
+                    : "linear-gradient(135deg, #faf7f2, #fff, #f5f0e8)",
+                }}
+              />
+              <div
+                className="absolute top-3 right-3 w-16 h-16 rounded-full"
+                style={{ background: isAdmirerMode ? "rgba(201,169,110,0.04)" : "rgba(0,0,0,0.02)" }}
+              />
+              <div
+                className="absolute bottom-2 left-2 w-10 h-10 rounded-full"
+                style={{ background: isAdmirerMode ? "rgba(201,169,110,0.04)" : "rgba(0,0,0,0.02)" }}
+              />
               <div className="relative flex flex-col items-center text-center py-8 px-6">
-                <span className="text-3xl mb-3">🫖</span>
-                <h3 className="text-base font-black tracking-tight serif text-black mb-1">
-                  Got something to confess?
+                <span className="text-3xl mb-3">{isAdmirerMode ? "💌" : "🫖"}</span>
+                <h3
+                  className="text-base font-black tracking-tight serif mb-1"
+                  style={{ color: isAdmirerMode ? "#5C1A2A" : "#000" }}
+                >
+                  {isAdmirerMode ? "Write a Love Letter" : "Got something to confess?"}
                 </h3>
-                <p className="text-[11px] text-black/35 mb-4 leading-relaxed">
-                  Spill the tea anonymously. No sign up, no judgement.
+                <p
+                  className="text-[11px] mb-4 leading-relaxed"
+                  style={{ color: isAdmirerMode ? "rgba(155,58,92,0.45)" : "rgba(0,0,0,0.35)" }}
+                >
+                  {isAdmirerMode
+                    ? "Pour your heart out anonymously. They'll never know."
+                    : "Spill the tea anonymously. No sign up, no judgement."}
                 </p>
-                <span className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">
-                  <Plus size={12} />
-                  Confess Now
+                <span
+                  className="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest"
+                  style={{
+                    background: isAdmirerMode
+                      ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
+                      : "#000",
+                    boxShadow: isAdmirerMode
+                      ? "0 4px 16px rgba(155, 58, 92, 0.2)"
+                      : undefined,
+                  }}
+                >
+                  {isAdmirerMode ? <Heart size={12} /> : <Plus size={12} />}
+                  {isAdmirerMode ? "Write Letter" : "Confess Now"}
                 </span>
               </div>
             </Link>
@@ -690,21 +869,44 @@ export default function BoardViewPage() {
             />
           </Link>
           <Link
-            href={`/b/${slug}/confess`}
-            className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
-            title="Drop a Confession"
+            href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
+            className="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all"
+            title={isAdmirerMode ? "Send Love Letter" : "Drop a Confession"}
+            style={{
+              background: isAdmirerMode
+                ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
+                : "#000",
+              boxShadow: isAdmirerMode
+                ? "0 8px 24px rgba(155, 58, 92, 0.35)"
+                : "0 8px 24px rgba(0,0,0,0.2)",
+            }}
           >
-            <Plus size={22} />
+            {isAdmirerMode ? <Heart size={20} /> : <Plus size={22} />}
           </Link>
         </div>
       )}
 
       {/* Real-time Toast */}
       {showToast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 bg-black text-white rounded-full shadow-xl shadow-black/20 flex items-center gap-3 z-50 animate-[slideUp_0.3s_ease-out]">
-          <Bell size={14} className="text-green-400 rotate-12" />
-          <span className="text-[11px] font-bold uppercase tracking-widest text-green-50">
-            Someone spilled new tea!
+        <div
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full shadow-xl flex items-center gap-3 z-50 animate-[slideUp_0.3s_ease-out]"
+          style={{
+            background: isAdmirerMode
+              ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
+              : "#000",
+            color: "#fff",
+            boxShadow: isAdmirerMode
+              ? "0 8px 32px rgba(155, 58, 92, 0.3)"
+              : "0 8px 24px rgba(0,0,0,0.2)",
+          }}
+        >
+          {isAdmirerMode ? (
+            <Heart size={14} fill="currentColor" style={{ color: "rgba(255,200,200,0.6)" }} />
+          ) : (
+            <Bell size={14} className="text-green-400 rotate-12" />
+          )}
+          <span className="text-[11px] font-bold uppercase tracking-widest">
+            {isAdmirerMode ? "Someone sent a love letter! 💌" : "Someone spilled new tea!"}
           </span>
         </div>
       )}

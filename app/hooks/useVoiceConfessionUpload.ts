@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { getVisitorId } from "@/app/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
 
 interface UseVoiceConfessionUploadOptions {
@@ -53,6 +54,7 @@ export const useVoiceConfessionUpload = (
         isAnonymousVoice: false,
         duration,
         boardId: (boardId || options?.boardId)!,
+        visitorId: getVisitorId(),
       });
 
       return {

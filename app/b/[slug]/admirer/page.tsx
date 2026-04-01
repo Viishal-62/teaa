@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { CATEGORY_INFO } from "@/app/lib/utils";
-import EmojiPicker from "@/app/components/EmojiPicker";
+import { CATEGORY_INFO, getVisitorId, parseConvexError } from "@/app/lib/utils";
 import Link from "next/link";
-import { ArrowLeft, Heart, Send } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, BookOpen, Heart, Send, Sparkles, Timer } from "lucide-react";
+import RateLimitModal from "@/app/components/RateLimitModal";
+import { motion } from "framer-motion";
 
 const ADMIRER_CATEGORIES = [
   "crush",
@@ -19,6 +19,14 @@ const ADMIRER_CATEGORIES = [
   "confession",
 ];
 
+function getWordMood(count: number) {
+  if (count === 0) return { emoji: "✨", label: "start writing..." };
+  if (count < 20) return { emoji: "💧", label: "a whisper" };
+  if (count < 100) return { emoji: "💌", label: "a sweet note" };
+  if (count < 300) return { emoji: "💝", label: "a love letter" };
+  return { emoji: "📜", label: "a full confession" };
+}
+
 export default function AdmirerConfessPage() {
   const params = useParams();
   const router = useRouter();
@@ -26,7 +34,14 @@ export default function AdmirerConfessPage() {
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const createConfession = useMutation(api.confessions.create);
+  const checkModeration = useAction(api.moderationAction.checkContent);
 
+  const [moderationError, setModerationError] = useState<{
+    flaggedWords: { word: string; start: number; end: number }[];
+    message: string;
+  } | null>(null);
+  const [showRateLimit, setShowRateLimit] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
   const [recipient, setRecipient] = useState("");
   const [text, setText] = useState("");
   const [category, setCategory] = useState("crush");
@@ -34,27 +49,56 @@ export default function AdmirerConfessPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const mood = useMemo(() => getWordMood(wordCount), [wordCount]);
 
   const handleSubmit = async () => {
-    if (!text.trim() || !category || !board || wordCount > 500) {
-      return;
-    }
+    if (!text.trim() || !category || !board || wordCount > 500) return;
     setIsSubmitting(true);
-    try {
-      // Store recipient in the text as a prefix
-      const finalText = recipient.trim() 
-        ? `To: ${recipient.trim()} — ${text.trim()}`
-        : text.trim();
+    setModerationError(null);
 
+    const finalText = recipient.trim()
+      ? `To: ${recipient.trim()} — ${text.trim()}`
+      : text.trim();
+
+    try {
+      // 1. Perform synchronous AI moderation check
+      const aiModResult = await checkModeration({ text: finalText });
+      if (!aiModResult.isClean) {
+        setModerationError({
+          flaggedWords: [],
+          message: aiModResult.reason || "Content flagged by moderation",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. If clean, proceed to create
       await createConfession({
         boardId: board._id,
         text: finalText,
         category,
-        isGlobal: true, // Admirer letters are always global by default for excitement
+        isGlobal: true,
+        visitorId: getVisitorId(),
       });
       setSubmitted(true);
-    } catch (error) {
-      console.error("Failed to submit admirer letter:", error);
+    } catch (error: any) {
+      const parsedErr = parseConvexError(error);
+      
+      if (parsedErr?.type === "moderation_error") {
+        setModerationError({
+          flaggedWords: parsedErr.flaggedWords || [],
+          message: parsedErr.message,
+        });
+        return;
+      }
+
+      if (parsedErr?.type === "rate_limit_error") {
+        setRateLimitMessage(parsedErr.message);
+        setShowRateLimit(true);
+        return;
+      }
+
+      console.error("Failed to submit confession:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,20 +106,28 @@ export default function AdmirerConfessPage() {
 
   if (board === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#faf8f5]">
-        <div className="w-8 h-8 border-2 border-[#be185d]/10 border-t-[#be185d]/40 rounded-full animate-spin" />
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#1A0B12" }}
+      >
+        <div className="w-8 h-8 border-2 border-white/5 border-t-white/20 rounded-full animate-spin" />
       </div>
     );
   }
 
   if (board === null) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#faf8f5]">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
+        style={{ background: "#1A0B12" }}
+      >
         <span className="text-5xl mb-4">🫣</span>
-        <h1 className="text-2xl font-bold mb-2 serif">Board not found</h1>
+        <h1 className="text-2xl font-bold mb-2 serif text-white">
+          Board not found
+        </h1>
         <Link
           href="/"
-          className="px-6 py-3 bg-black text-white rounded-xl text-sm font-medium mt-4"
+          className="px-6 py-3 bg-white text-black rounded-xl text-sm font-medium mt-4"
         >
           Go Home
         </Link>
@@ -86,40 +138,71 @@ export default function AdmirerConfessPage() {
   // ── Success screen ──
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-5 page-enter bg-[#fdf2f8]">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+      <div
+        className="min-h-screen flex items-center justify-center px-5"
+        style={{
+          background: "linear-gradient(160deg, #1A0B12 0%, #26101C 50%, #120810 100%)",
+        }}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 100, damping: 15 }}
           className="max-w-sm w-full text-center"
         >
-          <div className="bg-white rounded-3xl border border-pink-100 p-10 shadow-2xl shadow-pink-200/50 relative overflow-hidden">
-            {/* Floating hearts background */}
-            <motion.div 
-              animate={{ y: [-20, -100], opacity: [0, 1, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="absolute top-1/2 left-1/4 text-pink-200"
+          <div
+            className="rounded-3xl p-10 relative overflow-hidden"
+            style={{
+              background: "rgba(255, 255, 255, 0.04)",
+              border: "1px solid rgba(201, 169, 110, 0.12)",
+              boxShadow: "0 30px 80px rgba(0, 0, 0, 0.4)",
+            }}
+          >
+            {/* Wax seal stamp */}
+            <motion.div
+              initial={{ scale: 2.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                delay: 0.2,
+                type: "spring",
+                stiffness: 150,
+                damping: 12,
+              }}
+              className="w-20 h-20 rounded-full mx-auto mb-6 flex items-center justify-center"
+              style={{
+                background:
+                  "radial-gradient(circle at 38% 35%, #B22E4A, #8B1A3A 55%, #6B1228)",
+                boxShadow:
+                  "0 8px 32px rgba(139, 26, 58, 0.5), inset 0 1px 3px rgba(255,255,255,0.1)",
+              }}
             >
-              <Heart fill="currentColor" size={20} />
-            </motion.div>
-            <motion.div 
-              animate={{ y: [-10, -80], opacity: [0, 1, 0] }}
-              transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
-              className="absolute top-2/3 right-1/4 text-pink-200"
-            >
-              <Heart fill="currentColor" size={16} />
+              <span className="text-2xl">💌</span>
             </motion.div>
 
-            <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
-              💌
-            </div>
-            <h1 className="text-2xl font-black serif tracking-tight text-pink-900 mb-2">
-              Letter Sent!
-            </h1>
-            <p className="text-sm text-pink-900/40 font-medium mb-8 leading-relaxed">
-              Your secret admirer message has been sealed and delivered to the board.
-            </p>
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-2xl font-black serif tracking-tight text-white mb-2"
+            >
+              Letter Sealed & Sent
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.65 }}
+              className="text-sm font-medium mb-8 leading-relaxed"
+              style={{ color: "rgba(201, 169, 110, 0.4)" }}
+            >
+              Your message has been delivered anonymously to the board.
+            </motion.p>
 
-            <div className="flex flex-col gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="flex flex-col gap-3"
+            >
               <button
                 type="button"
                 onClick={() => {
@@ -127,80 +210,129 @@ export default function AdmirerConfessPage() {
                   setText("");
                   setRecipient("");
                 }}
-                className="w-full py-4 bg-[#be185d] text-white rounded-2xl text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-pink-200 transition-all active:scale-95"
+                className="w-full py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest text-white transition-all active:scale-[0.97]"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #9B3A5C 0%, #7B2040 100%)",
+                  boxShadow: "0 8px 24px rgba(155, 58, 92, 0.3)",
+                }}
               >
-                Send Another One
+                Send Another Letter
               </button>
               <Link
                 href={`/b/${slug}`}
-                className="w-full py-4 text-[11px] text-pink-900/30 font-bold uppercase tracking-widest hover:text-pink-900 transition-colors block"
+                className="w-full py-4 text-[11px] font-bold uppercase tracking-widest hover:text-white/40 transition-colors block text-center"
+                style={{ color: "rgba(255,255,255,0.15)" }}
               >
                 Back to the Board
               </Link>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       </div>
     );
   }
 
+  // ── Main form ──
   return (
-    <div className="min-h-screen page-enter bg-[#fdf2f8] text-pink-950 font-sans">
+    <div
+      className="min-h-screen page-enter font-sans relative"
+      style={{
+        background: "linear-gradient(160deg, #1A0B12 0%, #26101C 50%, #120810 100%)",
+        color: "#fff",
+      }}
+    >
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center px-5 py-4 bg-white/70 backdrop-blur-xl border-b border-pink-100">
+      <header
+        className="sticky top-0 z-50 flex items-center px-5 py-4 border-b"
+        style={{
+          background: "rgba(26, 11, 18, 0.7)",
+          backdropFilter: "blur(16px)",
+          borderColor: "rgba(201, 169, 110, 0.08)",
+        }}
+      >
         <Link
           href={`/b/${slug}`}
-          className="p-2 -ml-2 text-pink-900/30 hover:text-pink-900 transition-colors"
+          className="p-2 -ml-2 transition-opacity hover:opacity-60"
+          style={{ color: "rgba(201, 169, 110, 0.3)" }}
         >
           <ArrowLeft size={20} />
         </Link>
-        <span className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.3em] text-pink-900/20">
+        <span
+          className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2"
+          style={{ color: "rgba(201, 169, 110, 0.2)" }}
+        >
+          <span style={{ fontSize: "6px" }}>✦</span>
           Secret Admirer
+          <span style={{ fontSize: "6px" }}>✦</span>
         </span>
         <div className="w-8" />
       </header>
 
-      <main className="max-w-lg mx-auto px-6 py-10">
+      <main className="max-w-lg mx-auto px-6 py-10 relative z-10">
         {/* Intro */}
         <div className="text-center mb-10">
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1] }} 
-            transition={{ repeat: Infinity, duration: 2 }}
+          <motion.div
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
             className="text-4xl mb-4 inline-block"
           >
             💝
           </motion.div>
-          <h1 className="text-2xl font-black serif tracking-tight text-pink-900 mb-2">
-            Send a Love Letter
+          <h1
+            className="text-[26px] font-black serif tracking-tight mb-2"
+            style={{ color: "#fff" }}
+          >
+            Write a Love Letter
           </h1>
-          <p className="text-[12px] text-pink-900/40 font-medium tracking-wide">
+          <p
+            className="text-[13px] font-medium tracking-wide"
+            style={{ color: "rgba(201, 169, 110, 0.3)" }}
+          >
             Pour your heart out. They&apos;ll never know it was you.
           </p>
         </div>
 
-        {/* Paper-style form */}
-        <div className="bg-white rounded-[2rem] border border-pink-100 shadow-2xl shadow-pink-200/40 overflow-hidden relative">
-          {/* Paper texture */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
-          
-          <div className="p-8 space-y-8 relative z-10">
-            {/* Recipient Input */}
+        {/* Form card */}
+        <div
+          className="rounded-[24px] overflow-hidden relative"
+          style={{
+            background: "rgba(255, 255, 255, 0.035)",
+            border: "1px solid rgba(201, 169, 110, 0.1)",
+            boxShadow:
+              "0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.02)",
+          }}
+        >
+          <div className="p-7 space-y-7 relative z-10">
+            {/* Recipient */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-pink-900/30 mb-3 block">
-                To: (Optional)
+              <label
+                className="text-[10px] font-bold uppercase tracking-widest mb-3 block"
+                style={{ color: "rgba(201, 169, 110, 0.3)" }}
+              >
+                To (Optional)
               </label>
               <input
                 type="text"
                 value={recipient}
                 onChange={(e) => setRecipient(e.target.value)}
                 placeholder="Name or @handle"
-                className="w-full bg-pink-50/50 border-b-2 border-pink-100 px-0 py-3 outline-none text-lg font-bold serif italic text-pink-900 placeholder:text-pink-200 focus:border-[#be185d] transition-all"
+                className="w-full bg-transparent border-b-2 px-0 py-3 outline-none text-lg font-bold serif italic placeholder:text-white/10 transition-colors"
+                style={{
+                  color: "rgba(255, 255, 255, 0.85)",
+                  borderColor: recipient
+                    ? "rgba(155, 58, 92, 0.4)"
+                    : "rgba(201, 169, 110, 0.1)",
+                }}
               />
             </div>
 
-            {/* Message Area */}
+            {/* Message */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-pink-900/30 mb-3 block">
+              <label
+                className="text-[10px] font-bold uppercase tracking-widest mb-3 block"
+                style={{ color: "rgba(201, 169, 110, 0.3)" }}
+              >
                 Your Letter
               </label>
               <textarea
@@ -208,18 +340,42 @@ export default function AdmirerConfessPage() {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Write your secret compliment or crush confession here..."
                 rows={6}
-                className="w-full bg-transparent resize-none outline-none text-base leading-relaxed placeholder:text-pink-200 serif italic text-pink-900/80"
+                className="w-full bg-transparent resize-none outline-none text-base leading-relaxed serif italic"
+                style={{
+                  color: "rgba(255, 255, 255, 0.75)",
+                }}
               />
-              <div className="flex justify-end mt-2">
-                <span className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-pink-200"}`}>
-                  {500 - wordCount} words remaining
+
+              {/* Word count mood */}
+              <div className="flex items-center justify-between mt-2">
+                <span
+                  className="text-[10px] font-medium flex items-center gap-1.5"
+                  style={{ color: "rgba(201, 169, 110, 0.2)" }}
+                >
+                  <span>{mood.emoji}</span>
+                  <span className="italic">{mood.label}</span>
+                </span>
+                <span
+                  className={`text-[10px] font-mono ${
+                    wordCount > 500
+                      ? "text-red-400 font-bold"
+                      : ""
+                  }`}
+                  style={{
+                    color: wordCount > 500 ? undefined : "rgba(201, 169, 110, 0.15)",
+                  }}
+                >
+                  {500 - wordCount}
                 </span>
               </div>
             </div>
 
-            {/* Category Picker */}
+            {/* Category */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-pink-900/30 mb-4 block">
+              <label
+                className="text-[10px] font-bold uppercase tracking-widest mb-4 block"
+                style={{ color: "rgba(201, 169, 110, 0.3)" }}
+              >
                 Message Type
               </label>
               <div className="flex flex-wrap gap-2">
@@ -231,11 +387,21 @@ export default function AdmirerConfessPage() {
                       key={cat}
                       type="button"
                       onClick={() => setCategory(cat)}
-                      className={`px-4 py-2 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${
-                        active 
-                          ? "bg-[#be185d] text-white shadow-md shadow-pink-100" 
-                          : "bg-pink-50 text-pink-400 hover:bg-pink-100 hover:text-pink-600"
-                      }`}
+                      className="px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95"
+                      style={{
+                        background: active
+                          ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
+                          : "rgba(255, 255, 255, 0.03)",
+                        color: active ? "#fff" : "rgba(255, 255, 255, 0.2)",
+                        border: `1px solid ${
+                          active
+                            ? "rgba(155, 58, 92, 0.3)"
+                            : "rgba(255, 255, 255, 0.05)"
+                        }`,
+                        boxShadow: active
+                          ? "0 4px 16px rgba(155, 58, 92, 0.2)"
+                          : "none",
+                      }}
                     >
                       {info?.emoji} {info?.label || cat}
                     </button>
@@ -246,30 +412,70 @@ export default function AdmirerConfessPage() {
           </div>
         </div>
 
-        {/* Action Button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        {/* Rejection Feedback */}
+        {moderationError && !showRateLimit && (
+          <div className="mt-10 mb-2 p-8 rounded-[2.5rem] bg-[#1a0e0e]/60 border border-rose-500/20 shadow-2xl shadow-rose-950/40 backdrop-blur-xl flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+            <div className="relative mb-5">
+              <div className="absolute inset-0 scale-150 blur-2xl opacity-20 bg-rose-500 rounded-full" />
+              <div className="relative w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 animate-pulse">
+                <Sparkles size={24} className="text-rose-500" />
+              </div>
+            </div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3 italic">Seal Broken</h3>
+            <p className="text-[15px] text-rose-50 leading-relaxed max-w-[280px] serif italic">
+              &ldquo;{moderationError.message}&rdquo;
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <p className="text-[9px] text-rose-500/40 font-bold uppercase tracking-widest">
+                Re-write the letter
+              </p>
+              <button
+                onClick={() => setModerationError(null)}
+                className="px-8 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-[10px] font-bold uppercase tracking-widest text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+              >
+                I'll revise my words
+              </button>
+            </div>
+          </div>
+        )}
+        <button
           onClick={handleSubmit}
           disabled={!text.trim() || isSubmitting || wordCount > 500}
-          className="w-full mt-8 py-5 bg-[#be185d] text-white rounded-2xl text-[12px] font-bold uppercase tracking-[0.2em] shadow-xl shadow-pink-200 flex items-center justify-center gap-3 transition-all disabled:opacity-30"
+          className="w-full mt-8 py-5 rounded-2xl text-[12px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all disabled:opacity-15 active:scale-[0.98]"
+          style={{
+            background: "linear-gradient(135deg, #9B3A5C 0%, #7B2040 100%)",
+            boxShadow: "0 12px 40px rgba(155, 58, 92, 0.25)",
+            color: "#fff",
+          }}
         >
           {isSubmitting ? (
             <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
           ) : (
             <>
-              <Send size={16} />
+              <Send size={15} />
               Seal & Send Letter
             </>
           )}
-        </motion.button>
+        </button>
 
-        <div className="mt-8 flex items-center gap-3 justify-center text-pink-900/20">
-          <div className="h-px w-8 bg-current" />
-          <Heart size={14} fill="currentColor" />
-          <div className="h-px w-8 bg-current" />
+        {/* Decorative divider */}
+        <div className="mt-8 flex items-center gap-3 justify-center">
+          <div className="h-px w-10" style={{ background: "rgba(201, 169, 110, 0.1)" }} />
+          <Heart
+            size={11}
+            fill="currentColor"
+            style={{ color: "rgba(155, 58, 92, 0.15)" }}
+          />
+          <div className="h-px w-10" style={{ background: "rgba(201, 169, 110, 0.1)" }} />
         </div>
       </main>
+
+      <RateLimitModal 
+        isOpen={showRateLimit} 
+        onClose={() => setShowRateLimit(false)} 
+        message={rateLimitMessage}
+      />
     </div>
   );
 }

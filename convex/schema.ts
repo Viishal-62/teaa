@@ -17,6 +17,9 @@ export default defineSchema({
     allowedReactions: v.optional(v.array(v.string())), // Chosen 4 custom reactions
     sharePrompt: v.optional(v.string()), // Custom viral share text
     inboxLastSeenAt: v.optional(v.number()), // Creator inbox watermark for unread/read
+    aiSummary: v.optional(v.string()), // AI Vibe summary
+    aiSummaryUpdatedAt: v.optional(v.number()), // For caching
+    bannedWords: v.optional(v.array(v.string())), // Creator-defined banned words
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
@@ -38,6 +41,9 @@ export default defineSchema({
     views: v.optional(v.number()), // tracked when a user flips the card
     expiresAt: v.optional(v.number()), // timed confession auto-expiry timestamp
     maxViews: v.optional(v.number()), // optional auto-delete after X views
+    isFlagged: v.optional(v.boolean()), // Auto-flagged for moderation
+    flagReason: v.optional(v.string()), // Reason for flagging
+    visitorId: v.optional(v.string()), // For rate limiting
     createdAt: v.number(),
   })
     .index("by_boardId", ["boardId"])
@@ -45,7 +51,8 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .index("by_expiresAt", ["expiresAt"])
     .index("by_isGlobal", ["isGlobal"])
-    .index("by_type", ["type"]),
+    .index("by_type", ["type"])
+    .index("by_visitorId_createdAt", ["visitorId", "createdAt"]),
 
   // ─── Reactions ───
   reactions: defineTable({
@@ -56,7 +63,8 @@ export default defineSchema({
   })
     .index("by_confessionId", ["confessionId"])
     .index("by_confessionId_type", ["confessionId", "type"])
-    .index("by_confessionId_visitorId", ["confessionId", "visitorId"]),
+    .index("by_confessionId_visitorId", ["confessionId", "visitorId"])
+    .index("by_visitorId_createdAt", ["visitorId", "createdAt"]),
 
   // ─── Comments ───
   comments: defineTable({
@@ -64,10 +72,12 @@ export default defineSchema({
     text: v.string(),
     gifUrl: v.optional(v.string()), // optional GIF URL from Tenor
     displayName: v.string(), // auto-generated anonymous name
+    visitorId: v.string(), // For rate limiting
     createdAt: v.number(),
   })
     .index("by_confessionId", ["confessionId"])
-    .index("by_createdAt", ["createdAt"]),
+    .index("by_createdAt", ["createdAt"])
+    .index("by_visitorId_createdAt", ["visitorId", "createdAt"]),
 
   // ─── Spills (Deep Gossip Books) ───
   spills: defineTable({
@@ -105,4 +115,31 @@ export default defineSchema({
     .index("by_spillId", ["spillId"])
     .index("by_spillId_type", ["spillId", "type"])
     .index("by_spillId_visitorId", ["spillId", "visitorId"]),
+
+  // ─── Global AI Summaries ───
+  globalSummaries: defineTable({
+    summary: v.string(),
+    createdAt: v.number(),
+  }).index("by_createdAt", ["createdAt"]),
+
+  // ─── Moderation Reports ───
+  reports: defineTable({
+    confessionId: v.id("confessions"),
+    visitorId: v.string(),
+    reason: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_confessionId", ["confessionId"])
+    .index("by_visitorId", ["visitorId"]),
+
+  // ─── Creator Replies (Verified Board Owner Responses) ───
+  creatorReplies: defineTable({
+    confessionId: v.id("confessions"),
+    boardId: v.id("boards"),
+    text: v.string(),
+    creatorToken: v.string(), // Must match board.creatorToken
+    createdAt: v.number(),
+  })
+    .index("by_confessionId", ["confessionId"])
+    .index("by_boardId", ["boardId"]),
 });

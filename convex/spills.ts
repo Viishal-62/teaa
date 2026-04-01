@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { generateAnonName } from "./helpers";
+import { moderateText } from "./moderation";
 
 // ─── Create a new Spill ───
 export const create = mutation({
@@ -12,6 +13,17 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     if (!args.title.trim()) throw new Error("Title is required");
+
+    // ─── Content Moderation ───
+    const board = await ctx.db.get(args.boardId);
+    const titleMod = moderateText(args.title, board?.bannedWords ?? []);
+    if (!titleMod.isClean) {
+      throw new Error(JSON.stringify({
+        type: "moderation_error",
+        flaggedWords: titleMod.flaggedWords,
+        message: "Your spill title contains restricted words. Please change it.",
+      }));
+    }
 
     const displayName = generateAnonName();
 

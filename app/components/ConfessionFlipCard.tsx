@@ -5,9 +5,12 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, REACTION_INFO, getVisitorId } from "@/app/lib/utils";
 import Link from "next/link";
-import { Eye } from "lucide-react";
+import { Eye, Flag, AlertCircle, CheckCircle2 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import CardActions from "./CardActions";
+import { AnimatePresence, motion } from "framer-motion";
+import RateLimitModal from "./RateLimitModal";
+import { createPortal } from "react-dom";
 
 interface ConfessionFlipCardProps {
   confession: {
@@ -35,6 +38,12 @@ export default function ConfessionFlipCard({
   const catInfo = CATEGORY_INFO[confession.category];
   const toggleReaction = useMutation(api.reactions.toggle);
   const incrementView = useMutation(api.confessions.incrementView);
+  const reportConfession = useMutation(api.reports.create);
+  
+  const [reporting, setReporting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [showRateLimit, setShowRateLimit] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
   const reactionCounts = useQuery(api.reactions.getCounts, {
     confessionId: confession._id,
   });
@@ -50,11 +59,27 @@ export default function ConfessionFlipCard({
   const handleReactionClick = async (type: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!visitorId) return;
-    await toggleReaction({
-      confessionId: confession._id,
-      type: type as any,
-      visitorId,
-    });
+    try {
+      await toggleReaction({
+        confessionId: confession._id,
+        type: type as any,
+        visitorId,
+      });
+    } catch (error: any) {
+      try {
+        const errData = JSON.parse(error.message || error.data?.message || "");
+        if (errData.type === "rate_limit_error") {
+          setRateLimitMessage(errData.message);
+          setShowRateLimit(true);
+        }
+      } catch {
+        if (error.message?.includes("reacting too fast")) {
+          setRateLimitMessage(error.message);
+          setShowRateLimit(true);
+        }
+      }
+      console.error("Reaction failed:", error);
+    }
   };
 
   const handleFlip = () => {
@@ -63,6 +88,27 @@ export default function ConfessionFlipCard({
       setHasViewed(true);
     }
     setIsFlipped(!isFlipped);
+  };
+
+  const handleReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (reporting || reportSuccess) return;
+    
+    // For simplicity, we just trigger it. In a real app we'd have a reason selector.
+    setReporting(true);
+    try {
+      await reportConfession({
+        confessionId: confession._id,
+        visitorId: visitorId || "anon",
+        reason: "Inappropriate",
+      });
+      setReportSuccess(true);
+      setTimeout(() => setReportSuccess(false), 3000);
+    } catch (err) {
+      console.error("Report failed", err);
+    } finally {
+      setReporting(false);
+    }
   };
 
   const activeReactions =
@@ -215,9 +261,43 @@ export default function ConfessionFlipCard({
             >
               ✕
             </button>
+
+            {/* Report Button (Subtle) */}
+            <button
+              type="button"
+              onClick={handleReport}
+              title="Report this confession"
+              className="absolute top-3 left-3 flex items-center gap-1 text-[8px] font-bold uppercase tracking-widest text-black/10 hover:text-red-400 hover:opacity-100 transition-all opacity-60"
+            >
+              <Flag size={10} />
+              Report
+            </button>
+
+            {/* Simple Report Toast notification within card */}
+            <AnimatePresence>
+              {reportSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/90 text-white px-3 py-1.5 rounded-full flex items-center gap-2 z-50 shadow-lg pointer-events-none"
+                >
+                  <CheckCircle2 size={12} className="text-green-400" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">Reported! Thank you.</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
+      {showRateLimit && typeof document !== "undefined" && createPortal(
+        <RateLimitModal 
+          isOpen={showRateLimit} 
+          onClose={() => setShowRateLimit(false)} 
+          message={rateLimitMessage}
+        />,
+        document.body
+      )}
     </div>
   );
 }

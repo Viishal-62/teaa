@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
+import NotificationCenter from "./components/NotificationCenter";
 
 export const metadata: Metadata = {
   title: "Teaa 🫣 — Anonymous Confessions",
@@ -28,8 +29,12 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ConvexClientProvider>
+          {children}
+          <NotificationCenter />
+        </ConvexClientProvider>
       </body>
     </html>
   );
 }
+

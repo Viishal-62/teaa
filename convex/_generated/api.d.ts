@@ -8,14 +8,20 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as boards from "../boards.js";
 import type * as chapters from "../chapters.js";
 import type * as comments from "../comments.js";
 import type * as confessions from "../confessions.js";
+import type * as creatorReplies from "../creatorReplies.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
 import type * as helpers from "../helpers.js";
+import type * as moderation from "../moderation.js";
+import type * as moderationAction from "../moderationAction.js";
+import type * as notifications from "../notifications.js";
 import type * as reactions from "../reactions.js";
+import type * as reports from "../reports.js";
 import type * as spillReactions from "../spillReactions.js";
 import type * as spills from "../spills.js";
 
@@ -26,14 +32,20 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   boards: typeof boards;
   chapters: typeof chapters;
   comments: typeof comments;
   confessions: typeof confessions;
+  creatorReplies: typeof creatorReplies;
   crons: typeof crons;
   files: typeof files;
   helpers: typeof helpers;
+  moderation: typeof moderation;
+  moderationAction: typeof moderationAction;
+  notifications: typeof notifications;
   reactions: typeof reactions;
+  reports: typeof reports;
   spillReactions: typeof spillReactions;
   spills: typeof spills;
 }>;

@@ -74,6 +74,7 @@ export default function CreateBoard() {
     "no-it-burns",
   ]);
   const [sharePrompt, setSharePrompt] = useState(SHARE_PROMPTS[0].id);
+  const [bannedWordsInput, setBannedWordsInput] = useState("");
   const [result, setResult] = useState<{ slug: string; pin?: string } | null>(
     null,
   );
@@ -103,6 +104,7 @@ export default function CreateBoard() {
         slug: selectedSlug || undefined,
         allowedReactions,
         sharePrompt,
+        bannedWords: bannedWordsInput.split(",").map(w => w.trim()).filter(w => !!w),
       });
       setResult({ slug: res.slug, pin: !isPublic ? pin : undefined });
     } catch (error) {
@@ -444,6 +446,26 @@ export default function CreateBoard() {
                 ))}
               </div>
             </div>
+
+            {/* Banned Words Settings */}
+            {boardType !== "secret-admirer" && (
+              <div className="p-4 rounded-xl bg-red-50/30 border border-red-100/50">
+                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-red-900/40 mb-2 block">
+                  🛡️ Pro Moderation: Banned Words
+                </label>
+                <textarea
+                  value={bannedWordsInput}
+                  onChange={(e) => setBannedWordsInput(e.target.value)}
+                  placeholder="nigger, faggot, tranny, kike, paki (comma separated)"
+                  rows={2}
+                  className="w-full text-[11px] font-medium bg-white border border-red-100/50 rounded-xl px-4 py-3 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100/50 transition-all placeholder:text-black/10 resize-none"
+                />
+                <p className="text-[9px] text-red-900/30 font-medium mt-1.5 leading-relaxed">
+                  Confessions containing these words will be automatically hidden.
+                  Global restricted words are filtered by default.
+                </p>
+              </div>
+            )}
 
             {/* Theme selector */}
             <div>

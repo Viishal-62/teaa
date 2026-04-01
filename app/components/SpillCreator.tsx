@@ -385,8 +385,20 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
           : publicBoards?.find((b) => b._id === selectedBoardId)?.slug ||
             "global";
       router.push(`/b/${targetSlug}/s/${res.spillId}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      // Try to parse moderation error
+      try {
+        const errMsg = err?.message || err?.data?.message || "";
+        const errData = JSON.parse(errMsg);
+        if (errData.type === "moderation_error") {
+          const words = errData.flaggedWords?.map((f: any) => f.word).join(", ");
+          alert(`🛡️ ${errData.message}\n\nFlagged words: ${words}`);
+          return;
+        }
+      } catch {
+        // Not a moderation error
+      }
       alert("Failed to publish. Please try again.");
     } finally {
       setIsSubmitting(false);

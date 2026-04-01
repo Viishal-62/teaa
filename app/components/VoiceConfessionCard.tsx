@@ -9,6 +9,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, REACTION_INFO, getVisitorId } from "@/app/lib/utils";
 import Link from "next/link";
+import RateLimitModal from "./RateLimitModal";
+import { createPortal } from "react-dom";
 
 interface VoiceConfessionCardProps {
   id: string;
@@ -47,6 +49,8 @@ export const VoiceConfessionCard = ({
   const [duration, setDuration] = useState(0);
   const [bars, setBars] = useState<number[]>(generateIdleBars);
   const [copied, setCopied] = useState(false);
+  const [showRateLimit, setShowRateLimit] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -154,7 +158,23 @@ export const VoiceConfessionCard = ({
   const handleReactionClick = async (type: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!visitorId) return;
-    await toggleReaction({ confessionId, type: type as any, visitorId });
+    try {
+      await toggleReaction({ confessionId, type: type as any, visitorId });
+    } catch (error: any) {
+      try {
+        const errData = JSON.parse(error.message || error.data?.message || "");
+        if (errData.type === "rate_limit_error") {
+          setRateLimitMessage(errData.message);
+          setShowRateLimit(true);
+        }
+      } catch {
+        if (error.message?.includes("reacting too fast")) {
+          setRateLimitMessage(error.message);
+          setShowRateLimit(true);
+        }
+      }
+      console.error("Reaction failed:", error);
+    }
   };
 
   const handleShare = useCallback(async () => {
@@ -420,6 +440,15 @@ export const VoiceConfessionCard = ({
           className="hidden"
         />
       </div>
+
+      {showRateLimit && typeof document !== "undefined" && createPortal(
+        <RateLimitModal 
+          isOpen={showRateLimit} 
+          onClose={() => setShowRateLimit(false)} 
+          message={rateLimitMessage}
+        />,
+        document.body
+      )}
     </motion.div>
   );
 };

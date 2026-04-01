@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { CATEGORY_INFO } from "@/app/lib/utils";
+import { CATEGORY_INFO, getVisitorId, parseConvexError } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import Link from "next/link";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, AlertTriangle, X, Sparkles, Timer } from "lucide-react";
+import RateLimitModal from "@/app/components/RateLimitModal";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const CATEGORIES = [
   "regret",
@@ -23,12 +25,54 @@ const CATEGORIES = [
   "deep-dark",
 ];
 
+// ─── Render text with flagged words underlined in red ───
+function renderHighlightedText(
+  text: string,
+  flaggedWords: { word: string; start: number; end: number }[]
+) {
+  if (!flaggedWords || flaggedWords.length === 0) return text;
+
+  const parts: React.ReactNode[] = [];
+  let lastEnd = 0;
+
+  // Sort by start position
+  const sorted = [...flaggedWords].sort((a, b) => a.start - b.start);
+
+  for (const fw of sorted) {
+    // Clamp to text bounds
+    const start = Math.max(0, Math.min(fw.start, text.length));
+    const end = Math.max(start, Math.min(fw.end, text.length));
+
+    if (start > lastEnd) {
+      parts.push(text.substring(lastEnd, start));
+    }
+
+    parts.push(
+      <span
+        key={`flag-${start}`}
+        className="bg-red-100 text-red-600 underline decoration-red-500 decoration-wavy decoration-2 underline-offset-2 font-semibold px-0.5 rounded-sm"
+      >
+        {text.substring(start, end)}
+      </span>
+    );
+
+    lastEnd = end;
+  }
+
+  if (lastEnd < text.length) {
+    parts.push(text.substring(lastEnd));
+  }
+
+  return <>{parts}</>;
+}
+
 export default function ConfessPage() {
   const params = useParams();
   const slug = params.slug as string;
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const createConfession = useMutation(api.confessions.create);
+  const checkAIModeration = useAction(api.moderationAction.checkContent);
 
   const [text, setText] = useState("");
   const [category, setCategory] = useState("");
@@ -46,6 +90,30 @@ export default function ConfessPage() {
   >("never");
   const [customExpireAt, setCustomExpireAt] = useState("");
   const [customViews, setCustomViews] = useState("");
+  const [moderationError, setModerationError] = useState<{
+    flaggedWords: { word: string; start: number; end: number }[];
+    message: string;
+  } | null>(null);
+  const [showRateLimit, setShowRateLimit] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState("");
+  const [debouncedText, setDebouncedText] = useState("");
+
+  // Debounce text for real-time moderation check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedText(text);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [text]);
+
+  // Real-time moderation check
+  const moderationCheck = useQuery(
+    api.confessions.checkModeration,
+    debouncedText.trim().length > 2 && board
+      ? { text: debouncedText, boardId: board._id as Id<"boards"> }
+      : "skip"
+  );
+
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const parsedCustomExpireAt = customExpireAt
     ? new Date(customExpireAt).getTime()
@@ -72,8 +140,32 @@ export default function ConfessPage() {
     ) {
       return;
     }
+
+    // Check moderation result first
+    if (moderationCheck && !moderationCheck.isClean) {
+      setModerationError({
+        flaggedWords: moderationCheck.flaggedWords,
+        message: moderationCheck.message,
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setModerationError(null);
+
     try {
+      // 1. Perform synchronous AI moderation check
+      const aiModResult = await checkAIModeration({ text: text.trim() });
+      if (!aiModResult.isClean) {
+        setModerationError({
+          flaggedWords: [],
+          message: aiModResult.reason,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Proceed to create
       await createConfession({
         boardId: board._id,
         text: text.trim(),
@@ -95,9 +187,26 @@ export default function ConfessPage() {
             : disappearMode === "custom-views"
               ? parsedCustomViews
               : undefined,
+        visitorId: getVisitorId(),
       });
       setSubmitted(true);
-    } catch (error) {
+    } catch (error: any) {
+      const parsedErr = parseConvexError(error);
+      
+      if (parsedErr?.type === "moderation_error") {
+        setModerationError({
+          flaggedWords: parsedErr.flaggedWords || [],
+          message: parsedErr.message,
+        });
+        return;
+      }
+
+      if (parsedErr?.type === "rate_limit_error") {
+        setRateLimitMessage(parsedErr.message);
+        setShowRateLimit(true);
+        return;
+      }
+
       console.error("Failed to submit confession:", error);
     } finally {
       setIsSubmitting(false);
@@ -287,16 +396,40 @@ export default function ConfessPage() {
 
         {/* Form card */}
         <div className="bg-white rounded-2xl border border-black/5 shadow-xl shadow-black/[0.03]">
-          {/* Textarea */}
+          {/* Textarea with moderation overlay */}
           <div className="p-5 pb-0">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="write what's been sitting inside you..."
-              rows={5}
-              autoFocus
-              className="w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80"
-            />
+            <div className="relative">
+              {/* Underline overlay — renders behind the textarea */}
+              {moderationCheck && !moderationCheck.isClean && text.length > 0 && (
+                <div
+                  className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
+                  style={{ color: "transparent", padding: "0" }}
+                  aria-hidden
+                >
+                  {renderHighlightedText(text, moderationCheck.flaggedWords)}
+                </div>
+              )}
+              <textarea
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setModerationError(null);
+                }}
+                placeholder="write what's been sitting inside you..."
+                rows={5}
+                autoFocus
+                className="w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80"
+              />
+            </div>
+            {/* Real-time moderation warning */}
+            {moderationCheck && !moderationCheck.isClean && (
+              <div className="flex items-start gap-2 text-red-500 bg-red-50 rounded-xl px-3 py-2 mt-2 mb-2">
+                <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] font-medium leading-relaxed">
+                  {moderationCheck.message} — The highlighted words need to be removed.
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex items-center justify-between px-5 pb-4">
             <div className="relative">
@@ -515,7 +648,33 @@ export default function ConfessPage() {
           </div>
         </div>
 
-        {/* Submit */}
+        {/* Submit Rejection Feedback */}
+        {moderationError && !showRateLimit && (
+          <div className="mt-8 mb-4 p-8 rounded-[2.5rem] bg-[#1a0e0e] border border-rose-500/20 shadow-2xl shadow-rose-950/40 backdrop-blur-xl flex flex-col items-center text-center animate-in fade-in slide-in-from-top-4 duration-500 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+            <div className="relative mb-5">
+              <div className="absolute inset-0 scale-150 blur-2xl opacity-20 bg-rose-500 rounded-full" />
+              <div className="relative w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 animate-pulse">
+                <Sparkles size={24} className="text-rose-500" />
+              </div>
+            </div>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3">Brewing Interrupted</h3>
+            <p className="text-[15px] text-rose-50 leading-relaxed max-w-[280px] serif italic">
+              &ldquo;{moderationError.message}&rdquo;
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <p className="text-[9px] text-rose-500/40 font-bold uppercase tracking-widest">
+                Adjustment Required
+              </p>
+              <button
+                onClick={() => setModerationError(null)}
+                className="px-8 py-3 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-[10px] font-bold uppercase tracking-widest text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+              >
+                I'll fix the blend
+              </button>
+            </div>
+          </div>
+        )}
         <button
           type="button"
           onClick={handleSubmit}
@@ -525,7 +684,8 @@ export default function ConfessPage() {
             isSubmitting ||
             wordCount > 500 ||
             isCustomTimeInvalid ||
-            isCustomViewsInvalid
+            isCustomViewsInvalid ||
+            (moderationCheck ? !moderationCheck.isClean : false)
           }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
@@ -557,6 +717,12 @@ export default function ConfessPage() {
           </Link>
         </div>
       </main>
+
+      <RateLimitModal 
+        isOpen={showRateLimit} 
+        onClose={() => setShowRateLimit(false)} 
+        message={rateLimitMessage}
+      />
     </div>
   );
 }

@@ -103,7 +103,7 @@ export default function BoardInboxPage() {
 
         {inbox && inbox.rows.length > 0 ? (
           <div className="space-y-3">
-            {inbox.rows.map((confession) => {
+            {inbox.rows.map((confession: any) => {
               const catInfo = CATEGORY_INFO[confession.category];
               return (
                 <Link

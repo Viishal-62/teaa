@@ -8,6 +8,7 @@ export const create = mutation({
     confessionId: v.id("confessions"),
     text: v.string(),
     gifUrl: v.optional(v.string()),
+    visitorId: v.string(), // Required for rate limiting
   },
   handler: async (ctx, args) => {
     const hasText = args.text.trim().length > 0;
@@ -20,6 +21,22 @@ export const create = mutation({
       throw new Error("Comment text cannot exceed 300 characters");
     }
 
+    // ─── Rate Limiting ───
+    const FIVE_MINS = 5 * 60 * 1000;
+    const recentComments = await ctx.db
+      .query("comments")
+      .withIndex("by_visitorId_createdAt", (q) => 
+        q.eq("visitorId", args.visitorId).gt("createdAt", Date.now() - FIVE_MINS)
+      )
+      .collect();
+
+    if (recentComments.length >= 10) {
+      throw new Error(JSON.stringify({
+        type: "rate_limit_error",
+        message: "You're commenting too fast! Take a breath."
+      }));
+    }
+
     const displayName = generateAnonName();
 
     const commentId = await ctx.db.insert("comments", {
@@ -27,6 +44,7 @@ export const create = mutation({
       text: args.text.trim(),
       gifUrl: args.gifUrl,
       displayName,
+      visitorId: args.visitorId,
       createdAt: Date.now(),
     });
 
