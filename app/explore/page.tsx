@@ -7,7 +7,6 @@ import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
 import { Home, ArrowRight, Shuffle, Mic, Sparkles, X } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
-import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import { THEMES } from "@/convex/helpers";
@@ -37,7 +36,7 @@ export default function ExplorePage() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
-  
+
   const [showConfessBackCTA, setShowConfessBackCTA] = useState(false);
   const viewedIndexes = useRef<Set<number>>(new Set());
 
@@ -68,7 +67,7 @@ export default function ExplorePage() {
   useEffect(() => {
     if (globalFeed && globalFeed.length > 0) {
       viewedIndexes.current.add(activeIndex);
-      
+
       const hasDismissed = localStorage.getItem("teaa_dismissed_cta");
       if (viewedIndexes.current.size >= 3 && !hasDismissed && !showConfessBackCTA) {
         setShowConfessBackCTA(true);
@@ -86,7 +85,7 @@ export default function ExplorePage() {
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
           osc.start();
           osc.stop(ctx.currentTime + 0.15);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }, [activeIndex, globalFeed, showConfessBackCTA]);
@@ -334,12 +333,7 @@ export default function ExplorePage() {
                           pointerEvents: absOffset === 0 ? "auto" : "none",
                         }}
                       >
-                        {(confession as any).boardType === "secret-admirer" ? (
-                          <AdmirerConfessionCard
-                            confession={confession as any}
-                            boardSlug={confession.boardSlug}
-                          />
-                        ) : confession.type === "canvas" || confession.canvasImageUrl ? (
+                        {confession.type === "canvas" || confession.canvasImageUrl ? (
                           <DoodleConfessionCard
                             confession={confession as any}
                             boardSlug={confession.boardSlug}
@@ -481,8 +475,8 @@ export default function ExplorePage() {
                               background: spillOfDay.aiImageUrl
                                 ? `url(${spillOfDay.aiImageUrl}) center/cover`
                                 : THEMES.find(
-                                    (t) => t.key === spillOfDay.coverTheme,
-                                  )?.bg || "#f5f5f5",
+                                  (t) => t.key === spillOfDay.coverTheme,
+                                )?.bg || "#f5f5f5",
                             }}
                           >
                             <div
@@ -597,9 +591,8 @@ export default function ExplorePage() {
                             }}
                           >
                             <div
-                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${
-                                spill.aiImageUrl ? "bg-black/35" : ""
-                              }`}
+                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${spill.aiImageUrl ? "bg-black/35" : ""
+                                }`}
                             >
                               <span
                                 className="text-[8px] font-black uppercase tracking-[0.3em]"
@@ -745,7 +738,7 @@ export default function ExplorePage() {
             }}
           >
             <div className="p-5 flex flex-col gap-3 relative">
-              <button 
+              <button
                 onClick={() => {
                   setShowConfessBackCTA(false);
                   localStorage.setItem("teaa_dismissed_cta", "true");
@@ -755,7 +748,7 @@ export default function ExplorePage() {
               >
                 <X size={16} />
               </button>
-              
+
               <div className="flex items-start gap-4 mb-2">
                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">
                   🫖
@@ -767,7 +760,7 @@ export default function ExplorePage() {
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium mb-3 pr-2">
                     Get anonymous messages from friends. You choose the vibe, they spill the tea, and everyone can react!
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-1.5">
                     <span className="px-2 py-1 bg-white/10 border border-white/10 rounded-md text-[9px] font-bold text-white/90 uppercase tracking-widest flex items-center gap-1">
                       🤫 Confessions
@@ -784,7 +777,7 @@ export default function ExplorePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-3 flex gap-3">
                 <Link
                   href="/create"
