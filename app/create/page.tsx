@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -59,6 +59,7 @@ export default function CreateBoard() {
 
   const [name, setName] = useState("");
   const [tagline, setTagline] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [theme, setTheme] = useState("noir");
   const [boardType, setBoardType] = useState<"default" | "secret-admirer">(
     "default",
@@ -73,6 +74,22 @@ export default function CreateBoard() {
     "youll-be-ok",
     "no-it-burns",
   ]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const qs = new URLSearchParams(window.location.search);
+      if (qs.get("type") === "secret-admirer") {
+        setBoardType("secret-admirer");
+        setTheme("midnight-rose");
+        setAllowedReactions([
+          "blushing",
+          "butterflies",
+          "crying-admirer",
+          "giggling",
+        ]);
+      }
+    }
+  }, []);
   const [sharePrompt, setSharePrompt] = useState(SHARE_PROMPTS[0].id);
   const [bannedWordsInput, setBannedWordsInput] = useState("");
   const [result, setResult] = useState<{ slug: string; pin?: string } | null>(
@@ -104,6 +121,7 @@ export default function CreateBoard() {
         slug: selectedSlug || undefined,
         allowedReactions,
         sharePrompt,
+        prompt: prompt.trim() || undefined,
         bannedWords: bannedWordsInput.split(",").map(w => w.trim()).filter(w => !!w),
       });
       setResult({ slug: res.slug, pin: !isPublic ? pin : undefined });
@@ -369,6 +387,24 @@ export default function CreateBoard() {
                     : "e.g. Tell me anything, stay anonymous..."
                 }
                 className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15 italic"
+              />
+            </div>
+
+            {/* Confession Prompt */}
+            <div>
+              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                Viewer Prompt (Optional)
+              </label>
+              <input
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={
+                  boardType === "secret-admirer"
+                    ? "e.g. Tell me your favorite thing about me..."
+                    : "e.g. Rate me out of 10 and be brutally honest 😈"
+                }
+                className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15"
               />
             </div>
 

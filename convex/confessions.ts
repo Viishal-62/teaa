@@ -48,6 +48,8 @@ export const create = mutation({
     cloudinaryPublicId: v.optional(v.string()), // For reference
     isAnonymousVoice: v.optional(v.boolean()), // deprecated
     duration: v.optional(v.number()), // Audio duration in seconds
+    canvasImageUrl: v.optional(v.string()), // For doodle confessions (Cloudinary URL)
+    caption: v.optional(v.string()), // Short caption for doodle confessions
     category: v.string(),
     isGlobal: v.optional(v.boolean()),
     expiresAt: v.optional(v.number()),
@@ -81,6 +83,16 @@ export const create = mutation({
       }
       if (!args.duration || args.duration > 30) {
         throw new Error("Audio duration must be between 0 and 30 seconds");
+      }
+    }
+
+    // Canvas/doodle confession validation
+    if (confessionType === "canvas") {
+      if (!args.canvasImageUrl) {
+        throw new Error("Image URL is required for doodle confessions");
+      }
+      if (args.caption && args.caption.length > 120) {
+        throw new Error("Caption cannot exceed 120 characters");
       }
     }
 
@@ -143,10 +155,12 @@ export const create = mutation({
     const confessionId = await ctx.db.insert("confessions", {
       boardId: args.boardId,
       type: confessionType,
-      text: confessionType === "text" ? args.text?.trim() : undefined,
+      text: confessionType === "text" ? args.text?.trim() : (confessionType === "canvas" && args.caption ? args.caption.trim() : undefined),
       audioUrl: confessionType === "voice" ? args.audioUrl : undefined,
       voiceTitle: confessionType === "voice" ? args.voiceTitle?.trim() : undefined,
       isAnonymousVoice: confessionType === "voice" ? (args.isAnonymousVoice ?? false) : undefined,
+      canvasImageUrl: confessionType === "canvas" ? args.canvasImageUrl : undefined,
+      caption: confessionType === "canvas" ? args.caption?.trim() : undefined,
       category: args.category,
       displayName,
       isGlobal: args.isGlobal !== false,

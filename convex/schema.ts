@@ -16,6 +16,7 @@ export default defineSchema({
     creatorToken: v.string(), // random token stored in creator's localStorage
     allowedReactions: v.optional(v.array(v.string())), // Chosen 4 custom reactions
     sharePrompt: v.optional(v.string()), // Custom viral share text
+    prompt: v.optional(v.string()), // Custom text prompt shown above the confession textarea
     inboxLastSeenAt: v.optional(v.number()), // Creator inbox watermark for unread/read
     aiSummary: v.optional(v.string()), // AI Vibe summary
     aiSummaryUpdatedAt: v.optional(v.number()), // For caching
@@ -35,6 +36,7 @@ export default defineSchema({
     voiceTitle: v.optional(v.string()), // User-given title for voice confessions
     isAnonymousVoice: v.optional(v.boolean()), // deprecated — kept for backward compat
     canvasImageUrl: v.optional(v.string()), // For drawing confessions
+    caption: v.optional(v.string()), // Short optional caption for doodle confessions
     category: v.string(), // "regret" | "love" | "guilt" | "relief" | "longing" | "mischief" | "obsession" | "pride" | "fear" | "envy" | "deep-dark"
     displayName: v.string(), // auto-generated anonymous name
     isGlobal: v.boolean(), // true = posted to global feed (no specific board)

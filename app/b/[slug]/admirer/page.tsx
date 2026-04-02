@@ -19,6 +19,13 @@ const ADMIRER_CATEGORIES = [
   "confession",
 ];
 
+const QUICK_STARTERS = [
+  "I've had a crush on you since...",
+  "You probably don't notice but...",
+  "I just wanted to say your...",
+  "Every time I see you...",
+];
+
 function getWordMood(count: number) {
   if (count === 0) return { emoji: "✨", label: "start writing..." };
   if (count < 20) return { emoji: "💧", label: "a whisper" };
@@ -303,6 +310,24 @@ export default function AdmirerConfessPage() {
               "0 20px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.02)",
           }}
         >
+          {/* Viewer Prompt */}
+          {board?.prompt && (
+            <div
+              className="p-6 pb-5 border-b"
+              style={{
+                background: "rgba(155, 58, 92, 0.08)",
+                borderColor: "rgba(201, 169, 110, 0.1)",
+              }}
+            >
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "rgba(201, 169, 110, 0.6)" }}>
+                {board.name} asks:
+              </p>
+              <p className="text-[16px] font-black italic serif leading-snug" style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                "{board.prompt}"
+              </p>
+            </div>
+          )}
+
           <div className="p-7 space-y-7 relative z-10">
             {/* Recipient */}
             <div>
@@ -329,12 +354,38 @@ export default function AdmirerConfessPage() {
 
             {/* Message */}
             <div>
-              <label
-                className="text-[10px] font-bold uppercase tracking-widest mb-3 block"
-                style={{ color: "rgba(201, 169, 110, 0.3)" }}
-              >
-                Your Letter
-              </label>
+              <div className="flex items-center justify-between mb-3">
+                <label
+                  className="text-[10px] font-bold uppercase tracking-widest block"
+                  style={{ color: "rgba(201, 169, 110, 0.3)" }}
+                >
+                  Your Letter
+                </label>
+              </div>
+
+              {/* Quick Starters */}
+              <div className="flex overflow-x-auto gap-2 pb-3 mb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                <style jsx>{`
+                  ::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}</style>
+                {QUICK_STARTERS.map((starter, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setText(starter)}
+                    className="whitespace-nowrap px-3.5 py-1.5 rounded-[10px] text-[10px] font-bold tracking-wide transition-all active:scale-95"
+                    style={{
+                      background: "rgba(155, 58, 92, 0.1)",
+                      border: "1px solid rgba(155, 58, 92, 0.2)",
+                      color: "rgba(255, 255, 255, 0.5)"
+                    }}
+                  >
+                    "{starter}"
+                  </button>
+                ))}
+              </div>
+
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}

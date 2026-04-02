@@ -17,6 +17,7 @@ import {
   Inbox,
   Heart,
   Sparkles,
+  X,
 } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
@@ -67,6 +68,8 @@ export default function BoardViewPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const prevConfessionsLength = useRef(0);
+  const [showConfessBackCTA, setShowConfessBackCTA] = useState(false);
+  const viewedIndexes = useRef<Set<number>>(new Set());
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const summarize = useAction(api.ai.summarizeBoard);
@@ -172,6 +175,33 @@ export default function BoardViewPage() {
       setActiveIndex(Math.floor(mixedItems.length / 2));
     }
   }, [selectedCategory, mixedItems?.length]);
+
+  // Track viewed confessions for CTA
+  useEffect(() => {
+    if (mixedItems && mixedItems.length > 0 && board && !isOwner && board.visibility === "public") {
+      viewedIndexes.current.add(activeIndex);
+      
+      const hasDismissed = localStorage.getItem("teaa_dismissed_cta");
+      if (viewedIndexes.current.size >= 3 && !hasDismissed && !showConfessBackCTA) {
+        setShowConfessBackCTA(true);
+        // Play pop sound
+        try {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(500, ctx.currentTime); // Slight lower pitch pop
+          osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.15);
+        } catch (e) {}
+      }
+    }
+  }, [activeIndex, mixedItems, board, isOwner, showConfessBackCTA]);
 
   const scrollToCard = useCallback(
     (index: number) => {
@@ -402,19 +432,29 @@ export default function BoardViewPage() {
         </h1>
         <div className="flex items-center gap-3">
           {isOwner && (
-            <Link
-              href={`/b/${slug}/inbox`}
-              className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1"
-              title="Creator inbox"
-            >
-              <Inbox size={12} />
-              Inbox
-              {(inboxUnread ?? 0) > 0 && (
-                <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
-                  {inboxUnread}
-                </span>
-              )}
-            </Link>
+            <>
+              <Link
+                href={`/b/${slug}/settings`}
+                className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1 mr-1"
+                title="Board Settings"
+              >
+                <div style={{ transform: "scale(0.85)" }}>⚙️</div>
+                Settings
+              </Link>
+              <Link
+                href={`/b/${slug}/inbox`}
+                className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1"
+                title="Creator inbox"
+              >
+                <Inbox size={12} />
+                Inbox
+                {(inboxUnread ?? 0) > 0 && (
+                  <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                    {inboxUnread}
+                  </span>
+                )}
+              </Link>
+            </>
           )}
           <button
             type="button"
@@ -910,6 +950,92 @@ export default function BoardViewPage() {
           </span>
         </div>
       )}
+
+      {/* Confess Back CTA */}
+      <AnimatePresence>
+        {showConfessBackCTA && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+            }}
+          >
+            <div className="p-5 flex flex-col gap-3 relative">
+              <button 
+                onClick={() => {
+                  setShowConfessBackCTA(false);
+                  localStorage.setItem("teaa_dismissed_cta", "true");
+                }}
+                className="absolute top-3 right-3 text-white/40 hover:text-white transition-colors"
+                title="Dismiss"
+              >
+                <X size={16} />
+              </button>
+              
+              <div className="flex items-start gap-4 mb-2">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">
+                  {isAdmirerMode ? "💌" : "🫖"}
+                </div>
+                <div>
+                  <h4 className="font-[900] text-base mb-1.5 tracking-wide serif text-white flex items-center gap-2">
+                    Your turn now ✨
+                  </h4>
+                  <p className="text-[11px] text-white/70 leading-relaxed font-medium mb-3 pr-2">
+                    {isAdmirerMode
+                      ? "Create your own board. Find out who secretly admires you and let them react!"
+                      : "Get anonymous messages from friends. You choose the vibe, they spill the tea!"}
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-1.5">
+                    {!isAdmirerMode && (
+                      <span className="px-2 py-1 bg-white/10 border border-white/10 rounded-md text-[9px] font-bold text-white/90 uppercase tracking-widest flex items-center gap-1">
+                        🤫 Confessions
+                      </span>
+                    )}
+                    {!isAdmirerMode && (
+                      <span className="px-2 py-1 bg-orange-500/10 border border-orange-500/20 text-orange-200 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
+                        🔥 Spills
+                      </span>
+                    )}
+                    {!isAdmirerMode && (
+                      <span className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-200 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
+                        🎙️ Voice
+                      </span>
+                    )}
+                    <span className="px-2 py-1 bg-[#be185d]/20 border border-[#be185d]/30 text-pink-200 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
+                      💝 Admirer
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-3 flex gap-3">
+                <Link
+                  href={isAdmirerMode ? "/create?type=secret-admirer" : "/create"}
+                  className="flex-1 bg-white text-black py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-center hover:scale-[1.02] hover:bg-white/90 active:scale-95 transition-all shadow-lg"
+                >
+                  Create My Board →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfessBackCTA(false);
+                    localStorage.setItem("teaa_dismissed_cta", "true");
+                  }}
+                  className="flex-1 border border-white/10 bg-white/5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/70 hover:bg-white/10 hover:text-white active:scale-95 transition-all"
+                >
+                  Maybe Later ✕
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

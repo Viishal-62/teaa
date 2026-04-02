@@ -25,6 +25,13 @@ const CATEGORIES = [
   "deep-dark",
 ];
 
+const QUICK_STARTERS = [
+  "I never told anyone but...",
+  "Honestly, I think you...",
+  "Nobody knows that I...",
+  "My biggest secret is...",
+];
+
 // ─── Render text with flagged words underlined in red ───
 function renderHighlightedText(
   text: string,
@@ -396,8 +403,43 @@ export default function ConfessPage() {
 
         {/* Form card */}
         <div className="bg-white rounded-2xl border border-black/5 shadow-xl shadow-black/[0.03]">
+          {/* Viewer Prompt */}
+          {board.prompt && (
+            <div className="bg-[#faf8f5] border-b border-black/5 px-5 py-5 rounded-t-2xl">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mb-2">
+                {board.name} wants to know:
+              </p>
+              <p className="text-[15px] font-black text-black/80 serif">
+                "{board.prompt}"
+              </p>
+            </div>
+          )}
+
+          {/* Quick Starters / Confession Templates */}
+          <div className="px-5 pt-5 pb-2">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
+              Quick starters:
+            </p>
+            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              <style jsx>{`
+                ::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+              {QUICK_STARTERS.map((starter, i) => (
+                <button
+                  key={i}
+                  onClick={() => setText(starter)}
+                  className="whitespace-nowrap px-3.5 py-2 rounded-lg bg-black/[0.02] border border-black/5 text-[11px] font-medium text-black/60 hover:text-black/80 hover:bg-black/[0.04] transition-colors active:scale-95"
+                >
+                  "{starter}"
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Textarea with moderation overlay */}
-          <div className="p-5 pb-0">
+          <div className="px-5 pb-0">
             <div className="relative">
               {/* Underline overlay — renders behind the textarea */}
               {moderationCheck && !moderationCheck.isClean && text.length > 0 && (
