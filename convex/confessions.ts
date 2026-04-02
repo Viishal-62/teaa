@@ -344,6 +344,9 @@ export const globalFeed = query({
         if (confession.category !== args.category) continue;
       }
 
+      const ADMIRER_CATEGORIES = ["crush", "compliment", "attraction", "gratitude", "admiration", "confession", "secret-admirer"];
+      if (ADMIRER_CATEGORIES.includes(confession.category)) continue;
+
       const board = await ctx.db.get(confession.boardId);
       if (!board || confession.isFlagged) continue;
       const shouldShow = confession.isGlobal || isBoardPublic(board.visibility);

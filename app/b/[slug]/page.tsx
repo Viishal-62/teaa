@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
-import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
+import MemoryStickyCard from "@/app/components/MemoryStickyCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
@@ -55,6 +55,7 @@ const CATEGORIES = [
 export default function BoardViewPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const [pinInput, setPinInput] = useState("");
@@ -586,6 +587,7 @@ export default function BoardViewPage() {
               <span style={{ color: "rgba(201, 169, 110, 0.4)" }}>✦</span>
             </p>
           )}
+
         </div>
 
         {/* AI Vibe Summary Result */}
@@ -657,133 +659,159 @@ export default function BoardViewPage() {
             </div>
           ) : (
             <>
-              {/* Coverflow carousel */}
-              <div
-                ref={carouselRef}
-                className={`relative flex items-center justify-center -mx-5 ${isAdmirerMode ? "overflow-visible" : "overflow-hidden"}`}
-                style={{
-                  height: isAdmirerMode ? "560px" : "500px",
-                  perspective: "1200px",
-                }}
-              >
-                {mixedItems.map((item, i) => {
-                  const offset = i - activeIndex;
-                  const absOffset = Math.abs(offset);
+              {isAdmirerMode ? (
+                <div 
+                  className="relative w-full overflow-hidden border border-[rgba(201,169,110,0.1)] rounded-[2rem] bg-black/[0.02]"
+                  style={{ height: '600px', background: 'radial-gradient(circle at center, rgba(255,255,255,0.8), rgba(255,245,240,0.4))' }}
+                >
+                  <p className="absolute top-6 w-full text-center text-[10px] font-bold uppercase tracking-widest text-[#9B3A5C]/40 z-10 pointer-events-none">
+                    Drag the memories. Tap to immerse.
+                  </p>
+                  <div className="absolute inset-0 flex items-center justify-center p-8 flex-wrap gap-4" style={{ perspective: '1200px' }}>
+                    {mixedItems.slice(0, 5).map((item, i) => (
+                      <MemoryStickyCard 
+                        key={item._id}
+                        confession={item}
+                        rotateAmount={(i % 2 === 0 ? 1 : -1) * (Math.random() * 10 + 2)}
+                        onClick={() => router.push(`/b/${slug}/admirers?index=${i}`)}
+                      />
+                    ))}
+                  </div>
 
-                  if (absOffset > 4) return null;
-
-                  // Bigger cards & wider spacing for admirer mode
-                  const cardWidth = isAdmirerMode ? 420 : 280;
-                  const spacing = isAdmirerMode ? 240 : 160;
-                  const rotateAmount = isAdmirerMode ? 15 : 30;
-
-                  const translateX = offset * spacing;
-                  const translateZ =
-                    absOffset === 0 ? 60 : -100 - absOffset * 40;
-                  const scale =
-                    absOffset === 0
-                      ? 1.05
-                      : Math.max(0.7 - absOffset * 0.05, 0.5);
-                  const opacity =
-                    absOffset === 0
-                      ? 1
-                      : Math.max(0.65 - absOffset * 0.12, 0.15);
-                  const rotateY = offset > 0 ? -rotateAmount : offset < 0 ? rotateAmount : 0;
-                  const zIndex = 20 - absOffset;
-
-                  return (
-                    <div
-                      key={item._id}
-                      className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                      style={{
-                        width: `${cardWidth}px`,
-                        transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                        opacity,
-                        zIndex,
-                      }}
-                      onClick={
-                        absOffset !== 0 ? () => scrollToCard(i) : undefined
-                      }
+                  {mixedItems.length > 0 && (
+                    <Link
+                      href={`/b/${slug}/admirers`}
+                      className="absolute bottom-6 right-6 z-50 group flex items-center gap-2 px-6 py-3 rounded-full overflow-hidden transition-all active:scale-95 shadow-[0_8px_30px_rgba(155,58,92,0.2)] hover:shadow-[0_12px_40px_rgba(155,58,92,0.3)] bg-[rgba(255,255,255,0.9)] backdrop-blur-md border border-[rgba(155,58,92,0.1)]"
                     >
-                      <div
-                        style={{
-                          pointerEvents: absOffset === 0 ? "auto" : "none",
-                        }}
-                      >
-                        {item._type === "spill" ? (
-                          <DeepSpillCard slug={slug} spill={item} />
-                        ) : isAdmirerMode ? (
-                          <AdmirerConfessionCard
-                            confession={item}
-                            boardSlug={slug}
-                            boardReactions={board.allowedReactions}
-                          />
-                        ) : item.type === "canvas" || item.canvasImageUrl ? (
-                          <DoodleConfessionCard
-                            confession={item}
-                            boardSlug={slug}
-                            boardReactions={board.allowedReactions}
-                          />
-                        ) : (
-                          <ConfessionFlipCard
-                            confession={item}
-                            boardSlug={slug}
-                            boardReactions={board.allowedReactions}
-                          />
-                        )}
-                      </div>
-                      {absOffset !== 0 && (
+                      <Sparkles size={14} style={{ color: "#9B3A5C" }} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#5C1A2A" }}>Enter Aurora Exhibition</span>
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Coverflow carousel */}
+                  <div
+                    ref={carouselRef}
+                    className="relative flex items-center justify-center -mx-5 overflow-hidden"
+                    style={{
+                      height: "500px",
+                      perspective: "1200px",
+                    }}
+                  >
+                    {mixedItems.map((item, i) => {
+                      const offset = i - activeIndex;
+                      const absOffset = Math.abs(offset);
+
+                      if (absOffset > 4) return null;
+
+                      const cardWidth = 280;
+                      const spacing = 160;
+                      const rotateAmount = 30;
+
+                      const translateX = offset * spacing;
+                      const translateZ =
+                        absOffset === 0 ? 60 : -100 - absOffset * 40;
+                      const scale =
+                        absOffset === 0
+                          ? 1.05
+                          : Math.max(0.7 - absOffset * 0.05, 0.5);
+                      const opacity =
+                        absOffset === 0
+                          ? 1
+                          : Math.max(0.65 - absOffset * 0.12, 0.15);
+                      const rotateY = offset > 0 ? -rotateAmount : offset < 0 ? rotateAmount : 0;
+                      const zIndex = 20 - absOffset;
+
+                      return (
                         <div
-                          className="absolute inset-0 cursor-pointer z-10"
-                          onClick={() => scrollToCard(i)}
-                        />
-                      )}
+                          key={item._id}
+                          className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+                          style={{
+                            width: `${cardWidth}px`,
+                            transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                            opacity,
+                            zIndex,
+                          }}
+                          onClick={
+                            absOffset !== 0 ? () => scrollToCard(i) : undefined
+                          }
+                        >
+                          <div
+                            style={{
+                              pointerEvents: absOffset === 0 ? "auto" : "none",
+                            }}
+                          >
+                            {item._type === "spill" ? (
+                              <DeepSpillCard slug={slug} spill={item} />
+                            ) : item.type === "canvas" || item.canvasImageUrl ? (
+                              <DoodleConfessionCard
+                                confession={item}
+                                boardSlug={slug}
+                                boardReactions={board.allowedReactions}
+                              />
+                            ) : (
+                              <ConfessionFlipCard
+                                confession={item}
+                                boardSlug={slug}
+                                boardReactions={board.allowedReactions}
+                              />
+                            )}
+                          </div>
+                          {absOffset !== 0 && (
+                            <div
+                              className="absolute inset-0 cursor-pointer z-10"
+                              onClick={() => scrollToCard(i)}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Hint */}
+                  <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
+                    Scroll · ← → keys · tap to flip
+                  </p>
+
+                  {mixedItems.length > 1 && (
+                    <div className="flex justify-center mb-3">
+                      <button
+                        type="button"
+                        onClick={shuffleTea}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-black/8 text-[10px] font-bold uppercase tracking-widest text-black/40 hover:text-black hover:border-black/20 transition-all"
+                      >
+                        <Shuffle size={12} />
+                        Shuffle the Tea
+                      </button>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
 
-              {/* Hint */}
-              <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
-                Scroll · ← → keys · tap to flip
-              </p>
-
-              {mixedItems.length > 1 && (
-                <div className="flex justify-center mb-3">
-                  <button
-                    type="button"
-                    onClick={shuffleTea}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-black/8 text-[10px] font-bold uppercase tracking-widest text-black/40 hover:text-black hover:border-black/20 transition-all"
-                  >
-                    <Shuffle size={12} />
-                    Shuffle the Tea
-                  </button>
-                </div>
-              )}
-
-              {/* Arrow navigation */}
-              {mixedItems.length > 1 && (
-                <div className="flex justify-center gap-4 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => scrollToCard(activeIndex - 1)}
-                    disabled={activeIndex === 0}
-                    className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                  >
-                    ←
-                  </button>
-                  <span className="text-[10px] font-mono text-black/20 self-center">
-                    {activeIndex + 1} / {mixedItems.length}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => scrollToCard(activeIndex + 1)}
-                    disabled={activeIndex === mixedItems.length - 1}
-                    className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
-                  >
-                    →
-                  </button>
-                </div>
+                  {/* Arrow navigation */}
+                  {mixedItems.length > 1 && (
+                    <div className="flex justify-center gap-4 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => scrollToCard(activeIndex - 1)}
+                        disabled={activeIndex === 0}
+                        className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                      >
+                        ←
+                      </button>
+                      <span className="text-[10px] font-mono text-black/20 self-center">
+                        {activeIndex + 1} / {mixedItems.length}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => scrollToCard(activeIndex + 1)}
+                        disabled={activeIndex === mixedItems.length - 1}
+                        className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                      >
+                        →
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
