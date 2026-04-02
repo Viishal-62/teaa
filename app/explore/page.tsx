@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Home, ArrowRight, Shuffle, Mic, Sparkles, X } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
+import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import { THEMES } from "@/convex/helpers";
 import { motion, AnimatePresence } from "framer-motion";
@@ -335,6 +336,11 @@ export default function ExplorePage() {
                       >
                         {(confession as any).boardType === "secret-admirer" ? (
                           <AdmirerConfessionCard
+                            confession={confession as any}
+                            boardSlug={confession.boardSlug}
+                          />
+                        ) : confession.type === "canvas" || confession.canvasImageUrl ? (
+                          <DoodleConfessionCard
                             confession={confession as any}
                             boardSlug={confession.boardSlug}
                           />

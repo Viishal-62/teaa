@@ -144,4 +144,27 @@ export default defineSchema({
   })
     .index("by_confessionId", ["confessionId"])
     .index("by_boardId", ["boardId"]),
+
+  // ─── Feature Requests (Forum) ───
+  featureRequests: defineTable({
+    title: v.string(),
+    description: v.string(),
+    status: v.string(), // "under-review", "planned", "shipped"
+    upvotes: v.number(),
+    visitorId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_upvotes", ["upvotes"]),
+
+  // ─── Feature Upvotes ───
+  featureUpvotes: defineTable({
+    requestId: v.id("featureRequests"),
+    visitorId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_requestId", ["requestId"])
+    .index("by_visitorId", ["visitorId"])
+    .index("by_requestId_visitorId", ["requestId", "visitorId"]),
 });

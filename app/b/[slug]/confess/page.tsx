@@ -6,6 +6,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, getVisitorId, parseConvexError } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
+import DoodleCanvas from "@/app/components/DoodleCanvas";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, AlertTriangle, X, Sparkles, Timer } from "lucide-react";
 import RateLimitModal from "@/app/components/RateLimitModal";
@@ -82,6 +83,9 @@ export default function ConfessPage() {
   const checkAIModeration = useAction(api.moderationAction.checkContent);
 
   const [text, setText] = useState("");
+  const [mode, setMode] = useState<"text" | "doodle">("text");
+  const [hasDoodle, setHasDoodle] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [category, setCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -138,10 +142,11 @@ export default function ConfessPage() {
 
   const handleSubmit = async () => {
     if (
-      !text.trim() ||
+      (mode === "text" && !text.trim()) ||
+      (mode === "doodle" && !hasDoodle) ||
       !category ||
       !board ||
-      wordCount > 500 ||
+      (mode === "text" && wordCount > 500) ||
       isCustomTimeInvalid ||
       isCustomViewsInvalid
     ) {
@@ -149,7 +154,7 @@ export default function ConfessPage() {
     }
 
     // Check moderation result first
-    if (moderationCheck && !moderationCheck.isClean) {
+    if (mode === "text" && moderationCheck && !moderationCheck.isClean) {
       setModerationError({
         flaggedWords: moderationCheck.flaggedWords,
         message: moderationCheck.message,
@@ -161,21 +166,41 @@ export default function ConfessPage() {
     setModerationError(null);
 
     try {
-      // 1. Perform synchronous AI moderation check
-      const aiModResult = await checkAIModeration({ text: text.trim() });
-      if (!aiModResult.isClean) {
-        setModerationError({
-          flaggedWords: [],
-          message: aiModResult.reason,
+      let canvasImageUrl: string | undefined;
+
+      if (mode === "doodle") {
+        if (!canvasRef.current) return;
+        const dataUrl = canvasRef.current.toDataURL("image/png");
+        const res = await fetch("/api/upload-doodle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: dataUrl }),
         });
-        setIsSubmitting(false);
-        return;
+        const uploadResult = await res.json();
+        if (!res.ok || !uploadResult.url) {
+          throw new Error(uploadResult.error || "Failed to upload doodle");
+        }
+        canvasImageUrl = uploadResult.url;
+      } else {
+        // 1. Perform synchronous AI moderation check
+        const aiModResult = await checkAIModeration({ text: text.trim() });
+        if (!aiModResult.isClean) {
+          setModerationError({
+            flaggedWords: [],
+            message: aiModResult.reason,
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // 2. Proceed to create
       await createConfession({
         boardId: board._id,
-        text: text.trim(),
+        type: mode === "doodle" ? "canvas" : "text",
+        text: mode === "text" ? text.trim() : undefined,
+        canvasImageUrl,
+        caption: mode === "doodle" && text.trim() ? text.trim() : undefined,
         category,
         isGlobal,
         expiresAt:
@@ -223,13 +248,20 @@ export default function ConfessPage() {
   const handleConfessAgain = () => {
     setText("");
     setCategory("");
+    setHasDoodle(false);
     setSubmitted(false);
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    const currentWords = text.trim() ? text.trim().split(/\s+/).length : 0;
-    if (currentWords <= 500) {
-      setText((prev) => prev + emoji);
+    if (mode === "text") {
+      const currentWords = text.trim() ? text.trim().split(/\s+/).length : 0;
+      if (currentWords <= 500) {
+        setText((prev) => prev + emoji);
+      }
+    } else {
+      if (text.length + emoji.length <= 120) {
+        setText((prev) => prev + emoji);
+      }
     }
   };
 
@@ -415,34 +447,64 @@ export default function ConfessPage() {
             </div>
           )}
 
-          {/* Quick Starters / Confession Templates */}
-          <div className="px-5 pt-5 pb-2">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
-              Quick starters:
-            </p>
-            <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
-              <style jsx>{`
-                ::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
-              {QUICK_STARTERS.map((starter, i) => (
-                <button
-                  key={i}
-                  onClick={() => setText(starter)}
-                  className="whitespace-nowrap px-3.5 py-2 rounded-lg bg-black/[0.02] border border-black/5 text-[11px] font-medium text-black/60 hover:text-black/80 hover:bg-black/[0.04] transition-colors active:scale-95"
-                >
-                  "{starter}"
-                </button>
-              ))}
-            </div>
+          {/* Mode Tabs */}
+          <div className="flex bg-[#faf8f5] border-b border-black/5 rounded-t-2xl p-1 gap-1">
+            <button
+              type="button"
+              onClick={() => setMode("text")}
+              className={`flex-1 py-3 px-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
+                mode === "text" ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
+              }`}
+            >
+              ✍️ Write
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("doodle")}
+              className={`flex-1 py-3 px-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
+                mode === "doodle" ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
+              }`}
+            >
+              🎨 Draw
+            </button>
           </div>
 
+          {mode === "doodle" && (
+            <div className="p-4 bg-white border-b border-black/5">
+              <DoodleCanvas onDrawingChange={setHasDoodle} canvasRef={canvasRef} />
+            </div>
+          )}
+
+          {/* Quick Starters / Confession Templates */}
+          {mode === "text" && (
+            <div className="px-5 pt-5 pb-2">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
+                Quick starters:
+              </p>
+              <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+                <style jsx>{`
+                  ::-webkit-scrollbar {
+                    display: none;
+                  }
+                `}</style>
+                {QUICK_STARTERS.map((starter, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setText(starter)}
+                    className="whitespace-nowrap px-3.5 py-2 rounded-lg bg-black/[0.02] border border-black/5 text-[11px] font-medium text-black/60 hover:text-black/80 hover:bg-black/[0.04] transition-colors active:scale-95"
+                  >
+                    "{starter}"
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Textarea with moderation overlay */}
-          <div className="px-5 pb-0">
+          <div className="px-5 pb-0 pt-4">
             <div className="relative">
               {/* Underline overlay — renders behind the textarea */}
-              {moderationCheck && !moderationCheck.isClean && text.length > 0 && (
+              {mode === "text" && moderationCheck && !moderationCheck.isClean && text.length > 0 && (
                 <div
                   className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
                   style={{ color: "transparent", padding: "0" }}
@@ -454,17 +516,18 @@ export default function ConfessPage() {
               <textarea
                 value={text}
                 onChange={(e) => {
+                  if (mode === "doodle" && e.target.value.length > 120) return;
                   setText(e.target.value);
                   setModerationError(null);
                 }}
-                placeholder="write what's been sitting inside you..."
-                rows={5}
-                autoFocus
-                className="w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80"
+                placeholder={mode === "doodle" ? "add a short optional caption..." : "write what's been sitting inside you..."}
+                rows={mode === "doodle" ? 2 : 5}
+                autoFocus={mode === "text"}
+                className={`w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80 ${mode === "doodle" ? "text-center italic" : ""}`}
               />
             </div>
             {/* Real-time moderation warning */}
-            {moderationCheck && !moderationCheck.isClean && (
+            {mode === "text" && moderationCheck && !moderationCheck.isClean && (
               <div className="flex items-start gap-2 text-red-500 bg-red-50 rounded-xl px-3 py-2 mt-2 mb-2">
                 <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                 <p className="text-[10px] font-medium leading-relaxed">
@@ -478,11 +541,13 @@ export default function ConfessPage() {
               <EmojiPicker onEmojiSelect={handleEmojiSelect} />
             </div>
             <span
-              className={`text-[10px] font-mono ${wordCount > 500 ? "text-red-500 font-bold" : "text-black/25"}`}
+              className={`text-[10px] font-mono ${mode === "text" && wordCount > 500 ? "text-red-500 font-bold" : "text-black/25"}`}
             >
-              {wordCount > 500
+              {mode === "text" && wordCount > 500
                 ? `-${wordCount - 500} words`
-                : `${500 - wordCount} words left`}
+                : mode === "doodle"
+                  ? `${120 - text.length} chars left`
+                  : `${500 - wordCount} words left`}
             </span>
           </div>
 
@@ -721,13 +786,14 @@ export default function ConfessPage() {
           type="button"
           onClick={handleSubmit}
           disabled={
-            !text.trim() ||
+            (mode === "text" && !text.trim()) ||
+            (mode === "doodle" && !hasDoodle) ||
             !category ||
             isSubmitting ||
-            wordCount > 500 ||
+            (mode === "text" && wordCount > 500) ||
             isCustomTimeInvalid ||
             isCustomViewsInvalid ||
-            (moderationCheck ? !moderationCheck.isClean : false)
+            (mode === "text" && moderationCheck ? !moderationCheck.isClean : false)
           }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >

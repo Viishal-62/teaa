@@ -6,7 +6,10 @@ import { Eye } from "lucide-react";
 
 interface CardDownloadRendererProps {
   confession: {
-    text: string;
+    type?: string;
+    text?: string;
+    canvasImageUrl?: string;
+    caption?: string;
     category: string;
     displayName: string;
     views?: number;
@@ -90,29 +93,71 @@ const CardDownloadRenderer = forwardRef<
               </span>
             </div>
 
-            {/* Confession text */}
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 12px",
-              }}
-            >
-              <p
+            {/* Confession content */}
+            {confession.canvasImageUrl ? (
+              <div
                 style={{
-                  textAlign: "center",
-                  fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontSize: "17px",
-                  lineHeight: 1.7,
-                  color: "#2a2a2a",
-                  margin: 0,
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  padding: "0 20px",
                 }}
               >
-                {confession.text}
-              </p>
-            </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={confession.canvasImageUrl}
+                  crossOrigin="anonymous"
+                  alt="Doodle Confession"
+                  style={{
+                    width: "100%",
+                    borderRadius: "12px",
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    backgroundColor: "#f5f0e8",
+                  }}
+                />
+                {(confession.caption || confession.text) && (
+                  <p
+                    style={{
+                      marginTop: "12px",
+                      textAlign: "center",
+                      fontFamily: "Georgia, 'Times New Roman', serif",
+                      fontSize: "14px",
+                      fontStyle: "italic",
+                      color: "rgba(0,0,0,0.6)",
+                      margin: 0,
+                    }}
+                  >
+                    &ldquo;{confession.caption || confession.text}&rdquo;
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 12px",
+                }}
+              >
+                <p
+                  style={{
+                    textAlign: "center",
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontSize: "17px",
+                    lineHeight: 1.7,
+                    color: "#2a2a2a",
+                    margin: 0,
+                  }}
+                >
+                  {confession.text}
+                </p>
+              </div>
+            )}
 
             {/* Stats */}
             <div

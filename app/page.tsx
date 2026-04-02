@@ -105,6 +105,9 @@ export default function Home() {
           <Link href="/explore" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors">
             Explore
           </Link>
+          <Link href="/forum" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors">
+            Community
+          </Link>
           <Link href="/explore/voice" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors flex items-center gap-1">
             <Mic size={10} /> Voice
           </Link>
@@ -519,7 +522,7 @@ export default function Home() {
               How it works
             </p>
             <h2 className="text-3xl font-black serif tracking-tight">
-              Four ways to spill
+              Five ways to spill
             </h2>
           </motion.div>
 
@@ -528,7 +531,7 @@ export default function Home() {
             initial="hidden"
             whileInView="show"
             viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
             {[
               {
@@ -547,13 +550,20 @@ export default function Home() {
               },
               {
                 n: "03",
+                icon: "🎨",
+                title: "Doodle",
+                desc: "Draw a sketch, doodle your feelings, and share it as an artistic canvas card.",
+                gradient: "from-emerald-50 to-white",
+              },
+              {
+                n: "04",
                 icon: "📖",
                 title: "Spill",
                 desc: "Full-length anonymous stories with chapters and AI cover art.",
                 gradient: "from-amber-50 to-white",
               },
               {
-                n: "04",
+                n: "05",
                 icon: "💝",
                 title: "Admirer",
                 desc: "Send anonymous love letters with physical envelope reveal animations.",
@@ -580,6 +590,8 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+
 
       {/* ── RECENT CONFESSIONS ── */}
       {textConfessions.length > 0 && (
@@ -777,6 +789,199 @@ export default function Home() {
         </section>
       )}
 
+      {/* ── FAQ ── */}
+      <section className="py-20 px-4 sm:px-6 bg-[#faf8f5]">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent mb-3">
+              Clear the air
+            </p>
+            <h2 className="text-3xl font-black serif tracking-tight">
+              Frequently Asked Questions
+            </h2>
+          </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                q: "Is it really 100% anonymous?",
+                a: "Yes. We don't ask for your name, email, or phone number. There are no accounts to create. Your fingerprint is just a local anonymous session string to track your own reactions and prevent spam.",
+              },
+              {
+                q: "What is 'Disappearing Tea'?",
+                a: "When you write a text or doodle confession, you can choose to make it self-destruct after 5 minutes, 24 hours, or even after exactly 25 views. Once it's gone, it's purged completely.",
+              },
+              {
+                q: "How does Voice Confession work?",
+                a: "You can record up to 30 seconds of audio right from your browser. The audio is uploaded without any metadata attached to you.",
+              },
+              {
+                q: "What if someone says something awful?",
+                a: "Teaaa uses AI to moderate toxic, hateful, and violently explicit text before it even publishes to the board. Board creators can also set custom banned words for their specific communities.",
+              },
+            ].map((faq, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white border border-black/5 rounded-2xl p-6 shadow-sm shadow-black/[0.01]"
+              >
+                <h3 className="font-black serif text-lg mb-2">{faq.q}</h3>
+                <p className="text-[12px] text-black/60 leading-relaxed font-medium">
+                  {faq.a}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── THE TEAAA STANDARD (ELEGANT COMPARISON) ── */}
+      <section className="py-32 px-4 sm:px-6 bg-[#faf8f5] relative overflow-hidden border-y border-black/5">
+        <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] bg-rose-100/30 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-indigo-100/20 blur-[100px] rounded-full pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-black/5 text-[9px] font-bold uppercase tracking-[0.2em] mb-6 text-black/40 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Our Philosophy
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black serif tracking-tight leading-tight text-[#2a2a2a]">
+              A quieter, safer space. <br />
+              <span className="text-black/30">Just human connection.</span>
+            </h2>
+          </motion.div>
+
+          <div className="space-y-6">
+            {[
+              {
+                title: "Identity & Presence",
+                old: "Public profiles, follower counts, and constant pressure to perform.",
+                new: "Zero trace. No accounts. 100% anonymous freedom.",
+                icon: "🎭",
+              },
+              {
+                title: "Memory & Permanence",
+                old: "An unerasable digital footprint stored forever on servers.",
+                new: "Disappearing tea. You fully control when your truth vanishes.",
+                icon: "⏳",
+              },
+              {
+                title: "Discovery & Reach",
+                old: "Engagement algorithms pushing outrage and endless echo chambers.",
+                new: "Purely chronological feeds. Raw, unfiltered, and honest.",
+                icon: "🌊",
+              },
+              {
+                title: "Community & Safety",
+                old: "Toxic comment sections and endless, stressful arguing.",
+                new: "AI Moderation + Verified creator replies seamlessly guiding the space.",
+                icon: "🛡️",
+              },
+              {
+                title: "Expression & Medium",
+                old: "Rigid text boxes limited by character counts and pre-defined formats.",
+                new: "Voice drops, sprawling 'deep spills', and freehand doodle canvases.",
+                icon: "🎨",
+              },
+              {
+                title: "Intentionality",
+                old: "Infinite doomscrolling engineered to hijack your dopamine.",
+                new: "Thoughtful collections designed to be enjoyed and gracefully left.",
+                icon: "🍃",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="group relative bg-[#ffffff]/40 backdrop-blur-[40px] rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden border border-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] hover:bg-[#ffffff]/60 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all duration-700"
+              >
+                {/* Floating huge watermark icon */}
+                <div className="absolute -right-6 -bottom-6 text-9xl opacity-[0.02] group-hover:opacity-[0.05] group-hover:scale-110 group-hover:-rotate-12 transition-all duration-700 pointer-events-none blur-[2px]">
+                  {item.icon}
+                </div>
+
+                {/* Subtle animated gradient background on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-rose-500/[0.015] via-transparent to-emerald-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                <div className="w-16 h-16 rounded-[1.25rem] bg-white border border-black/[0.04] flex items-center justify-center text-3xl z-10 group-hover:scale-[1.15] group-hover:rotate-[-5deg] transition-all duration-700 flex-shrink-0 relative shadow-[inset_0_1px_1px_rgba(255,255,255,1)]">
+                  {item.icon}
+                </div>
+
+                <div className="flex-1 w-full z-10 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10 relative">
+                  
+                  {/* The Old (Norm) */}
+                  <div className="flex-1 w-full text-left md:pr-4 relative">
+                    <div className="flex items-center gap-3 mb-2">
+                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 group-hover:text-red-500 transition-colors duration-500">The Norm</span>
+                    </div>
+                    <p className="text-xs md:text-sm text-black/40 font-medium leading-relaxed group-hover:opacity-50 transition-opacity duration-500">
+                      {item.old}
+                    </p>
+                  </div>
+
+                  {/* Animated Divider */}
+                  <div className="hidden md:flex flex-col items-center justify-center w-8 h-full relative z-10">
+                    <div className="w-[1px] h-20 bg-black/[0.04] relative overflow-hidden rounded-full mix-blend-multiply">
+                       <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-red-400 to-transparent group-hover:via-accent -translate-y-full group-hover:animate-[ping_2s_infinite] opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                    </div>
+                    {/* Floating VS */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#faf8f5]/80 backdrop-blur-sm border border-black/[0.05] flex items-center justify-center text-[8px] font-black uppercase tracking-widest text-black/30 group-hover:bg-accent group-hover:text-white group-hover:border-accent group-hover:rotate-180 transition-all duration-700 shadow-sm z-20">
+                      vs
+                    </div>
+                  </div>
+
+                  {/* The New (Teaaa Way) */}
+                  <div className="flex-1 w-full text-left md:pl-2 relative">
+                    <div className="flex items-center gap-2 mb-2 relative">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500">
+                        The Teaaa Way
+                      </span>
+                    </div>
+                    <p className="text-sm md:text-[15px] font-bold text-[#2a2a2a] leading-relaxed group-hover:text-black transition-colors duration-500 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+                      {item.new}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex justify-end mt-10"
+          >
+            <Link
+              href="/explore"
+              className="group flex items-center gap-2 text-[10px] font-bold text-black/30 uppercase tracking-[0.2em] hover:text-accent transition-colors"
+            >
+              <span className="relative">
+                View all features
+                <span className="absolute left-0 bottom-[-4px] w-full h-[1.5px] bg-accent origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-full" />
+              </span>
+              <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-500" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── FINAL CTA ── */}
       <section className="py-28 px-4 sm:px-6 relative">
         <div className="absolute inset-0 pointer-events-none">
@@ -849,6 +1054,7 @@ export default function Home() {
           <div className="flex gap-6">
             {[
               { href: "/explore", label: "Explore" },
+              { href: "/forum", label: "Community" },
               { href: "/explore/voice", label: "Voice" },
               { href: "/confess", label: "Confess" },
               { href: "/spill/create", label: "Write Spill" },

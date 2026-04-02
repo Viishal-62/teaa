@@ -16,6 +16,7 @@ import type * as confessions from "../confessions.js";
 import type * as creatorReplies from "../creatorReplies.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
+import type * as forum from "../forum.js";
 import type * as helpers from "../helpers.js";
 import type * as moderation from "../moderation.js";
 import type * as moderationAction from "../moderationAction.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   creatorReplies: typeof creatorReplies;
   crons: typeof crons;
   files: typeof files;
+  forum: typeof forum;
   helpers: typeof helpers;
   moderation: typeof moderation;
   moderationAction: typeof moderationAction;

@@ -9,7 +9,10 @@ import type { Id } from "@/convex/_generated/dataModel";
 interface CardActionsProps {
   confession: {
     _id: Id<"confessions">;
-    text: string;
+    type?: string;
+    text?: string;
+    canvasImageUrl?: string;
+    caption?: string;
     category: string;
     displayName: string;
     views?: number;

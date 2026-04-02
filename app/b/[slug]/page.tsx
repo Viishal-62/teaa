@@ -22,6 +22,7 @@ import {
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import AdmirerConfessionCard from "@/app/components/AdmirerConfessionCard";
+import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -713,6 +714,12 @@ export default function BoardViewPage() {
                           <DeepSpillCard slug={slug} spill={item} />
                         ) : isAdmirerMode ? (
                           <AdmirerConfessionCard
+                            confession={item}
+                            boardSlug={slug}
+                            boardReactions={board.allowedReactions}
+                          />
+                        ) : item.type === "canvas" || item.canvasImageUrl ? (
+                          <DoodleConfessionCard
                             confession={item}
                             boardSlug={slug}
                             boardReactions={board.allowedReactions}
