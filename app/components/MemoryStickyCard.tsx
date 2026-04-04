@@ -1,112 +1,113 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { timeAgo } from "@/app/lib/utils";
-import { Heart, ArrowDownToLine } from "lucide-react";
+import { Heart } from "lucide-react";
+import type { RefObject } from "react";
+import { useRef } from "react";
+import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
+import type { Doc } from "@/convex/_generated/dataModel";
 
-/**
- * Ultra-premium Physical Stationery Card
- */
-export default function MemoryStickyCard({ 
-  confession, 
-  onClick, 
-  rotateAmount,
-  offsetX = 0,
-  offsetY = 0
-}: { 
-  confession: any; 
+type MemoryStickyCardProps = {
+  confession: Doc<"confessions">;
   onClick: () => void;
   rotateAmount: number;
   offsetX?: number;
   offsetY?: number;
-}) {
+  dragBoundsRef?: RefObject<HTMLDivElement | null>;
+};
+
+function formatCategory(category: string) {
+  return category
+    .replace(/-/g, " ")
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export default function MemoryStickyCard({
+  confession,
+  onClick,
+  rotateAmount,
+  offsetX = 0,
+  offsetY = 0,
+  dragBoundsRef,
+}: MemoryStickyCardProps) {
+  const suppressClickUntil = useRef(0);
+  const categoryInfo = CATEGORY_INFO[confession.category] ?? {
+    label: formatCategory(confession.category),
+    emoji: "💌",
+  };
+
   return (
-    <motion.div
+    <motion.button
+      type="button"
       drag
+      dragConstraints={dragBoundsRef}
       dragMomentum={false}
-      // Removed dragConstraints so it can be freely dragged endlessly around the massive desk
-      whileHover={{ scale: 1.04, zIndex: 60, rotate: rotateAmount * 0.5 }}
-      whileTap={{ scale: 0.96, cursor: "grabbing" }}
-      initial={{ rotate: rotateAmount, y: 50 + offsetY, x: offsetX, opacity: 0 }}
-      animate={{ 
-        rotate: rotateAmount, 
-        y: [offsetY, offsetY - 6, offsetY], // Smooth breathing
-        x: offsetX,
-        opacity: 1 
-      }}
-      transition={{ 
-        type: "spring", stiffness: 150, damping: 20,
-        y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
+      onClick={(event) => {
+        event.stopPropagation();
+        if (Date.now() < suppressClickUntil.current) return;
         onClick();
       }}
-      className="absolute cursor-grab p-8 md:p-10 rounded-[2rem] flex flex-col justify-between overflow-hidden group"
-      style={{
-        width: "320px",
-        height: "400px",
-        background: "linear-gradient(135deg, #FFFDFB 0%, #FAEDE9 100%)", // Rich ivory / warm parchment
-        border: "1px solid rgba(255,255,255,0.7)", // crisp physical edge
-        boxShadow: "0 40px 80px -20px rgba(15, 5, 8, 0.8), inset 0 2px 5px rgba(255,255,255,1), inset 0 -2px 10px rgba(0,0,0,0.03)",
-        transformOrigin: "center center",
+      onDragEnd={(_, info) => {
+        const movement = Math.abs(info.offset.x) + Math.abs(info.offset.y);
+        if (movement > 6) {
+          suppressClickUntil.current = Date.now() + 220;
+        }
       }}
+      initial={{
+        opacity: 0,
+        x: offsetX,
+        y: offsetY + 26,
+        rotate: rotateAmount,
+      }}
+      animate={{ opacity: 1, x: offsetX, y: offsetY, rotate: rotateAmount }}
+      whileHover={{
+        scale: 1.04,
+        rotate: rotateAmount * 0.65,
+        y: offsetY - 6,
+        zIndex: 90,
+      }}
+      whileTap={{ scale: 0.98, cursor: "grabbing" }}
+      transition={{
+        opacity: { duration: 0.3 },
+        x: { type: "spring", stiffness: 140, damping: 19 },
+        y: { type: "spring", stiffness: 140, damping: 19 },
+        rotate: { type: "spring", stiffness: 120, damping: 20 },
+      }}
+      className="absolute w-[264px] sm:w-[286px] rounded-md bg-[#fffef9] p-3 pb-4 text-left cursor-grab active:cursor-grabbing border border-[#e6dfd2] shadow-[0_26px_52px_rgba(0,0,0,0.42)]"
+      style={{ top: "54%", left: "50%", transformOrigin: "center center" }}
     >
-      {/* Intense high-quality paper texture */}
-      <div 
-        className="absolute inset-0 pointer-events-none mix-blend-multiply opacity-[0.06]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-        }}
-      />
+      <div className="pointer-events-none absolute -top-2 left-5 h-5 w-14 rotate-[-8deg] rounded-[2px] bg-[#f7e7b7]/75 shadow-sm border border-[#efe0b4]" />
+      <div className="pointer-events-none absolute -top-2 right-5 h-5 w-14 rotate-[9deg] rounded-[2px] bg-[#f7e7b7]/75 shadow-sm border border-[#efe0b4]" />
 
-      {/* Decorative top dot */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#5C1A2A]/20" />
-
-      {/* Internal Content Wrapper */}
-      <div className="flex-1 overflow-hidden relative z-10 flex items-center justify-center mt-2 px-2">
-        <p 
-          className="font-serif italic text-[18px] md:text-[20px] leading-relaxed text-center tracking-wide"
-          style={{ 
-            color: "#3F111E", // Deep elegant plum/wine
-            textShadow: "0 1px 0 rgba(255,255,255,0.8)" // High-end letterpress deboss effect
-          }}
-        >
-          "{confession.text}"
-        </p>
-      </div>
-
-      {/* Signature block with Download CTA */}
-      <div className="mt-4 flex flex-col items-center justify-center relative z-10 w-full">
-        <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-[#5C1A2A]/20 to-transparent mb-5" />
-        
-        <div className="flex flex-col items-center gap-1.5 w-full relative">
-          <Heart size={14} className="text-[#9B3A5C]/40" fill="currentColor" />
-          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#9B3A5C]/80 mt-1">
-            {confession.category}
-          </span>
-          <span className="block text-[11px] font-bold text-[#3F111E]/50 mt-1">
-            {confession.displayName}
-          </span>
-          <span className="text-[8px] uppercase tracking-[0.2em] text-[#3F111E]/30 mt-0.5">
-            {timeAgo(confession.createdAt)}
-          </span>
-
-          {/* Download Button Premium Overlay */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // Standard alert for now until html2canvas is set up, serves as requested UI component layer
-              alert("Downloading confession card...");
-            }}
-            className="absolute -bottom-2 right-0 opacity-0 group-hover:opacity-100 group-hover:bottom-0 transition-all p-3 rounded-full hover:bg-white/50 active:scale-90 text-[#5C1A2A]"
-            title="Download this memory"
-          >
-            <ArrowDownToLine size={16} />
-          </button>
+      <div className="rounded-sm overflow-hidden border border-[#e8dcc6] bg-[#f5ecdd]">
+        <div className="relative h-44 sm:h-48 bg-[radial-gradient(circle_at_30%_20%,#ffe7f2_0%,#e5b9cc_34%,#7d4a63_72%,#38232f_100%)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_78%,rgba(255,215,232,0.35)_0%,transparent_36%)]" />
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/25 px-2 py-1 text-[10px] font-semibold text-white/90">
+            <span>{categoryInfo.emoji}</span>
+            {categoryInfo.label}
+          </div>
+          <p className="absolute bottom-4 left-4 right-4 font-serif italic text-white text-[16px] leading-snug drop-shadow-[0_3px_14px_rgba(0,0,0,0.45)] line-clamp-3">
+            "{confession.text}"
+          </p>
         </div>
       </div>
-      
-    </motion.div>
+
+      <div className="mt-3 px-1">
+        <p className="text-[11px] font-black tracking-[0.16em] uppercase text-[#8c4c66]">
+          {categoryInfo.emoji} {categoryInfo.label}
+        </p>
+        <p className="mt-1 text-[13px] font-semibold text-[#4a2a36]">
+          {confession.displayName}
+        </p>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[#8b7280]">
+            {timeAgo(confession.createdAt)}
+          </p>
+          <Heart size={12} className="text-[#c56d90]" fill="currentColor" />
+        </div>
+      </div>
+    </motion.button>
   );
 }
