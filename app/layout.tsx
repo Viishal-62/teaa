@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 import NotificationCenter from "./components/NotificationCenter";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.teaadrop.xyz"),
@@ -105,6 +106,7 @@ export default function RootLayout({
           {children}
           <NotificationCenter />
         </ConvexClientProvider>
+        <Analytics />
       </body>
     </html>
   );
