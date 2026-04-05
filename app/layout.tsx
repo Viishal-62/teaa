@@ -4,9 +4,61 @@ import ConvexClientProvider from "./ConvexClientProvider";
 import NotificationCenter from "./components/NotificationCenter";
 
 export const metadata: Metadata = {
-  title: "Teaa 🫣 — Anonymous Confessions",
+  metadataBase: new URL("https://teaa.xyz"),
+  title: {
+    default: "Teaa 🫣 — Anonymous Confessions & Secret Boards",
+    template: "%s | Teaa",
+  },
   description:
-    "Spill it here, don't carry it alone. Create a confession board, share the link, and let people confess anonymously.",
+    "The ultimate platform for anonymous confessions. Spill your secrets, create personal confession boards, drop voice notes, and share links. No sign-up, 100% anonymous.",
+  keywords: [
+    "anonymous confessions",
+    "secret board",
+    "confession link",
+    "spill the tea",
+    "anonymous messaging",
+    "send anonymous message",
+    "confession page",
+    "voice confessions",
+  ],
+  authors: [{ name: "Teaa" }],
+  creator: "Teaa",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://teaa.xyz",
+    siteName: "Teaa 🫣",
+    title: "Teaa 🫣 — Anonymous Confessions",
+    description: "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
+    images: [
+      {
+        url: "/og-image.jpg", // Add a nice image at public/og-image.jpg for social sharing preview!
+        width: 1200,
+        height: 630,
+        alt: "Teaa - Anonymous Confessions",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Teaa 🫣 — Anonymous Confessions",
+    description: "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "paste-your-google-site-verification-id-here",
+  },
 };
 
 export default function RootLayout({
@@ -14,9 +66,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Teaa 🫣",
+    url: "https://teaa.xyz",
+    description: "The ultimate platform for anonymous confessions. Spill your secrets, create personal confession boards.",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://teaa.xyz/explore?category={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="en" className="h-full antialiased">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

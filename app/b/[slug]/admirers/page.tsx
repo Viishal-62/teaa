@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  LocateFixed,
   Shuffle,
   Sparkles,
   X,
@@ -37,7 +36,24 @@ const READING_PALETTES = [
   ["#261912", "#5a3428", "#9f5f48", "#e9b289"],
 ];
 
-const PLAYFUL_FLOATERS = ["💖", "✨", "💌", "🌙", "⭐", "🫶"];
+/* ─── Animated background orbs ─── */
+const ORBS = [
+  { color: "rgba(155, 58, 92, 0.35)", size: 420, x: "12%", y: "18%", duration: 18 },
+  { color: "rgba(100, 40, 120, 0.25)", size: 340, x: "78%", y: "72%", duration: 22 },
+  { color: "rgba(200, 100, 150, 0.18)", size: 280, x: "55%", y: "25%", duration: 15 },
+  { color: "rgba(80, 30, 80, 0.3)", size: 500, x: "30%", y: "80%", duration: 25 },
+  { color: "rgba(180, 80, 130, 0.12)", size: 220, x: "85%", y: "15%", duration: 20 },
+  { color: "rgba(60, 20, 60, 0.4)", size: 380, x: "5%", y: "60%", duration: 16 },
+];
+
+const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  x: `${Math.random() * 100}%`,
+  y: `${Math.random() * 100}%`,
+  size: Math.random() * 3 + 1,
+  duration: Math.random() * 4 + 3,
+  delay: Math.random() * 3,
+}));
 
 type ViewMode = "desk" | "reading";
 
@@ -191,36 +207,93 @@ export default function AdmirersPage() {
 
   if (board === undefined || allConfessions === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#140f13]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0c0810]">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-white/60" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden text-white bg-[#120d11]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,#3a1a2d_0%,#211520_45%,#120d11_100%)]" />
-      <div className="absolute inset-0 opacity-[0.16] bg-[radial-gradient(circle_at_20%_15%,#ffdbe8_0%,transparent_40%),radial-gradient(circle_at_80%_85%,#e5b4c8_0%,transparent_35%)]" />
-      <div className="absolute inset-0 opacity-[0.08] bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22%3E%3Cpath fill=%22%23fff%22 fill-opacity=%220.6%22 d=%22M0 0h1v1H0zM30 30h1v1h-1zM59 59h1v1h-1z%22/%3E%3C/svg%3E')]" />
+    <div className="fixed inset-0 overflow-hidden text-white bg-[#0c0810]">
+      {/* ═══ Animated background layer ═══ */}
 
-      {PLAYFUL_FLOATERS.map((item, index) => (
+      {/* Floating gradient orbs */}
+      {ORBS.map((orb, i) => (
         <motion.div
-          key={item}
-          className="absolute text-lg pointer-events-none"
+          key={`orb-${i}`}
+          className="absolute rounded-full pointer-events-none"
           style={{
-            left: `${8 + index * 14}%`,
-            top: `${12 + ((index * 11) % 70)}%`,
+            width: orb.size,
+            height: orb.size,
+            left: orb.x,
+            top: orb.y,
+            background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
+            filter: "blur(60px)",
           }}
-          animate={{ y: [0, -10, 0], opacity: [0.25, 0.6, 0.25] }}
+          animate={{
+            x: [0, 40, -30, 20, 0],
+            y: [0, -30, 20, -40, 0],
+            scale: [1, 1.15, 0.9, 1.1, 1],
+            opacity: [0.6, 0.9, 0.5, 0.8, 0.6],
+          }}
           transition={{
-            duration: 3.2 + index * 0.2,
-            repeat: Number.POSITIVE_INFINITY,
+            duration: orb.duration,
+            repeat: Infinity,
+            ease: "easeInOut",
           }}
-        >
-          {item}
-        </motion.div>
+        />
       ))}
 
+      {/* Slowly rotating aurora overlay */}
+      <motion.div
+        className="absolute inset-[-30%] pointer-events-none"
+        style={{
+          background: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(155,58,92,0.08) 15%, transparent 30%, rgba(80,30,120,0.06) 45%, transparent 60%, rgba(200,80,140,0.05) 75%, transparent 90%)",
+          filter: "blur(80px)",
+        }}
+        animate={{ rotate: [0, 360] }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+      />
+
+      {/* Shimmering particles */}
+      {PARTICLES.map((p) => (
+        <motion.div
+          key={`particle-${p.id}`}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: p.x,
+            top: p.y,
+            width: p.size,
+            height: p.size,
+            background: "rgba(255, 200, 230, 0.8)",
+            boxShadow: `0 0 ${p.size * 3}px rgba(255, 180, 210, 0.4)`,
+          }}
+          animate={{
+            y: [0, -20, 0],
+            opacity: [0, 0.8, 0],
+            scale: [0.5, 1.2, 0.5],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+
+      {/* Vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(8,4,10,0.6) 100%)",
+        }}
+      />
+
+      {/* Grain texture */}
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Cpath fill=%22%23fff%22 fill-opacity=%220.8%22 d=%22M0 0h1v1H0zM40 40h1v1h-1zM79 79h1v1h-1zM20 60h1v1h-1zM60 20h1v1h-1z%22/%3E%3C/svg%3E')]" />
+
+      {/* ═══ Header ═══ */}
       <div className="absolute top-0 left-0 right-0 z-40 p-4 sm:p-6 flex items-center justify-between">
         <Link
           href={`/b/${slug}`}
@@ -247,14 +320,6 @@ export default function AdmirersPage() {
               >
                 Reset
               </button>
-              <button
-                type="button"
-                onClick={() => setShuffleSeed((prev) => prev + 101)}
-                className="inline-flex items-center gap-1 rounded-full border border-white/25 bg-black/35 px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-white/80 font-bold hover:bg-black/55 transition-all"
-              >
-                <LocateFixed size={12} />
-                Show all
-              </button>
             </>
           ) : (
             <div className="rounded-full border border-white/25 bg-black/35 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-white/75 font-bold backdrop-blur-xl">
@@ -264,6 +329,7 @@ export default function AdmirersPage() {
         </div>
       </div>
 
+      {/* ═══ Desk View ═══ */}
       <AnimatePresence>
         {viewMode === "desk" ? (
           <motion.div
@@ -275,15 +341,30 @@ export default function AdmirersPage() {
           >
             <div ref={deskRef} className="absolute inset-0 overflow-hidden">
               <div className="text-center pt-24 px-4 relative z-10 pointer-events-none">
-                <p className="text-[10px] uppercase tracking-[0.34em] text-white/55">
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-[10px] uppercase tracking-[0.34em] text-white/55"
+                >
                   Memory Wall
-                </p>
-                <h1 className="mt-2 text-2xl sm:text-3xl font-black serif text-white/95">
+                </motion.p>
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-2 text-2xl sm:text-3xl font-black serif text-white/95"
+                >
                   {board?.name ?? "Secret Admirers"}
-                </h1>
-                <p className="mt-1 text-[12px] text-white/65">
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-1 text-[12px] text-white/65"
+                >
                   {admirers.length} pinned moments • drag, drop, and shuffle
-                </p>
+                </motion.p>
               </div>
 
               {!admirers.length ? (
@@ -305,8 +386,18 @@ export default function AdmirersPage() {
                 </div>
               ) : (
                 <div className="absolute inset-0">
-                  <div className="absolute inset-0 opacity-[0.12] bg-[linear-gradient(to_right,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)]" />
-                  <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_50%_58%,rgba(255,255,255,0.08)_0%,transparent_62%)]" />
+                  {/* Subtle desk light */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    animate={{
+                      background: [
+                        "radial-gradient(ellipse at 50% 55%, rgba(255,255,255,0.04) 0%, transparent 50%)",
+                        "radial-gradient(ellipse at 50% 55%, rgba(255,255,255,0.07) 0%, transparent 55%)",
+                        "radial-gradient(ellipse at 50% 55%, rgba(255,255,255,0.04) 0%, transparent 50%)",
+                      ],
+                    }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  />
                   {admirers.map((confession, index) => {
                     const position = cardPositions[index];
                     return (
@@ -328,6 +419,7 @@ export default function AdmirersPage() {
         ) : null}
       </AnimatePresence>
 
+      {/* ═══ Reading View ═══ */}
       <AnimatePresence>
         {viewMode === "reading" && currentConfession ? (
           <motion.div
@@ -449,7 +541,7 @@ export default function AdmirersPage() {
         ) : null}
       </AnimatePresence>
 
-      <AmbientAudioPlayer src="https://upload.wikimedia.org/wikipedia/commons/2/23/Gymnop%C3%A9die_No._1.ogg" />
+      <AmbientAudioPlayer />
     </div>
   );
 }

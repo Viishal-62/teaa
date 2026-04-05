@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useMotionValue } from "framer-motion";
 import { Heart } from "lucide-react";
 import type { RefObject } from "react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import type { Doc } from "@/convex/_generated/dataModel";
 
@@ -33,10 +33,27 @@ export default function MemoryStickyCard({
   dragBoundsRef,
 }: MemoryStickyCardProps) {
   const suppressClickUntil = useRef(0);
+  const isDragging = useRef(false);
+  const [hasEnteredView, setHasEnteredView] = useState(false);
+
+  // Use motion values so drag position persists after drop
+  const x = useMotionValue(offsetX);
+  const y = useMotionValue(offsetY + 26); // start slightly below for entrance animation
+
   const categoryInfo = CATEGORY_INFO[confession.category] ?? {
     label: formatCategory(confession.category),
     emoji: "💌",
   };
+
+  // Entrance animation — run once on mount
+  if (!hasEnteredView) {
+    // Animate from initial to target position
+    requestAnimationFrame(() => {
+      x.set(offsetX);
+      y.set(offsetY);
+      setHasEnteredView(true);
+    });
+  }
 
   return (
     <motion.button
@@ -47,36 +64,44 @@ export default function MemoryStickyCard({
       onClick={(event) => {
         event.stopPropagation();
         if (Date.now() < suppressClickUntil.current) return;
+        if (isDragging.current) return;
         onClick();
+      }}
+      onDragStart={() => {
+        isDragging.current = true;
       }}
       onDragEnd={(_, info) => {
         const movement = Math.abs(info.offset.x) + Math.abs(info.offset.y);
-        if (movement > 6) {
-          suppressClickUntil.current = Date.now() + 220;
+        if (movement > 3) {
+          suppressClickUntil.current = Date.now() + 300;
         }
+        // Reset dragging state after a tick so click handler can check it
+        requestAnimationFrame(() => {
+          isDragging.current = false;
+        });
       }}
-      initial={{
-        opacity: 0,
-        x: offsetX,
-        y: offsetY + 26,
+      style={{
+        x,
+        y,
         rotate: rotateAmount,
+        top: "50%",
+        left: "50%",
+        marginTop: "-160px",
+        marginLeft: "-140px",
+        transformOrigin: "center center",
       }}
-      animate={{ opacity: 1, x: offsetX, y: offsetY, rotate: rotateAmount }}
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
       whileHover={{
         scale: 1.04,
-        rotate: rotateAmount * 0.65,
-        y: offsetY - 6,
         zIndex: 90,
       }}
       whileTap={{ scale: 0.98, cursor: "grabbing" }}
       transition={{
-        opacity: { duration: 0.3 },
-        x: { type: "spring", stiffness: 140, damping: 19 },
-        y: { type: "spring", stiffness: 140, damping: 19 },
-        rotate: { type: "spring", stiffness: 120, damping: 20 },
+        opacity: { duration: 0.4 },
+        scale: { type: "spring", stiffness: 200, damping: 20 },
       }}
       className="absolute w-[264px] sm:w-[286px] rounded-md bg-[#fffef9] p-3 pb-4 text-left cursor-grab active:cursor-grabbing border border-[#e6dfd2] shadow-[0_26px_52px_rgba(0,0,0,0.42)]"
-      style={{ top: "54%", left: "50%", transformOrigin: "center center" }}
     >
       <div className="pointer-events-none absolute -top-2 left-5 h-5 w-14 rotate-[-8deg] rounded-[2px] bg-[#f7e7b7]/75 shadow-sm border border-[#efe0b4]" />
       <div className="pointer-events-none absolute -top-2 right-5 h-5 w-14 rotate-[9deg] rounded-[2px] bg-[#f7e7b7]/75 shadow-sm border border-[#efe0b4]" />

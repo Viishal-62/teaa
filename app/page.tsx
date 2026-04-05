@@ -824,6 +824,18 @@ export default function Home() {
                 q: "What if someone says something awful?",
                 a: "Teaaa uses AI to moderate toxic, hateful, and violently explicit text before it even publishes to the board. Board creators can also set custom banned words for their specific communities.",
               },
+              {
+                q: "Can I create my own anonymous confession board?",
+                a: "Absolutely. Anyone can create their own custom board on Teaaa. Whether it's for your high school, a specific fandom, your university, or just your close friend group, you can instantly set up a safe, moderated space for anonymous gossip, secrets, and voice drops.",
+              },
+              {
+                q: "What makes Teaaa different from other anonymous apps?",
+                a: "Unlike older anonymous social networks, Teaaa focuses heavily on aesthetic, ambient design and mental well-being. We feature Deep Spills for long-form anonymous journaling, interactive Doodle canvases for artistic expression, and purely chronological feeds without highly-addictive engagement algorithms.",
+              },
+              {
+                q: "How to send an anonymous Secret Admirer message?",
+                a: "Simply use our Secret Admirer feature to send a beautifully animated digital envelope. It's completely untraceable, and viewers can interact with it on memory corkboards using our unique physics-based interactive canvas.",
+              },
             ].map((faq, i) => (
               <motion.div
                 key={i}
@@ -941,7 +953,7 @@ export default function Home() {
                        <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-red-400 to-transparent group-hover:via-accent -translate-y-full group-hover:animate-[ping_2s_infinite] opacity-0 group-hover:opacity-100 transition-all duration-700" />
                     </div>
                     {/* Floating VS */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#faf8f5]/80 backdrop-blur-sm border border-black/[0.05] flex items-center justify-center text-[8px] font-black uppercase tracking-widest text-black/30 group-hover:bg-accent group-hover:text-white group-hover:border-accent group-hover:rotate-180 transition-all duration-700 shadow-sm z-20">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#faf8f5]/80 backdrop-blur-sm border border-black/[0.05] flex items-center justify-center text-[8px] font-black uppercase tracking-widest text-black/30 group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-colors duration-700 shadow-sm z-20">
                       vs
                     </div>
                   </div>
@@ -1042,6 +1054,20 @@ export default function Home() {
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* ── SEO BOTTOM TEXT ── */}
+      <section className="py-12 px-4 sm:px-6 bg-[#faf8f5]">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-[10px] text-black/30 leading-loose font-medium max-w-2xl mx-auto border-t border-black/5 pt-10">
+            Teaaa is the internet's most elegant <strong className="font-bold font-serif text-black/40">anonymous confession platform</strong>. 
+            Whether you want to share <strong className="font-bold text-black/40">secret admirer</strong> letters, 
+            listen to raw <strong className="font-bold text-black/40">anonymous voice drops</strong>, or read chronological 
+            <strong className="font-bold text-black/40"> gossip and deep spills</strong>, Teaaa provides a totally untraceable, 
+            account-free sanctuary. Build your own anonymous boards for schools, colleges, and communities. Free from toxic algorithms, 
+            focused entirely on authentic human connection.
+          </p>
+        </div>
       </section>
 
       {/* ── FOOTER ── */}

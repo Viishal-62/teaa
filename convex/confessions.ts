@@ -553,3 +553,95 @@ export const cleanupExpired = internalMutation({
     return { deleted: deletedCount };
   },
 });
+
+// ——— Mood Ring: Board emotion distribution ———
+export const getMoodDistribution = query({
+  args: {
+    boardId: v.id("boards"),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    const confessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_boardId", (q) => q.eq("boardId", args.boardId))
+      .order("desc")
+      .take(200);
+
+    const active = confessions.filter(
+      (c) => !isExpired(c.expiresAt, now) && !c.isFlagged,
+    );
+
+    // Count categories
+    const distribution: Record<string, number> = {};
+    let recentActivity = 0;
+
+    for (const c of active) {
+      distribution[c.category] = (distribution[c.category] || 0) + 1;
+      if (c.createdAt > now - ONE_HOUR) {
+        recentActivity++;
+      }
+    }
+
+    // Find dominant emotion
+    let dominant = "";
+    let maxCount = 0;
+    for (const [cat, count] of Object.entries(distribution)) {
+      if (count > maxCount) {
+        maxCount = count;
+        dominant = cat;
+      }
+    }
+
+    return {
+      total: active.length,
+      distribution,
+      dominant,
+      recentActivity,
+    };
+  },
+});
+
+// ——— Global Mood Ring: Platform-wide emotion distribution ———
+export const getGlobalMoodDistribution = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+
+    const ADMIRER_CATS = ["crush", "compliment", "attraction", "gratitude", "admiration", "confession", "secret-admirer"];
+
+    const confessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(300);
+
+    const distribution: Record<string, number> = {};
+    let recentActivity = 0;
+    let total = 0;
+
+    for (const c of confessions) {
+      if (isExpired(c.expiresAt, now) || c.isFlagged) continue;
+      if (ADMIRER_CATS.includes(c.category)) continue;
+
+      distribution[c.category] = (distribution[c.category] || 0) + 1;
+      total++;
+      if (c.createdAt > now - ONE_HOUR) {
+        recentActivity++;
+      }
+    }
+
+    let dominant = "";
+    let maxCount = 0;
+    for (const [cat, count] of Object.entries(distribution)) {
+      if (count > maxCount) {
+        maxCount = count;
+        dominant = cat;
+      }
+    }
+
+    return { total, distribution, dominant, recentActivity };
+  },
+});

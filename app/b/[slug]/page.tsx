@@ -25,6 +25,7 @@ import MemoryStickyCard from "@/app/components/MemoryStickyCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
+import MoodRing from "@/app/components/MoodRing";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ADMIRER_CATEGORIES = [
@@ -70,6 +71,7 @@ export default function BoardViewPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const prevConfessionsLength = useRef(0);
+  const isInitialLoad = useRef(true);
   const [showConfessBackCTA, setShowConfessBackCTA] = useState(false);
   const viewedIndexes = useRef<Set<number>>(new Set());
 
@@ -120,6 +122,11 @@ export default function BoardViewPage() {
     board && isOwner ? { boardId: board._id, creatorToken } : "skip",
   );
 
+  const moodData = useQuery(
+    api.confessions.getMoodDistribution,
+    board && !isLocked ? { boardId: board._id } : "skip",
+  );
+
   const mixedItems = useMemo(() => {
     if (!confessions) return undefined;
     const items: any[] = [...confessions];
@@ -145,6 +152,14 @@ export default function BoardViewPage() {
   // Start in the middle so cards are balanced on both sides
   useEffect(() => {
     if (mixedItems) {
+      if (isInitialLoad.current) {
+        // First load — just record the length, don't show toast
+        isInitialLoad.current = false;
+        prevConfessionsLength.current = mixedItems.length;
+        setActiveIndex(Math.floor(mixedItems.length / 2));
+        return;
+      }
+
       if (
         prevConfessionsLength.current !== 0 &&
         mixedItems.length > prevConfessionsLength.current
@@ -558,6 +573,10 @@ export default function BoardViewPage() {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
         }
+        @keyframes borderSpin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       `}</style>
 
       <main className="max-w-5xl mx-auto">
@@ -589,6 +608,13 @@ export default function BoardViewPage() {
           )}
 
         </div>
+
+        {/* Mood Ring */}
+        {moodData && moodData.total >= 3 && (
+          <div className="flex justify-center py-4 mb-2">
+            <MoodRing moodData={moodData} />
+          </div>
+        )}
 
         {/* AI Vibe Summary Result */}
         <AnimatePresence mode="wait">
@@ -667,24 +693,66 @@ export default function BoardViewPage() {
                   <p className="absolute top-6 w-full text-center text-[10px] font-bold uppercase tracking-widest text-[#9B3A5C]/40 z-10 pointer-events-none">
                     Drag the memories. Tap to immerse.
                   </p>
-                  <div className="absolute inset-0 flex items-center justify-center p-8 flex-wrap gap-4" style={{ perspective: '1200px' }}>
-                    {mixedItems.slice(0, 5).map((item, i) => (
-                      <MemoryStickyCard 
-                        key={item._id}
-                        confession={item}
-                        rotateAmount={(i % 2 === 0 ? 1 : -1) * (Math.random() * 10 + 2)}
-                        onClick={() => router.push(`/b/${slug}/admirers?index=${i}`)}
-                      />
-                    ))}
+                  <div className="absolute inset-0" style={{ perspective: '1200px' }}>
+                    {(() => {
+                      const previewCards = mixedItems.slice(0, 5);
+                      const count = previewCards.length;
+                      // Spread cards from center with staggered positions
+                      const offsets = [
+                        { x: -180, y: -40 },
+                        { x: -60, y: 30 },
+                        { x: 60, y: -20 },
+                        { x: 180, y: 40 },
+                        { x: 0, y: -60 },
+                      ];
+                      return previewCards.map((item, i) => (
+                        <MemoryStickyCard 
+                          key={item._id}
+                          confession={item}
+                          rotateAmount={(i % 2 === 0 ? 1 : -1) * (3 + i * 2.5)}
+                          offsetX={offsets[i % offsets.length].x}
+                          offsetY={offsets[i % offsets.length].y}
+                          onClick={() => router.push(`/b/${slug}/admirers?index=${i}`)}
+                        />
+                      ));
+                    })()}
                   </div>
 
                   {mixedItems.length > 0 && (
                     <Link
                       href={`/b/${slug}/admirers`}
-                      className="absolute bottom-6 right-6 z-50 group flex items-center gap-2 px-6 py-3 rounded-full overflow-hidden transition-all active:scale-95 shadow-[0_8px_30px_rgba(155,58,92,0.2)] hover:shadow-[0_12px_40px_rgba(155,58,92,0.3)] bg-[rgba(255,255,255,0.9)] backdrop-blur-md border border-[rgba(155,58,92,0.1)]"
+                      className="absolute bottom-6 right-6 z-50 group"
                     >
-                      <Sparkles size={14} style={{ color: "#9B3A5C" }} />
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#5C1A2A" }}>Enter Aurora Exhibition</span>
+                      {/* Animated rotating border */}
+                      <div className="relative rounded-full p-[2px] overflow-hidden">
+                        <div
+                          className="absolute inset-[-50%] animate-[borderSpin_3s_linear_infinite]"
+                          style={{
+                            background: "conic-gradient(from 0deg, transparent, #e8467c, #c95884, #ffd4e8, transparent, #9B3A5C, transparent)",
+                          }}
+                        />
+                        <div
+                          className="relative flex items-center gap-2.5 px-6 py-3 rounded-full transition-all active:scale-95"
+                          style={{
+                            background: "linear-gradient(135deg, #2a0e1a, #4a1a30, #3a1222)",
+                            boxShadow: "0 8px 30px rgba(155,58,92,0.3), 0 2px 8px rgba(155,58,92,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
+                          }}
+                        >
+                          <Heart size={13} fill="currentColor" className="text-[#e8467c] group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd4e8]">
+                            View All Letters
+                          </span>
+                          <span
+                            className="min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white"
+                            style={{
+                              background: "linear-gradient(135deg, #e8467c, #c95884)",
+                              boxShadow: "0 2px 8px rgba(232,70,124,0.4)",
+                            }}
+                          >
+                            {mixedItems.length}
+                          </span>
+                        </div>
+                      </div>
                     </Link>
                   )}
                 </div>

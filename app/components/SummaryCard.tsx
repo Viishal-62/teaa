@@ -30,6 +30,9 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
       const dataUrl = await toPng(cardRef.current, {
         cacheBust: true,
         pixelRatio: 3,
+        // Bypass cross-origin stylesheet errors by disabling font embedding
+        fontEmbedCSS: "",
+        skipFonts: true, // for newer or specific forks of html-to-image
         style: {
           transform: "scale(1)",
           borderRadius: "0",
@@ -350,44 +353,31 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
         className="flex items-center justify-center gap-4 mt-8"
       >
         {/* Download Button */}
+        {/* Download Button */}
         <motion.button
           onClick={handleDownload}
           disabled={downloading}
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="group relative h-14 px-8 rounded-full font-bold text-[11px] uppercase tracking-[0.2em] overflow-hidden"
-          style={{
-            background: `linear-gradient(135deg, ${c.primary} 0%, ${c.primarySoft.replace('0.15', '0.25').replace('rgba', 'rgb').replace(/,\s*\d+\.\d+\)/, ', 0.8)')} 100%)`,
-            color: "#ffffff",
-            boxShadow: `0 8px 32px -8px ${c.primarySoft}`,
-          }}
+          className="group relative inline-flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-full p-[2px] font-bold focus:outline-none active:scale-95 disabled:opacity-60 transition-all shadow-lg shadow-black/5"
         >
-          {/* Shine effect */}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{
-              background: `linear-gradient(
-                105deg,
-                transparent 30%,
-                rgba(255,255,255,0.3) 50%,
-                transparent 70%
-              )`,
-            }}
-          />
-
-          <span className="relative z-10 flex items-center gap-3">
+          {/* Rotating Gradient Border */}
+          <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#10b981_0%,#3b82f6_50%,#10b981_100%)]" />
+          
+          {/* Inner button surface */}
+          <span className="inline-flex h-full w-full items-center justify-center gap-3 rounded-full bg-white px-8 text-[11px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
             {downloading ? (
               <>
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                  className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-500 rounded-full"
                 />
                 <span>Brewing...</span>
               </>
             ) : (
               <>
-                <Download size={16} />
+                <Download size={16} className="text-emerald-500" />
                 <span>Download</span>
               </>
             )}
@@ -399,60 +389,39 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
           onClick={handleCopy}
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="group relative h-14 px-8 rounded-full font-bold text-[11px] uppercase tracking-[0.2em] overflow-hidden backdrop-blur-md"
-          style={{
-            background: `rgba(255, 255, 255, 0.08)`,
-            border: `1px solid ${c.border}`,
-            color: c.text,
-            boxShadow: `0 8px 32px -8px rgba(0,0,0,0.3)`,
-          }}
+          className="group relative inline-flex h-14 min-w-[160px] items-center justify-center overflow-hidden rounded-full p-[2px] font-bold focus:outline-none active:scale-95 transition-all shadow-lg shadow-black/5"
         >
-          {/* Border glow on hover */}
-          <div
-            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            style={{
-              boxShadow: `inset 0 0 20px ${c.primarySoft}`,
-            }}
-          />
-
-          {/* Shine effect */}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{
-              background: `linear-gradient(
-                105deg,
-                transparent 30%,
-                rgba(255,255,255,0.1) 50%,
-                transparent 70%
-              )`,
-            }}
-          />
-
-          <AnimatePresence mode="wait">
-            {copied ? (
-              <motion.span
-                key="copied"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative z-10 flex items-center gap-3"
-              >
-                <Check size={16} style={{ color: c.primary }} />
-                <span>Copied!</span>
-              </motion.span>
-            ) : (
-              <motion.span
-                key="copy"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="relative z-10 flex items-center gap-3"
-              >
-                <Share2 size={16} />
-                <span>Share</span>
-              </motion.span>
-            )}
-          </AnimatePresence>
+          {/* Rotating Gradient Border */}
+          <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)]" />
+          
+          {/* Inner button surface */}
+          <span className="inline-flex h-full w-full items-center justify-center gap-3 rounded-full bg-white px-8 text-[11px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
+            <AnimatePresence mode="wait">
+              {copied ? (
+                <motion.span
+                  key="copied"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="relative z-10 flex items-center gap-3"
+                >
+                  <Check size={16} className="text-pink-500" />
+                  <span>Copied!</span>
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="copy"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="relative z-10 flex items-center gap-3"
+                >
+                  <Share2 size={16} className="text-purple-500" />
+                  <span>Share</span>
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </span>
         </motion.button>
 
         {/* Close Button */}

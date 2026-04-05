@@ -55,10 +55,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function BoardLayout({
+export default async function BoardLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
-  return <>{children}</>;
+  const { slug } = await params;
+  let boardData = null;
+  try {
+    boardData = await fetchQuery(api.boards.getBySlug, { slug });
+  } catch (e) {}
+
+  const jsonLd = boardData ? {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `${boardData.name} — Teaaa 🫖`,
+    "description": boardData.tagline || `Anonymous confessions on ${boardData.name}`,
+    "url": `https://teaa.xyz/b/${slug}`
+  } : null;
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      {children}
+    </>
+  );
 }

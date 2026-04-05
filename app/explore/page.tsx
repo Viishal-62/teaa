@@ -5,10 +5,11 @@ import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
-import { Home, ArrowRight, Shuffle, Mic, Sparkles, X } from "lucide-react";
+import { Home, ArrowRight, Shuffle, Mic, Zap, X } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
+import MoodRing from "@/app/components/MoodRing";
 import { THEMES } from "@/convex/helpers";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -56,6 +57,7 @@ export default function ExplorePage() {
   const allSpills = useQuery(api.spills.listAll);
   const teaaOfDay = useQuery(api.confessions.confessionOfTheDay);
   const spillOfDay = useQuery(api.spills.spillOfTheDay);
+  const globalMood = useQuery(api.confessions.getGlobalMoodDistribution);
 
   useEffect(() => {
     if (globalFeed) {
@@ -201,35 +203,26 @@ export default function ExplorePage() {
           >
             Write a spill
           </Link>
-          {/* Premium Shine Summarize Button */}
+          {/* Premium Summarize Button (Gradient Border) */}
           {hasEnoughForSummary && (
             <button
               onClick={handleSummarize}
               disabled={isGenerating}
-              className="group relative h-10 px-8 min-w-[150px] cursor-pointer rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60"
-              style={{
-                background: "linear-gradient(135deg, #1a0e0e, #2d1515)",
-                boxShadow: "0 4px 16px rgba(196, 58, 58, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
-              }}
+              className="group relative inline-flex h-9 min-w-[140px] items-center justify-center overflow-hidden rounded-full p-[1.5px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 disabled:opacity-60 transition-all font-bold"
             >
-              {/* Animated shimmer sweep */}
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
-                  backgroundSize: "200% 100%",
-                  animation: "shimmerSweep 3s ease-in-out infinite",
-                }}
-              />
-              <span className="relative z-10 flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: "#f5e6e0" }}>
+              {/* Rotating Gradient Border */}
+              <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)]" />
+              
+              {/* Inner button surface */}
+              <span className="inline-flex h-full w-full items-center justify-center gap-1.5 rounded-full bg-white px-6 text-[9px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
                 {isGenerating ? (
                   <>
-                    <div className="w-2.5 h-2.5 border-[1.5px] border-pink-200/30 border-t-pink-300 rounded-full animate-spin" />
+                    <div className="w-2.5 h-2.5 border-[1.5px] border-pink-400/30 border-t-pink-500 rounded-full animate-spin" />
                     Brewing...
                   </>
                 ) : (
                   <>
-                    <Sparkles size={11} style={{ color: "#c43a3a" }} />
+                    <Zap size={11} className="text-pink-500" />
                     Summarization
                   </>
                 )}
@@ -248,11 +241,29 @@ export default function ExplorePage() {
       `}</style>
 
       <main className="max-w-5xl mx-auto">
-        {/* Compact hero */}
-        <div className="pt-10 pb-2 text-center">
-          <h1 className="text-3xl font-black tracking-tight serif text-black">
-            Teaaa!
-          </h1>
+        {/* Hero Section */}
+        <div className="pt-8 pb-6 px-4 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col items-center sm:items-start gap-5 w-full sm:w-auto">
+            <h1 className="text-4xl font-black tracking-tight serif text-black text-center sm:text-left">
+              Teaaa!
+            </h1>
+            <Link
+              href="/boards"
+              className="group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-full p-[2px] font-bold focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50 hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto"
+            >
+              <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f43f5e_0%,#f97316_50%,#f43f5e_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-white px-7 py-1 text-[11px] uppercase tracking-widest text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95 shadow-sm">
+                Explore All Boards ✨
+              </span>
+            </Link>
+          </div>
+
+          {/* Global Mood Ring */}
+          {globalMood && globalMood.total >= 3 && (
+            <div className="sm:scale-90 origin-right transition-transform flex-shrink-0">
+              <MoodRing moodData={globalMood} />
+            </div>
+          )}
         </div>
 
         {/* AI Vibe Summary Result */}
@@ -434,85 +445,94 @@ export default function ExplorePage() {
 
         {/* ── Daily Highlights ── */}
         {(teaaOfDay || spillOfDay) && (
-          <section className="px-4 mb-16">
-            <div className="max-w-4xl mx-auto space-y-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Teaa of the Day */}
-                {teaaOfDay && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
-                        ☕ Teaa of the Day
-                      </h2>
+          <section className="px-4 mb-20">
+            <div className="max-w-3xl mx-auto flex flex-col gap-16">
+              
+              {/* Teaa of the Day */}
+              {teaaOfDay && (
+                <div className="flex flex-col items-center w-full">
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-sm shadow-sm">
+                      ☕
                     </div>
-                    <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/10 to-rose-500/10 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                      <div className="relative">
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-black/40">
+                      Teaa of the Day
+                    </h2>
+                  </div>
+                  <div className="relative group w-full max-w-sm mx-auto">
+                    <div className="relative flex justify-center transform group-hover:-translate-y-1 transition-transform duration-500 w-full">
+                      <div className="w-full">
                         <ConfessionFlipCard confession={teaaOfDay} />
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Spill of the Day */}
-                {spillOfDay && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-1">
-                      <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
-                        🔥 Spill of the Day
-                      </h2>
+              {/* Spill of the Day */}
+              {spillOfDay && (
+                <div className="flex flex-col items-center w-full">
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center text-sm shadow-sm">
+                      🔥
                     </div>
-                    <Link
-                      href={`/b/${spillOfDay.boardSlug}/s/${spillOfDay._id}`}
-                      className="group block relative"
-                    >
-                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-500/20 to-rose-500/20 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
-                      <article className="relative rounded-[2rem] border border-black/5 bg-white p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                        <div className="flex gap-6">
-                          <div
-                            className="w-24 aspect-[3/4] rounded-xl overflow-hidden shadow-lg flex-shrink-0"
-                            style={{
-                              background: spillOfDay.aiImageUrl
-                                ? `url(${spillOfDay.aiImageUrl}) center/cover`
-                                : THEMES.find(
-                                  (t) => t.key === spillOfDay.coverTheme,
-                                )?.bg || "#f5f5f5",
-                            }}
-                          >
-                            <div
-                              className={`size-full flex flex-col items-center justify-center p-2 text-center ${spillOfDay.aiImageUrl ? "bg-black/40" : ""}`}
-                            >
-                              {!spillOfDay.aiImageUrl && (
-                                <div className="text-2xl mb-1">
-                                  {spillOfDay.coverEmoji}
-                                </div>
-                              )}
-                              <div className="w-4 h-px bg-white/30" />
-                            </div>
-                          </div>
-                          <div className="flex-1 flex flex-col justify-center">
-                            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-black/20 mb-2">
-                              Deep Spill
-                            </span>
-                            <h3 className="serif text-xl font-black leading-tight text-black mb-3 group-hover:text-orange-600 transition-colors">
-                              {spillOfDay.title}
-                            </h3>
-                            <div className="flex items-center gap-3">
-                              <span className="text-[10px] font-bold text-black/40">
-                                {spillOfDay.displayName}
-                              </span>
-                              <span className="text-black/10">·</span>
-                              <span className="text-[10px] text-black/20 font-bold uppercase tracking-wider">
-                                {spillOfDay.totalReactions} 🔥
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </article>
-                    </Link>
+                    <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-black/40">
+                      Spill of the Day
+                    </h2>
                   </div>
-                )}
-              </div>
+                  <Link
+                    href={`/b/${spillOfDay.boardSlug}/s/${spillOfDay._id}`}
+                    className="group block relative w-full"
+                  >
+                    <article className="relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-6 md:p-8 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-stretch group-hover:-translate-y-1">
+                      
+                      {/* Image side */}
+                      <div
+                        className="w-full sm:w-40 aspect-[3/4] sm:aspect-auto rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500"
+                        style={{
+                          background: spillOfDay.aiImageUrl
+                            ? `url(${spillOfDay.aiImageUrl}) center/cover`
+                            : THEMES.find(
+                              (t) => t.key === spillOfDay.coverTheme,
+                            )?.bg || "#f5f5f5",
+                        }}
+                      >
+                        <div
+                          className={`size-full flex flex-col items-center justify-center p-2 text-center transition-colors duration-500 ${spillOfDay.aiImageUrl ? "bg-black/40 group-hover:bg-black/20" : ""}`}
+                        >
+                          {!spillOfDay.aiImageUrl && (
+                            <div className="text-4xl mb-2 drop-shadow-md">
+                              {spillOfDay.coverEmoji}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Content side */}
+                      <div className="flex-1 flex flex-col justify-center text-center sm:text-left">
+                        <span className="inline-block px-3 py-1 rounded-full bg-black/5 text-[9px] font-black uppercase tracking-[0.3em] text-black/40 w-fit mx-auto sm:mx-0 mb-4">
+                          Long-Form Spill
+                        </span>
+                        <h3 className="serif text-2xl md:text-3xl font-black leading-tight text-black mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-rose-500 group-hover:to-orange-500 transition-all duration-300">
+                          {spillOfDay.title}
+                        </h3>
+                        <p className="text-sm text-black/50 line-clamp-2 md:line-clamp-3 mb-6 leading-relaxed">
+                          {spillOfDay.content || "Read this juicy spill..."}
+                        </p>
+                        <div className="flex items-center justify-center sm:justify-start gap-3 mt-auto">
+                          <span className="text-[11px] font-bold text-black/60 px-3 py-1 rounded-full border border-black/10">
+                            {spillOfDay.displayName}
+                          </span>
+                          <span className="text-[11px] text-black/40 font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-orange-50 text-orange-600">
+                            {spillOfDay.totalReactions} 🔥
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  </Link>
+                </div>
+              )}
+
             </div>
           </section>
         )}
@@ -568,8 +588,8 @@ export default function ExplorePage() {
                         {/* Rank Badge */}
                         <div
                           className={`
-                          absolute -top-3 -left-1 w-9 h-9 rounded-2xl flex items-center justify-center text-[12px] font-black text-white shadow-lg z-20 transition-transform group-hover:scale-110
-                          ${isTop3 ? `bg-gradient-to-br ${rankColors[idx]}` : "bg-black text-white/50"}
+                          absolute -top-2 -left-2 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg border-[3px] border-white z-20 transition-transform group-hover:scale-110 group-hover:rotate-6
+                          ${isTop3 ? `bg-gradient-to-br ${rankColors[idx]}` : "bg-slate-800"}
                         `}
                         >
                           {idx === 0
@@ -578,12 +598,12 @@ export default function ExplorePage() {
                               ? "🥈"
                               : idx === 2
                                 ? "🥉"
-                                : `#${idx + 1}`}
+                                : `${idx + 1}`}
                         </div>
 
-                        <article className="rounded-[2rem] border border-black/5 bg-white p-5 transition-all hover:shadow-2xl hover:shadow-black/5 group-hover:-translate-y-1">
+                        <article className="rounded-3xl border border-white/50 bg-white/60 p-4 transition-all hover:shadow-xl hover:bg-white/80 backdrop-blur-md group-hover:-translate-y-1">
                           <div
-                            className="relative mx-auto aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-inner"
+                            className="relative mx-auto aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-sm"
                             style={{
                               background: spill.aiImageUrl
                                 ? `url(${spill.aiImageUrl}) center/cover`
@@ -660,67 +680,6 @@ export default function ExplorePage() {
           </section>
         )}
 
-        {/* ── Boards / Links Section ── */}
-        {publicBoards && publicBoards.length > 0 && (
-          <section className="px-4 pb-16">
-            <div className="border-t border-black/5 pt-8">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25">
-                  Confession Boards
-                </h2>
-                <span className="text-[10px] text-black/15 font-medium">
-                  {publicBoards.length}{" "}
-                  {publicBoards.length === 1 ? "board" : "boards"} active
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {publicBoards.map((board) => (
-                  <Link
-                    key={board._id}
-                    href={`/b/${board.slug}`}
-                    className="flex items-center gap-4 p-4 rounded-xl border border-black/5 bg-black/[0.01] hover:bg-black/[0.03] transition-all group"
-                  >
-                    {/* Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-lg flex-shrink-0">
-                      🫖
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-black truncate">
-                        {board.name}
-                      </h3>
-                      {board.tagline && (
-                        <p className="text-[10px] text-black/30 italic truncate">
-                          &quot;{board.tagline}&quot;
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <div className="text-right">
-                        <span className="text-lg font-black text-black/70 block leading-none">
-                          {board.confessionCount + (board.spillCount ?? 0)}
-                        </span>
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-black/20">
-                          {board.spillCount > 0
-                            ? `${board.confessionCount} confessions · ${board.spillCount} spills`
-                            : "confessions"}
-                        </span>
-                      </div>
-                      <ArrowRight
-                        size={14}
-                        className="text-black/15 group-hover:text-black/40 group-hover:translate-x-0.5 transition-all"
-                      />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
       </main>
 
       {/* Confess Back CTA */}
