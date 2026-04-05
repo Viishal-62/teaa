@@ -11,7 +11,8 @@ export const reply = mutation({
   },
   handler: async (ctx, args) => {
     if (!args.text.trim()) throw new Error("Reply cannot be empty");
-    if (args.text.length > 500) throw new Error("Reply cannot exceed 500 characters");
+    if (args.text.length > 500)
+      throw new Error("Reply cannot exceed 500 characters");
 
     // Get confession → board → verify ownership
     const confession = await ctx.db.get(args.confessionId);
@@ -26,21 +27,27 @@ export const reply = mutation({
     // Check if creator already replied to this confession
     const existing = await ctx.db
       .query("creatorReplies")
-      .withIndex("by_confessionId", (q) => q.eq("confessionId", args.confessionId))
+      .withIndex("by_confessionId", (q) =>
+        q.eq("confessionId", args.confessionId),
+      )
       .first();
 
     if (existing) {
-      throw new Error("You already replied to this confession. Use edit instead.");
+      throw new Error(
+        "You already replied to this confession. Use edit instead.",
+      );
     }
 
     // Content moderation
     const modResult = moderateText(args.text, board.bannedWords ?? []);
     if (!modResult.isClean) {
-      throw new Error(JSON.stringify({
-        type: "moderation_error",
-        flaggedWords: modResult.flaggedWords,
-        message: "Your reply contains restricted words.",
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: modResult.flaggedWords,
+          message: "Your reply contains restricted words.",
+        }),
+      );
     }
 
     const replyId = await ctx.db.insert("creatorReplies", {
@@ -64,7 +71,8 @@ export const edit = mutation({
   },
   handler: async (ctx, args) => {
     if (!args.text.trim()) throw new Error("Reply cannot be empty");
-    if (args.text.length > 500) throw new Error("Reply cannot exceed 500 characters");
+    if (args.text.length > 500)
+      throw new Error("Reply cannot exceed 500 characters");
 
     const reply = await ctx.db.get(args.replyId);
     if (!reply) throw new Error("Reply not found");
@@ -75,11 +83,13 @@ export const edit = mutation({
     const board = await ctx.db.get(reply.boardId);
     const modResult = moderateText(args.text, board?.bannedWords ?? []);
     if (!modResult.isClean) {
-      throw new Error(JSON.stringify({
-        type: "moderation_error",
-        flaggedWords: modResult.flaggedWords,
-        message: "Your reply contains restricted words.",
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: modResult.flaggedWords,
+          message: "Your reply contains restricted words.",
+        }),
+      );
     }
 
     await ctx.db.patch(args.replyId, {
@@ -114,7 +124,9 @@ export const getByConfession = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("creatorReplies")
-      .withIndex("by_confessionId", (q) => q.eq("confessionId", args.confessionId))
+      .withIndex("by_confessionId", (q) =>
+        q.eq("confessionId", args.confessionId),
+      )
       .first();
   },
 });
@@ -125,7 +137,9 @@ export const hasReply = query({
   handler: async (ctx, args) => {
     const reply = await ctx.db
       .query("creatorReplies")
-      .withIndex("by_confessionId", (q) => q.eq("confessionId", args.confessionId))
+      .withIndex("by_confessionId", (q) =>
+        q.eq("confessionId", args.confessionId),
+      )
       .first();
     return !!reply;
   },

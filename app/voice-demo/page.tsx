@@ -55,8 +55,9 @@ export default function VoiceConfessionsDemo() {
             All voice confessions are fully anonymous — no names, no traces.
           </p>
           <div className="text-xs text-gray-500">
-            ✓ Client-side processing<br />✓ Cloudinary storage<br />✓ No IP
-            logging
+            ✓ Client-side processing
+            <br />✓ Cloudinary storage
+            <br />✓ No IP logging
           </div>
         </motion.div>
 
@@ -70,11 +71,13 @@ export default function VoiceConfessionsDemo() {
           <div className="text-3xl mb-3">✨</div>
           <h3 className="text-xl font-bold mb-2">Beautiful Animations</h3>
           <p className="text-gray-600 text-sm mb-4">
-            React Spring physics animations + Framer Motion. Cartoonish
-            waveform bounces to audio frequency in real-time.
+            React Spring physics animations + Framer Motion. Cartoonish waveform
+            bounces to audio frequency in real-time.
           </p>
           <div className="text-xs text-gray-500">
-            ✓ 40-bar waveform<br />✓ Spring physics<br />✓ Responsive
+            ✓ 40-bar waveform
+            <br />✓ Spring physics
+            <br />✓ Responsive
           </div>
         </motion.div>
 
@@ -92,7 +95,9 @@ export default function VoiceConfessionsDemo() {
             feed with beautiful cards.
           </p>
           <div className="text-xs text-gray-500">
-            ✓ Coverflow carousel<br />✓ Category filters<br />✓ Reactions
+            ✓ Coverflow carousel
+            <br />✓ Category filters
+            <br />✓ Reactions
           </div>
         </motion.div>
       </div>
@@ -113,7 +118,9 @@ export default function VoiceConfessionsDemo() {
             <div className="text-xs text-blue-700 mt-1">Web Audio API</div>
           </div>
           <div>
-            <div className="font-semibold text-sm text-blue-900">Animations</div>
+            <div className="font-semibold text-sm text-blue-900">
+              Animations
+            </div>
             <div className="text-xs text-blue-700 mt-1">
               React Spring + Framer
             </div>

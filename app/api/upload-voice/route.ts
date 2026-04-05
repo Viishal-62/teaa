@@ -22,14 +22,18 @@ export async function POST(request: NextRequest) {
     if (!audioFile || !(audioFile instanceof File)) {
       return NextResponse.json(
         { error: "No audio file provided" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+    if (
+      !CLOUDINARY_CLOUD_NAME ||
+      !CLOUDINARY_API_KEY ||
+      !CLOUDINARY_API_SECRET
+    ) {
       return NextResponse.json(
         { error: "Cloudinary not configured" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
       {
         method: "POST",
         body: cloudinaryFormData,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest) {
       console.error("Cloudinary upload error:", error);
       return NextResponse.json(
         { error: "Upload failed", details: error },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
         error: "Internal server error",
         message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

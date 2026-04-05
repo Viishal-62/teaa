@@ -14,15 +14,32 @@ import {
   Zap,
   Eye,
   Flame,
+  Inbox,
+  Wand2,
+  ImageDown,
+  Volume2,
+  Menu,
+  X,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
-import { motion, useScroll, useTransform, useMotionValue, useSpring as useFMSpring } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useSpring as useFMSpring,
+  AnimatePresence,
+} from "framer-motion";
 import { useSpring, animated } from "@react-spring/web";
 import { THEMES } from "@/convex/helpers";
 
 /* ── Animated number ── */
 function AnimNum({ value }: { value: number }) {
-  const sp = useSpring({ val: value, from: { val: 0 }, config: { tension: 40, friction: 20 } });
+  const sp = useSpring({
+    val: value,
+    from: { val: 0 },
+    config: { tension: 40, friction: 20 },
+  });
   return <animated.span>{sp.val.to((v) => Math.floor(v))}</animated.span>;
 }
 
@@ -30,11 +47,19 @@ function AnimNum({ value }: { value: number }) {
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as any },
+  },
 };
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.92 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as any },
+  },
 };
 
 /* ── Mood categories for marquee ── */
@@ -59,6 +84,7 @@ export default function Home() {
   const recentSpills = useQuery(api.spills.listAll);
   const voiceFeed = useQuery(api.confessions.voiceFeed, {});
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setHeroReady(true), 100);
@@ -75,7 +101,8 @@ export default function Home() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   const totalConfessions = (globalFeed?.length ?? 0) + (voiceFeed?.length ?? 0);
-  const textConfessions = globalFeed?.filter((c: any) => c.type !== "voice") ?? [];
+  const textConfessions =
+    globalFeed?.filter((c: any) => c.type !== "voice") ?? [];
 
   /* Cursor glow on hero */
   const mouseX = useMotionValue(0);
@@ -96,43 +123,162 @@ export default function Home() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-4 bg-[#faf8f5]/80 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 bg-[#faf8f5]/80 backdrop-blur-xl"
       >
-        <Link href="/" className="text-sm font-black serif tracking-tight hover:scale-105 transition-transform">
-          🫖 teaaa
-        </Link>
-        <div className="flex items-center gap-5">
-          <Link href="/explore" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors">
-            Explore
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-sm font-black serif tracking-tight hover:scale-105 transition-transform"
+          >
+            🫖 teaaa
           </Link>
-          <Link href="/forum" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors">
-            Community
-          </Link>
-          <Link href="/explore/voice" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors flex items-center gap-1">
-            <Mic size={10} /> Voice
-          </Link>
-          <Link href="/confess" className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors">
-            Confess
-          </Link>
-          <Link href="/create" className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transition-all">
-            Create Board
-          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-5">
+            <Link
+              href="/explore"
+              className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+            >
+              Explore
+            </Link>
+            <Link
+              href="/forum"
+              className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+            >
+              Community
+            </Link>
+            <Link
+              href="/explore/voice"
+              className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors flex items-center gap-1"
+            >
+              <Mic size={10} /> Voice
+            </Link>
+            <Link
+              href="/confess"
+              className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
+            >
+              Confess
+            </Link>
+            <Link
+              href="/create"
+              className="text-[10px] font-bold uppercase tracking-widest px-4 py-2 bg-black text-white rounded-lg hover:scale-105 transition-all"
+            >
+              Create Board
+            </Link>
+          </div>
+
+          {/* Mobile Nav Toggle */}
+          <button
+            className="md:hidden p-2 text-black/60 hover:text-black tap-highlight-transparent"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0, y: -10 }}
+              animate={{ height: "auto", opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden overflow-hidden bg-[#eeece7] mt-3 rounded-2xl border border-black/5 shadow-2xl"
+            >
+              <div className="flex flex-col p-4 gap-2">
+                <Link
+                  href="/explore"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
+                >
+                  Explore
+                </Link>
+                <Link
+                  href="/forum"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
+                >
+                  Community
+                </Link>
+                <Link
+                  href="/explore/voice"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors flex items-center gap-2"
+                >
+                  <Mic size={14} /> Voice
+                </Link>
+                <Link
+                  href="/confess"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
+                >
+                  Confess
+                </Link>
+                <Link
+                  href="/create"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-[11px] font-bold uppercase tracking-widest text-center p-4 bg-black text-white rounded-xl active:scale-95 transition-all mt-2 border border-black"
+                >
+                  Create Board
+                </Link>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
 
       {/* ══════════════════════════════════════════
-          HERO — parallax + cursor glow + stagger
+          HERO — Ultra Premium section
          ══════════════════════════════════════════ */}
       <section
         ref={heroRef}
         onMouseMove={handleMouseMove}
-        className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-16 overflow-hidden"
+        className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 pb-16 overflow-hidden bg-[#faf8f5]"
       >
-        {/* Cursor glow */}
-        <motion.div
-          className="absolute pointer-events-none w-[500px] h-[500px] rounded-full opacity-[0.06]"
+        {/* Subtle noise/grid overlay */}
+        <div
+          className="absolute inset-0 z-0 opacity-[0.35] mix-blend-overlay pointer-events-none"
           style={{
-            background: "radial-gradient(circle, #ec4899, transparent 70%)",
+            backgroundImage:
+              "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')",
+          }}
+        ></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_20%,transparent_100%)] pointer-events-none" />
+
+        {/* ── Mesh gradient background ── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <motion.div
+            animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
+            transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
+            className="absolute -top-[10%] -left-[10%] w-[800px] h-[800px] rounded-full blur-[140px] opacity-40 mix-blend-multiply"
+            style={{
+              background: "radial-gradient(circle, #fca5a5, transparent 60%)",
+            }}
+          />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
+            transition={{ repeat: Infinity, duration: 30, ease: "easeInOut" }}
+            className="absolute top-[20%] left-[30%] w-[700px] h-[700px] rounded-full blur-[180px] opacity-30 mix-blend-multiply"
+            style={{
+              background: "radial-gradient(circle, #fde047, transparent 70%)",
+            }}
+          />
+          <motion.div
+            animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
+            transition={{ repeat: Infinity, duration: 28, ease: "easeInOut" }}
+            className="absolute -bottom-[20%] -right-[10%] w-[900px] h-[900px] rounded-full blur-[160px] opacity-40 mix-blend-multiply"
+            style={{
+              background: "radial-gradient(circle, #c4b5fd, transparent 70%)",
+            }}
+          />
+        </div>
+
+        {/* Cursor interactive glow */}
+        <motion.div
+          className="absolute z-0 pointer-events-none w-[500px] h-[500px] rounded-full mix-blend-screen opacity-[0.15]"
+          style={{
+            background: "radial-gradient(circle, #ff0080, transparent 60%)",
             x: smoothX,
             y: smoothY,
             translateX: "-50%",
@@ -140,132 +286,206 @@ export default function Home() {
           }}
         />
 
-        {/* Ambient bg */}
-        <div className="absolute inset-0 pointer-events-none">
-          <motion.div
-            animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.15, 1] }}
-            transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-            className="absolute top-[10%] left-[8%] w-80 h-80 bg-rose-200/15 rounded-full blur-[130px]"
-          />
-          <motion.div
-            animate={{ x: [0, -25, 0], y: [0, 30, 0], scale: [1, 1.1, 1] }}
-            transition={{ repeat: Infinity, duration: 14, ease: "easeInOut" }}
-            className="absolute bottom-[15%] right-[5%] w-72 h-72 bg-violet-200/12 rounded-full blur-[120px]"
-          />
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-            className="absolute top-[45%] left-[45%] w-96 h-96 bg-amber-100/10 rounded-full blur-[160px]"
-          />
+        {/* ── Floating glass confession previews (Desktop) ── */}
+        <div className="absolute inset-0 pointer-events-none z-[1] hidden lg:block perspective-[1000px]">
+          {[
+            {
+              item: textConfessions[0] || {
+                text: "I accidentally sent the screenshot to the group chat instead of my best friend.",
+                category: "Regret",
+                _creationTime: Date.now(),
+              },
+              className:
+                "absolute top-[20%] left-[8%] 2xl:left-[15%] w-[250px]",
+              anim: { y: [0, -15, 0], rotateZ: [0, 2, 0] },
+              delay: 1.2,
+              bgGrad: "from-pink-400 to-rose-400",
+              avatar: "A",
+              rotateX: 10,
+              rotateY: -10,
+            },
+            {
+              item: textConfessions[1] || {
+                text: "I know you're dating someone else, but I still wait for your text.",
+                category: "Longing",
+                _creationTime: Date.now() - 300000,
+              },
+              className:
+                "absolute top-[40%] right-[6%] 2xl:right-[12%] w-[240px]",
+              anim: { y: [0, 20, 0], rotateZ: [0, -2, 0] },
+              delay: 1.5,
+              bgGrad: "from-indigo-400 to-violet-400",
+              avatar: "J",
+              rotateX: 10,
+              rotateY: 10,
+            },
+            {
+              item: textConfessions[2] || {
+                text: "Everyone thinks I have it together, but I'm just guessing my way through life.",
+                category: "Fear",
+                _creationTime: Date.now() - 3600000,
+              },
+              className:
+                "absolute bottom-[10%] left-[12%] 2xl:left-[20%] w-[230px]",
+              anim: { y: [0, -10, 0], rotateZ: [0, -1, 0] },
+              delay: 1.8,
+              bgGrad: "from-emerald-400 to-teal-400",
+              avatar: "S",
+              rotateX: 15,
+              rotateY: -5,
+            },
+          ].map((card, i) => {
+            const catInfo = CATEGORY_INFO[
+              card.item.category as keyof typeof CATEGORY_INFO
+            ] || {
+              emoji: "💭",
+              label: card.item.category || "Confession",
+              color: "#cbd5e1",
+            };
+            const cardText = card.item.text || (card.item as any).body || ""; // fallback safely if property shape differs
+
+            return (
+              <motion.div
+                key={i}
+                initial={{
+                  opacity: 0,
+                  y: 50,
+                  rotateX: card.rotateX,
+                  rotateY: card.rotateY,
+                }}
+                animate={
+                  heroReady ? { opacity: 1, y: 0, rotateX: 0, rotateY: 0 } : {}
+                }
+                transition={{
+                  delay: card.delay,
+                  duration: 1.2,
+                  type: "spring",
+                  stiffness: 50,
+                }}
+                className={card.className}
+              >
+                <motion.div
+                  animate={card.anim}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 7 + i,
+                    ease: "easeInOut",
+                  }}
+                  className="bg-white/50 backdrop-blur-3xl border border-white/80 rounded-[2rem] p-5 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(255,255,255,0.5)_inset]"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className={`w-8 h-8 rounded-full bg-gradient-to-tr ${card.bgGrad} shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] flex items-center justify-center text-white text-[10px] font-bold`}
+                    >
+                      {card.avatar}
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-widest text-black/70">
+                        Anonymous
+                      </div>
+                      <div className="text-[9px] text-black/40 font-bold uppercase tracking-wider">
+                        {timeAgo(card.item._creationTime)}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-black/70 leading-relaxed font-semibold mb-4">
+                    {cardText.length > 80
+                      ? cardText.slice(0, 80) + "..."
+                      : cardText}
+                  </p>
+                  <div
+                    className="inline-flex px-2.5 py-1.5 rounded-lg bg-black/[0.04] border border-black/[0.02] text-[9px] font-black uppercase tracking-widest"
+                    style={{ color: catInfo.color }}
+                  >
+                    {catInfo.emoji} {catInfo.label}
+                  </div>
+                </motion.div>
+              </motion.div>
+            );
+          })}
         </div>
 
+        {/* ── Main content ── */}
         <motion.div
           style={{ y: heroY, scale: heroScale, opacity: heroOpacity }}
-          className="relative z-10 text-center max-w-2xl"
+          className="relative z-10 text-center max-w-4xl mx-auto"
         >
-          {/* Pill */}
-          <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.9 }}
-            animate={heroReady ? { opacity: 1, y: 0, scale: 1 } : {}}
-            transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/70 backdrop-blur-md border border-black/5 text-[9px] font-bold uppercase tracking-[0.2em] mb-8 text-black/35 shadow-sm"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-            </span>
-            Anonymous · No sign up · Voice & Text
-          </motion.div>
+          {/* Epic Typography Setup */}
+          <div className="flex flex-col items-center justify-center mb-6 leading-[0.9]">
+            <motion.h1
+              initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+              animate={
+                heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
+              }
+              transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-black text-black tracking-tighter"
+            >
+              Unfiltered.
+            </motion.h1>
 
-          {/* Heading — word by word */}
-          <div className="mb-6">
-            {[
-              { text: "Say the thing", delay: 0.3 },
-              { text: "you haven't said.", delay: 0.5, accent: true },
-            ].map((line, li) => (
-              <motion.div
-                key={li}
-                initial={{ opacity: 0, y: 25 }}
-                animate={heroReady ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: line.delay, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <h1
-                  className={`text-5xl md:text-7xl font-black tracking-tight serif leading-[0.95] ${
-                    line.accent
-                      ? "bg-gradient-to-r from-rose-500 via-orange-400 to-amber-500 bg-clip-text text-transparent"
-                      : "text-black"
-                  }`}
-                >
-                  {line.text}
-                </h1>
-              </motion.div>
-            ))}
+            <motion.h1
+              initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+              animate={
+                heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
+              }
+              transition={{ delay: 0.35, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-[3rem] sm:text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-serif italic tracking-tight relative -mt-3 sm:-mt-5 lg:-mt-6 z-10"
+            >
+              <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm px-4">
+                Raw. Anonymous.
+              </span>
+            </motion.h1>
           </div>
 
+          {/* Refined Subtitle */}
           <motion.p
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={heroReady ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="text-sm md:text-base text-black/35 max-w-md mx-auto mb-10 font-medium leading-relaxed"
+            transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+            className="text-[14px] sm:text-base md:text-lg text-black/50 max-w-xl mx-auto mb-10 font-medium leading-[1.6] text-balance px-4"
           >
-            Confess anonymously — type it, say it, or spill the whole story.
-            Voice recordings, text drops, and full gossip books.
+            Create private spaces for your community. Drop voice notes, secret
+            admirer letters, or spill the absolute truth without ever logging
+            in.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Advanced CTAs */}
           <motion.div
             variants={stagger}
             initial="hidden"
             animate={heroReady ? "show" : "hidden"}
-            className="flex flex-col sm:flex-row gap-3 justify-center"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           >
             <motion.div variants={fadeUp}>
               <Link
                 href="/create"
-                className="group relative flex items-center justify-center gap-2.5 px-8 py-4 bg-black text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl shadow-black/15 overflow-hidden"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#0f0f0f] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:scale-[1.02] active:scale-95 transition-all shadow-[0_16px_40px_-12px_rgba(0,0,0,0.4)] overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-                <Plus size={15} />
-                Create Your Board
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+                <Plus size={14} className="text-white/70" />
+                <span>Create Board</span>
               </Link>
             </motion.div>
+
             <motion.div variants={fadeUp}>
               <Link
-                href="/confess"
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-white/80 backdrop-blur-sm border border-black/8 text-[11px] text-black/50 font-bold uppercase tracking-widest rounded-xl hover:bg-white hover:text-black hover:shadow-lg hover:shadow-black/5 transition-all"
+                href="/explore"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-xl border border-black/5 hover:border-black/10 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-white active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.05)]"
               >
-                🫖 Just Confess
+                <span className="text-[14px] leading-none">🫖</span>
+                <span>Explore Feed</span>
               </Link>
             </motion.div>
+
             <motion.div variants={fadeUp}>
               <Link
                 href="/explore/voice"
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-white/80 backdrop-blur-sm border border-black/8 text-[11px] text-black/50 font-bold uppercase tracking-widest rounded-xl hover:bg-white hover:text-black hover:shadow-lg hover:shadow-black/5 transition-all"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-xl border border-black/5 hover:border-black/10 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-white active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.05)]"
               >
-                <Mic size={14} /> Voice Confess
+                <Mic size={14} className="text-black/70" />
+                <span>Voice Confess</span>
               </Link>
             </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-            className="w-5 h-8 rounded-full border-2 border-black/10 flex justify-center pt-1.5"
-          >
-            <motion.div
-              animate={{ height: [4, 10, 4], opacity: [0.3, 0.6, 0.3] }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-              className="w-0.5 bg-black/30 rounded-full"
-            />
           </motion.div>
         </motion.div>
       </section>
@@ -307,7 +527,11 @@ export default function Home() {
             { label: "Boards", value: publicBoards?.length ?? 0, icon: "🫖" },
             { label: "Confessions", value: totalConfessions, icon: "✍️" },
             { label: "Voice Drops", value: voiceFeed?.length ?? 0, icon: "🎙️" },
-            { label: "Deep Spills", value: recentSpills?.length ?? 0, icon: "📖" },
+            {
+              label: "Deep Spills",
+              value: recentSpills?.length ?? 0,
+              icon: "📖",
+            },
           ].map((s) => (
             <motion.div
               key={s.label}
@@ -381,33 +605,37 @@ export default function Home() {
                 <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mb-5">
                   <Mic size={24} className="text-rose-500" />
                 </div>
-                <h3 className="text-xl font-black serif mb-2">Record a Confession</h3>
+                <h3 className="text-xl font-black serif mb-2">
+                  Record a Confession
+                </h3>
                 <p className="text-xs text-black/35 leading-relaxed max-w-sm mb-6">
-                  Hit record, speak your truth for up to 30 seconds.
-                  Choose a mood, give it a title, and drop it into the void.
+                  Hit record, speak your truth for up to 30 seconds. Choose a
+                  mood, give it a title, and drop it into the void.
                 </p>
 
                 {/* Mini waveform */}
                 <div className="flex items-end gap-[3px] h-10">
-                  {Array(28).fill(0).map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-[3px] rounded-full bg-rose-400/60"
-                      animate={{
-                        height: [
-                          `${8 + Math.sin(i * 0.5) * 5}px`,
-                          `${20 + Math.cos(i * 0.7) * 14}px`,
-                          `${8 + Math.sin(i * 0.5) * 5}px`,
-                        ],
-                      }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1.3 + i * 0.03,
-                        ease: "easeInOut",
-                        delay: i * 0.015,
-                      }}
-                    />
-                  ))}
+                  {Array(28)
+                    .fill(0)
+                    .map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="w-[3px] rounded-full bg-rose-400/60"
+                        animate={{
+                          height: [
+                            `${8 + Math.sin(i * 0.5) * 5}px`,
+                            `${20 + Math.cos(i * 0.7) * 14}px`,
+                            `${8 + Math.sin(i * 0.5) * 5}px`,
+                          ],
+                        }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1.3 + i * 0.03,
+                          ease: "easeInOut",
+                          delay: i * 0.015,
+                        }}
+                      />
+                    ))}
                 </div>
               </div>
             </motion.div>
@@ -425,9 +653,12 @@ export default function Home() {
                   <div className="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center mb-3">
                     <Headphones size={20} className="text-violet-500" />
                   </div>
-                  <h3 className="text-base font-black serif mb-1">Listen & Feel</h3>
+                  <h3 className="text-base font-black serif mb-1">
+                    Listen & Feel
+                  </h3>
                   <p className="text-[11px] text-black/30 leading-relaxed">
-                    Animated waveform player. Hear real voices. React with emotions.
+                    Animated waveform player. Hear real voices. React with
+                    emotions.
                   </p>
                 </div>
               </motion.div>
@@ -443,7 +674,9 @@ export default function Home() {
                   <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
                     <MessageCircle size={20} className="text-amber-500" />
                   </div>
-                  <h3 className="text-base font-black serif mb-1">Reply Anonymously</h3>
+                  <h3 className="text-base font-black serif mb-1">
+                    Reply Anonymously
+                  </h3>
                   <p className="text-[11px] text-black/30 leading-relaxed">
                     Text or GIF replies. Build anonymous conversation threads.
                   </p>
@@ -461,10 +694,26 @@ export default function Home() {
             className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10"
           >
             {[
-              { icon: <Shield size={16} />, label: "100% Anonymous", color: "#22c55e" },
-              { icon: <Zap size={16} />, label: "No Sign Up", color: "#f59e0b" },
-              { icon: <Eye size={16} />, label: "View Tracking", color: "#6366f1" },
-              { icon: <Flame size={16} />, label: "Reactions", color: "#ef4444" },
+              {
+                icon: <Shield size={16} />,
+                label: "100% Anonymous",
+                color: "#22c55e",
+              },
+              {
+                icon: <Zap size={16} />,
+                label: "No Sign Up",
+                color: "#f59e0b",
+              },
+              {
+                icon: <Eye size={16} />,
+                label: "View Tracking",
+                color: "#6366f1",
+              },
+              {
+                icon: <Flame size={16} />,
+                label: "Reactions",
+                color: "#ef4444",
+              },
             ].map((f) => (
               <motion.div
                 key={f.label}
@@ -502,7 +751,10 @@ export default function Home() {
                   ? `Listen to ${voiceFeed.length} Confessions`
                   : "Explore Voice Confessions"}
               </span>
-              <ArrowRight size={14} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight
+                size={14}
+                className="relative z-10 group-hover:translate-x-1 transition-transform"
+              />
             </Link>
           </motion.div>
         </div>
@@ -538,7 +790,7 @@ export default function Home() {
                 n: "01",
                 icon: "✍️",
                 title: "Write",
-                desc: "Type your confession. Pick a mood. Drop it anonymously into the void.",
+                desc: "Type your confession. Pick a mood. Drop int anonymously into the void.",
                 gradient: "from-blue-50 to-white",
               },
               {
@@ -566,7 +818,7 @@ export default function Home() {
                 n: "05",
                 icon: "💝",
                 title: "Admirer",
-                desc: "Send anonymous love letters with physical envelope reveal animations.",
+                desc: "Read secret anonymous love letters while listening to immersive background music and deep ambient audios.",
                 gradient: "from-pink-50 to-white",
               },
             ].map((s) => (
@@ -591,7 +843,100 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── POWER FEATURES ── */}
+      <section className="py-24 px-4 sm:px-6 relative bg-white border-y border-black/5">
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 80 80%22%3E%3Cpath fill=%22%23000%22 fill-opacity=%220.8%22 d=%22M0 0h1v1H0zM40 40h1v1h-1zM79 79h1v1h-1zM20 60h1v1h-1zM60 20h1v1h-1z%22/%3E%3C/svg%3E')]" />
 
+        <div className="max-w-4xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent mb-3">
+              ✦ Powerful Extras
+            </p>
+            <h2 className="text-3xl md:text-4xl font-black serif tracking-tight">
+              More than just a wall
+            </h2>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-5"
+          >
+            {/* Inbox */}
+            <motion.div
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-[#faf8f5] border border-black/5 rounded-[1.5rem] p-8 text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all group flex flex-col items-start"
+            >
+              <div className="w-14 h-14 rounded-[16px] bg-blue-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Inbox size={26} className="text-blue-500" />
+              </div>
+              <h3 className="text-xl font-black serif mb-2">Live Inbox</h3>
+              <p className="text-[11px] text-black/40 leading-relaxed font-medium">
+                Track real-time reactions, incoming replies, and pings for every
+                confession or voice drop you publish.
+              </p>
+            </motion.div>
+
+            {/* Summarizer */}
+            <motion.div
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-[#faf8f5] border border-black/5 rounded-[1.5rem] p-8 text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all group flex flex-col items-start"
+            >
+              <div className="w-14 h-14 rounded-[16px] bg-purple-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Wand2 size={26} className="text-purple-500" />
+              </div>
+              <h3 className="text-xl font-black serif mb-2">AI Summarizer</h3>
+              <p className="text-[11px] text-black/40 leading-relaxed font-medium">
+                Generate instant thematic vibes and automated TLDRs for massive
+                boards. Read the room instantly.
+              </p>
+            </motion.div>
+
+            {/* Downloadable Cards */}
+            <motion.div
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-[#faf8f5] border border-black/5 rounded-[1.5rem] p-8 text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all group flex flex-col items-start"
+            >
+              <div className="w-14 h-14 rounded-[16px] bg-orange-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <ImageDown size={26} className="text-orange-500" />
+              </div>
+              <h3 className="text-xl font-black serif mb-2">Export Cards</h3>
+              <p className="text-[11px] text-black/40 leading-relaxed font-medium">
+                Turn your favorite confessions into aesthetic, branded polaroid
+                images ready to share on socials instantly.
+              </p>
+            </motion.div>
+
+            {/* Ambient Sounds */}
+            <motion.div
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="bg-[#faf8f5] border border-black/5 rounded-[1.5rem] p-8 text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-black/10 transition-all group flex flex-col items-start"
+            >
+              <div className="w-14 h-14 rounded-[16px] bg-emerald-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Volume2 size={26} className="text-emerald-500" />
+              </div>
+              <h3 className="text-xl font-black serif mb-2">Ambient Audios</h3>
+              <p className="text-[11px] text-black/40 leading-relaxed font-medium">
+                Enhance your reading experience with 18 dynamic background
+                soundscapes. Perfect for listening to relaxing music while
+                reading secret admirer confessions.
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── RECENT CONFESSIONS ── */}
       {textConfessions.length > 0 && (
@@ -635,7 +980,8 @@ export default function Home() {
               {textConfessions.slice(0, 3).map((confession: any) => {
                 const catInfo = CATEGORY_INFO[confession.category];
                 const previewText =
-                  typeof confession.text === "string" && confession.text.trim().length > 0
+                  typeof confession.text === "string" &&
+                  confession.text.trim().length > 0
                     ? confession.text
                     : "Anonymous confession";
                 return (
@@ -660,7 +1006,10 @@ export default function Home() {
                           {catInfo && (
                             <span
                               className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                              style={{ background: `${catInfo.color}10`, color: catInfo.color }}
+                              style={{
+                                background: `${catInfo.color}10`,
+                                color: catInfo.color,
+                              }}
                             >
                               {catInfo.label}
                             </span>
@@ -690,7 +1039,10 @@ export default function Home() {
                   className="flex items-center justify-center gap-2 mt-4 py-4 bg-white border border-black/5 rounded-xl text-[11px] font-bold text-black/25 hover:text-black hover:border-black/15 transition-all group"
                 >
                   <span>+{textConfessions.length - 3} more secrets</span>
-                  <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight
+                    size={12}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
                 </Link>
               </motion.div>
             )}
@@ -730,14 +1082,18 @@ export default function Home() {
               className="grid grid-cols-1 sm:grid-cols-3 gap-4"
             >
               {recentSpills.slice(0, 3).map((spill) => {
-                const spillTheme = THEMES.find((t) => t.key === spill.coverTheme) || THEMES[0];
+                const spillTheme =
+                  THEMES.find((t) => t.key === spill.coverTheme) || THEMES[0];
                 return (
                   <motion.div
                     key={spill._id}
                     variants={fadeUp}
                     whileHover={{ y: -6, transition: { duration: 0.25 } }}
                   >
-                    <Link href={`/b/${spill.boardSlug}/s/${spill._id}`} className="group block">
+                    <Link
+                      href={`/b/${spill.boardSlug}/s/${spill._id}`}
+                      className="group block"
+                    >
                       <div className="bg-white border border-black/5 rounded-2xl p-4 hover:shadow-lg hover:shadow-black/5 transition-all">
                         <div
                           className="relative mx-auto aspect-[3/4] rounded-xl overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-1deg]"
@@ -747,25 +1103,43 @@ export default function Home() {
                               : spillTheme.bg,
                           }}
                         >
-                          <div className={`absolute inset-0 flex flex-col justify-between p-5 text-center ${spill.aiImageUrl ? "bg-black/35" : ""}`}>
+                          <div
+                            className={`absolute inset-0 flex flex-col justify-between p-5 text-center ${spill.aiImageUrl ? "bg-black/35" : ""}`}
+                          >
                             <span
                               className="text-[8px] font-black uppercase tracking-[0.3em]"
-                              style={{ color: spill.aiImageUrl ? "#fff" : spillTheme.accent }}
+                              style={{
+                                color: spill.aiImageUrl
+                                  ? "#fff"
+                                  : spillTheme.accent,
+                              }}
                             >
                               Deep Spill
                             </span>
                             <div>
-                              {!spill.aiImageUrl && <div className="text-3xl mb-2">{spill.coverEmoji}</div>}
+                              {!spill.aiImageUrl && (
+                                <div className="text-3xl mb-2">
+                                  {spill.coverEmoji}
+                                </div>
+                              )}
                               <h3
                                 className="serif text-lg font-black leading-tight"
-                                style={{ color: spill.aiImageUrl ? "#fff" : spillTheme.text }}
+                                style={{
+                                  color: spill.aiImageUrl
+                                    ? "#fff"
+                                    : spillTheme.text,
+                                }}
                               >
                                 {spill.title}
                               </h3>
                             </div>
                             <span
                               className="text-[8px] uppercase tracking-[0.15em] font-medium opacity-50"
-                              style={{ color: spill.aiImageUrl ? "#fff" : spillTheme.text }}
+                              style={{
+                                color: spill.aiImageUrl
+                                  ? "#fff"
+                                  : spillTheme.text,
+                              }}
                             >
                               {spill.displayName}
                             </span>
@@ -868,7 +1242,8 @@ export default function Home() {
             className="text-center mb-16"
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-black/5 text-[9px] font-bold uppercase tracking-[0.2em] mb-6 text-black/40 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Our Philosophy
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Our
+              Philosophy
             </span>
             <h2 className="text-3xl md:text-5xl font-black serif tracking-tight leading-tight text-[#2a2a2a]">
               A quieter, safer space. <br />
@@ -920,7 +1295,11 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20, scale: 0.98 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: i * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                transition={{
+                  delay: i * 0.1,
+                  duration: 0.7,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className="group relative bg-[#ffffff]/40 backdrop-blur-[40px] rounded-[2.5rem] p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-10 items-start md:items-center overflow-hidden border border-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] hover:bg-[#ffffff]/60 hover:shadow-[0_20px_40px_rgb(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all duration-700"
               >
                 {/* Floating huge watermark icon */}
@@ -936,11 +1315,12 @@ export default function Home() {
                 </div>
 
                 <div className="flex-1 w-full z-10 flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-10 relative">
-                  
                   {/* The Old (Norm) */}
                   <div className="flex-1 w-full text-left md:pr-4 relative">
                     <div className="flex items-center gap-3 mb-2">
-                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 group-hover:text-red-500 transition-colors duration-500">The Norm</span>
+                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-red-400 group-hover:text-red-500 transition-colors duration-500">
+                        The Norm
+                      </span>
                     </div>
                     <p className="text-xs md:text-sm text-black/40 font-medium leading-relaxed group-hover:opacity-50 transition-opacity duration-500">
                       {item.old}
@@ -950,7 +1330,7 @@ export default function Home() {
                   {/* Animated Divider */}
                   <div className="hidden md:flex flex-col items-center justify-center w-8 h-full relative z-10">
                     <div className="w-[1px] h-20 bg-black/[0.04] relative overflow-hidden rounded-full mix-blend-multiply">
-                       <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-red-400 to-transparent group-hover:via-accent -translate-y-full group-hover:animate-[ping_2s_infinite] opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                      <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-transparent via-red-400 to-transparent group-hover:via-accent -translate-y-full group-hover:animate-[ping_2s_infinite] opacity-0 group-hover:opacity-100 transition-all duration-700" />
                     </div>
                     {/* Floating VS */}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#faf8f5]/80 backdrop-blur-sm border border-black/[0.05] flex items-center justify-center text-[8px] font-black uppercase tracking-widest text-black/30 group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-colors duration-700 shadow-sm z-20">
@@ -988,7 +1368,10 @@ export default function Home() {
                 View all features
                 <span className="absolute left-0 bottom-[-4px] w-full h-[1.5px] bg-accent origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-full" />
               </span>
-              <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-500" />
+              <ArrowRight
+                size={14}
+                className="group-hover:translate-x-1.5 transition-transform duration-500"
+              />
             </Link>
           </motion.div>
         </div>
@@ -1060,12 +1443,25 @@ export default function Home() {
       <section className="py-12 px-4 sm:px-6 bg-[#faf8f5]">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-[10px] text-black/30 leading-loose font-medium max-w-2xl mx-auto border-t border-black/5 pt-10">
-            Teaaa is the internet's most elegant <strong className="font-bold font-serif text-black/40">anonymous confession platform</strong>. 
-            Whether you want to share <strong className="font-bold text-black/40">secret admirer</strong> letters, 
-            listen to raw <strong className="font-bold text-black/40">anonymous voice drops</strong>, or read chronological 
-            <strong className="font-bold text-black/40"> gossip and deep spills</strong>, Teaaa provides a totally untraceable, 
-            account-free sanctuary. Build your own anonymous boards for schools, colleges, and communities. Free from toxic algorithms, 
-            focused entirely on authentic human connection.
+            Teaaa is the internet's most elegant{" "}
+            <strong className="font-bold font-serif text-black/40">
+              anonymous confession platform
+            </strong>
+            . Whether you want to share{" "}
+            <strong className="font-bold text-black/40">secret admirer</strong>{" "}
+            letters, listen to raw{" "}
+            <strong className="font-bold text-black/40">
+              anonymous voice drops
+            </strong>
+            , or read chronological
+            <strong className="font-bold text-black/40">
+              {" "}
+              gossip and deep spills
+            </strong>
+            , Teaaa provides a totally untraceable, account-free sanctuary.
+            Build your own anonymous boards for schools, colleges, and
+            communities. Free from toxic algorithms, focused entirely on
+            authentic human connection.
           </p>
         </div>
       </section>

@@ -141,30 +141,61 @@ export default function DoodleConfessionCard({
               {/* Floating brush stroke 1 */}
               <motion.div
                 className="absolute top-[15%] left-[10%] w-24 h-4 rounded-full opacity-[0.12]"
-                style={{ background: "white", filter: "blur(4px)", transform: "rotate(-15deg)" }}
+                style={{
+                  background: "white",
+                  filter: "blur(4px)",
+                  transform: "rotate(-15deg)",
+                }}
                 animate={{ x: [0, 10, 0], y: [0, -5, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
               {/* Floating brush stroke 2 */}
               <motion.div
                 className="absolute bottom-[25%] right-[8%] w-20 h-3 rounded-full opacity-[0.1]"
-                style={{ background: "white", filter: "blur(3px)", transform: "rotate(25deg)" }}
+                style={{
+                  background: "white",
+                  filter: "blur(3px)",
+                  transform: "rotate(25deg)",
+                }}
                 animate={{ x: [0, -8, 0], y: [0, 6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1,
+                }}
               />
               {/* Floating brush stroke 3 */}
               <motion.div
                 className="absolute top-[50%] left-[50%] w-16 h-2 rounded-full opacity-[0.08]"
-                style={{ background: "white", filter: "blur(2px)", transform: "rotate(-45deg)" }}
+                style={{
+                  background: "white",
+                  filter: "blur(2px)",
+                  transform: "rotate(-45deg)",
+                }}
                 animate={{ x: [0, 5, -5, 0], y: [0, -3, 3, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 2,
+                }}
               />
               {/* Paint drip effect */}
               <motion.div
                 className="absolute top-0 right-[30%] w-1 opacity-[0.08]"
                 style={{ background: "white" }}
                 animate={{ height: ["0%", "30%", "0%"] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1.5,
+                }}
               />
             </div>
 
@@ -188,7 +219,11 @@ export default function DoodleConfessionCard({
               <motion.div
                 className="relative mb-4"
                 animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
                 <span className="text-5xl drop-shadow-lg">🎨</span>
               </motion.div>
@@ -198,7 +233,11 @@ export default function DoodleConfessionCard({
                 <motion.span
                   className="text-[11px] font-black uppercase tracking-[0.3em] text-white/60 block"
                   animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
                 >
                   Tap to reveal
                 </motion.span>
@@ -210,7 +249,13 @@ export default function DoodleConfessionCard({
             </div>
 
             {/* Border accent */}
-            <div className="absolute bottom-0 left-0 right-0 h-1.5" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)" }} />
+            <div
+              className="absolute bottom-0 left-0 right-0 h-1.5"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+              }}
+            />
           </motion.div>
         ) : (
           /* ── REVEALED ── The doodle content */
@@ -243,7 +288,10 @@ export default function DoodleConfessionCard({
 
               {/* The doodle image */}
               <div className="flex-1 flex items-center justify-center min-h-0 mb-2">
-                <div className="w-full h-full relative rounded-xl overflow-hidden" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
+                <div
+                  className="w-full h-full relative rounded-xl overflow-hidden"
+                  style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                >
                   {confession.canvasImageUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -266,7 +314,8 @@ export default function DoodleConfessionCard({
               {/* Stats */}
               <div className="flex items-center justify-center gap-3 mb-2 text-[9px] text-black/30 font-medium tracking-wide uppercase">
                 <span className="flex items-center gap-1.5">
-                  <Eye size={10} className="opacity-70" /> {confession.views || 0}
+                  <Eye size={10} className="opacity-70" />{" "}
+                  {confession.views || 0}
                 </span>
                 {totalReactions !== undefined && totalReactions > 0 && (
                   <>
@@ -290,8 +339,12 @@ export default function DoodleConfessionCard({
                       onClick={(e) => handleReactionClick(type, e)}
                       className={`flex flex-col items-center gap-0.5 group/rxn transition-all ${isActive ? "scale-110" : ""}`}
                     >
-                      <span className="text-[10px] font-bold text-black/50">{count}</span>
-                      <span className={`text-lg transition-transform group-hover/rxn:scale-125 ${isActive ? "drop-shadow-md" : ""}`}>
+                      <span className="text-[10px] font-bold text-black/50">
+                        {count}
+                      </span>
+                      <span
+                        className={`text-lg transition-transform group-hover/rxn:scale-125 ${isActive ? "drop-shadow-md" : ""}`}
+                      >
                         {info.emoji}
                       </span>
                       <span className="text-[7px] font-semibold uppercase tracking-wider text-black/35 max-w-[50px] text-center leading-tight">
@@ -304,10 +357,15 @@ export default function DoodleConfessionCard({
 
               {/* Card actions */}
               <CardActions
-                confession={{ ...confession, text: captionText || "🎨 Doodle confession" }}
+                confession={{
+                  ...confession,
+                  text: captionText || "🎨 Doodle confession",
+                }}
                 boardSlug={boardSlug}
                 totalReactions={totalReactions}
-                reactionCounts={reactionCounts as Record<string, number> | undefined}
+                reactionCounts={
+                  reactionCounts as Record<string, number> | undefined
+                }
               />
 
               {/* View thread */}
@@ -349,7 +407,9 @@ export default function DoodleConfessionCard({
                     className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/90 text-white px-3 py-1.5 rounded-full flex items-center gap-2 z-50 shadow-lg pointer-events-none"
                   >
                     <CheckCircle2 size={12} className="text-green-400" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">Reported! Thank you.</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">
+                      Reported! Thank you.
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -357,14 +417,16 @@ export default function DoodleConfessionCard({
           </motion.div>
         )}
       </AnimatePresence>
-      {showRateLimit && typeof document !== "undefined" && createPortal(
-        <RateLimitModal
-          isOpen={showRateLimit}
-          onClose={() => setShowRateLimit(false)}
-          message={rateLimitMessage}
-        />,
-        document.body
-      )}
+      {showRateLimit &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <RateLimitModal
+            isOpen={showRateLimit}
+            onClose={() => setShowRateLimit(false)}
+            message={rateLimitMessage}
+          />,
+          document.body,
+        )}
     </div>
   );
 }

@@ -4,7 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Eye, MessageCircle, Heart, ArrowRight, Bell } from "lucide-react";
+import {
+  X,
+  Sparkles,
+  Eye,
+  MessageCircle,
+  Heart,
+  ArrowRight,
+  Bell,
+} from "lucide-react";
 import { getVisitorId, getCreatorToken, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
 
@@ -39,16 +47,12 @@ export default function NotificationCenter() {
   // Query notifications
   const confessorNotifs = useQuery(
     api.notifications.getConfessorNotifications,
-    mounted && visitorId
-      ? { visitorId, lastSeenAt }
-      : "skip"
+    mounted && visitorId ? { visitorId, lastSeenAt } : "skip",
   );
 
   const creatorNotifs = useQuery(
     api.notifications.getCreatorNotifications,
-    mounted && creatorToken
-      ? { creatorToken }
-      : "skip"
+    mounted && creatorToken ? { creatorToken } : "skip",
   );
 
   const hasCreatorReplies = (confessorNotifs?.creatorReplies?.length ?? 0) > 0;
@@ -156,7 +160,7 @@ export default function NotificationCenter() {
               {/* Notification list */}
               <div className="px-4 py-4 space-y-3 pb-8">
                 {/* 🌟 Priority 1: Creator Replies (Golden) */}
-                {confessorNotifs?.creatorReplies?.map((notif) => (
+                {confessorNotifs?.creatorReplies?.map((notif: any) => (
                   <motion.div
                     key={`reply-${notif.confessionId}`}
                     initial={{ opacity: 0, x: -20 }}
@@ -175,11 +179,13 @@ export default function NotificationCenter() {
                       </div>
 
                       <p className="text-sm text-amber-950/80 serif italic leading-relaxed mb-2">
-                        &ldquo;{notif.replyText}{notif.replyText.length >= 100 ? "..." : ""}&rdquo;
+                        &ldquo;{notif.replyText}
+                        {notif.replyText.length >= 100 ? "..." : ""}&rdquo;
                       </p>
 
                       <p className="text-[10px] text-amber-600/50 mb-3">
-                        On your confession: &ldquo;{notif.confessionText}...&rdquo;
+                        On your confession: &ldquo;{notif.confessionText}
+                        ...&rdquo;
                       </p>
 
                       <div className="flex items-center justify-between">
@@ -199,7 +205,7 @@ export default function NotificationCenter() {
                 ))}
 
                 {/* 🔥 Priority 2: Confession Stats */}
-                {confessorNotifs?.stats?.map((notif) => (
+                {confessorNotifs?.stats?.map((notif: any) => (
                   <motion.div
                     key={`stats-${notif.confessionId}`}
                     initial={{ opacity: 0, x: -20 }}
@@ -224,7 +230,9 @@ export default function NotificationCenter() {
                           <span className="text-xs font-bold text-black/60">
                             {notif.views}
                           </span>
-                          <span className="text-[9px] text-black/25">views</span>
+                          <span className="text-[9px] text-black/25">
+                            views
+                          </span>
                         </div>
                       )}
                       {notif.reactionCount > 0 && (
@@ -233,7 +241,9 @@ export default function NotificationCenter() {
                           <span className="text-xs font-bold text-black/60">
                             {notif.reactionCount}
                           </span>
-                          <span className="text-[9px] text-black/25">reactions</span>
+                          <span className="text-[9px] text-black/25">
+                            reactions
+                          </span>
                         </div>
                       )}
                       {notif.commentCount > 0 && (
@@ -242,7 +252,9 @@ export default function NotificationCenter() {
                           <span className="text-xs font-bold text-black/60">
                             {notif.commentCount}
                           </span>
-                          <span className="text-[9px] text-black/25">comments</span>
+                          <span className="text-[9px] text-black/25">
+                            comments
+                          </span>
                         </div>
                       )}
                     </div>
@@ -258,7 +270,7 @@ export default function NotificationCenter() {
                 ))}
 
                 {/* 🫖 Priority 3: Creator — New Confessions */}
-                {creatorNotifs?.map((notif) => (
+                {creatorNotifs?.map((notif: any) => (
                   <motion.div
                     key={`creator-${notif.boardId}`}
                     initial={{ opacity: 0, x: -20 }}
@@ -268,7 +280,9 @@ export default function NotificationCenter() {
                     <div className="flex items-center gap-1.5 mb-2">
                       <span className="text-sm">🫖</span>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-black/50">
-                        {notif.newConfessionCount} new confession{notif.newConfessionCount !== 1 ? "s" : ""} on your board
+                        {notif.newConfessionCount} new confession
+                        {notif.newConfessionCount !== 1 ? "s" : ""} on your
+                        board
                       </span>
                     </div>
 

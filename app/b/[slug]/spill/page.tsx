@@ -97,7 +97,7 @@ export default function SpillLibraryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {spills.map((spill) => {
+            {spills.map((spill: any) => {
               const theme =
                 THEMES.find((entry) => entry.key === spill.coverTheme) ||
                 THEMES[0];

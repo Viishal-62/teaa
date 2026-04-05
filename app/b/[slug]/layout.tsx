@@ -68,13 +68,16 @@ export default async function BoardLayout({
     boardData = await fetchQuery(api.boards.getBySlug, { slug });
   } catch (e) {}
 
-  const jsonLd = boardData ? {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "name": `${boardData.name} — Teaaa 🫖`,
-    "description": boardData.tagline || `Anonymous confessions on ${boardData.name}`,
-    "url": `https://teaa.xyz/b/${slug}`
-  } : null;
+  const jsonLd = boardData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: `${boardData.name} — Teaaa 🫖`,
+        description:
+          boardData.tagline || `Anonymous confessions on ${boardData.name}`,
+        url: `https://teaa.xyz/b/${slug}`,
+      }
+    : null;
 
   return (
     <>

@@ -5,7 +5,16 @@ import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
-import { Home, ArrowRight, Shuffle, Mic, Zap, X } from "lucide-react";
+import {
+  Home,
+  ArrowRight,
+  Shuffle,
+  Mic,
+  Zap,
+  X,
+  Plus,
+  BookOpen,
+} from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
@@ -49,7 +58,7 @@ export default function ExplorePage() {
 
   // Filter out voice confessions — they live at /explore/voice
   const globalFeed = useMemo(
-    () => rawGlobalFeed?.filter((c) => c.type !== "voice"),
+    () => rawGlobalFeed?.filter((c: any) => c.type !== "voice"),
     [rawGlobalFeed],
   );
 
@@ -71,23 +80,32 @@ export default function ExplorePage() {
       viewedIndexes.current.add(activeIndex);
 
       const hasDismissed = localStorage.getItem("teaa_dismissed_cta");
-      if (viewedIndexes.current.size >= 3 && !hasDismissed && !showConfessBackCTA) {
+      if (
+        viewedIndexes.current.size >= 3 &&
+        !hasDismissed &&
+        !showConfessBackCTA
+      ) {
         setShowConfessBackCTA(true);
         // Play pop sound
         try {
-          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const ctx = new (
+            window.AudioContext || (window as any).webkitAudioContext
+          )();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.type = "sine";
           osc.frequency.setValueAtTime(500, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+          osc.frequency.exponentialRampToValueAtTime(
+            900,
+            ctx.currentTime + 0.15,
+          );
           gain.gain.setValueAtTime(0.2, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
           osc.start();
           osc.stop(ctx.currentTime + 0.15);
-        } catch (e) { }
+        } catch (e) {}
       }
     }
   }, [activeIndex, globalFeed, showConfessBackCTA]);
@@ -186,44 +204,46 @@ export default function ExplorePage() {
         <div className="flex items-center gap-3">
           <Link
             href="/confess"
-            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
-            Add confession
+            <Plus size={14} />
+            <span className="hidden sm:inline">Add confession</span>
           </Link>
           <Link
             href="/explore/voice"
-            className="text-[10px] text-black/40 hover:text-black font-medium transition-colors flex items-center gap-1"
+            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
-            <Mic size={10} />
-            Voice
+            <Mic size={14} />
+            <span className="hidden sm:inline">Voice</span>
           </Link>
           <Link
             href="/spill/create"
-            className="text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
           >
-            Write a spill
+            <BookOpen size={14} />
+            <span className="hidden sm:inline">Write a spill</span>
           </Link>
           {/* Premium Summarize Button (Gradient Border) */}
           {hasEnoughForSummary && (
             <button
               onClick={handleSummarize}
               disabled={isGenerating}
-              className="group relative inline-flex h-9 min-w-[140px] items-center justify-center overflow-hidden rounded-full p-[1.5px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 disabled:opacity-60 transition-all font-bold"
+              className="group relative inline-flex h-9 px-3 sm:min-w-[140px] sm:px-6 items-center justify-center overflow-hidden rounded-full p-[1.5px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 disabled:opacity-60 transition-all font-bold ml-1"
             >
               {/* Rotating Gradient Border */}
               <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)]" />
-              
+
               {/* Inner button surface */}
-              <span className="inline-flex h-full w-full items-center justify-center gap-1.5 rounded-full bg-white px-6 text-[9px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
+              <span className="inline-flex h-full w-full items-center justify-center gap-1.5 rounded-full bg-white px-2 sm:px-4 text-[9px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
                 {isGenerating ? (
                   <>
                     <div className="w-2.5 h-2.5 border-[1.5px] border-pink-400/30 border-t-pink-500 rounded-full animate-spin" />
-                    Brewing...
+                    <span className="hidden sm:inline">Brewing...</span>
                   </>
                 ) : (
                   <>
                     <Zap size={11} className="text-pink-500" />
-                    Summarization
+                    <span className="hidden md:inline">Summarization</span>
                   </>
                 )}
               </span>
@@ -308,7 +328,7 @@ export default function ExplorePage() {
                 className="relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
                 style={{ height: "420px", perspective: "1200px" }}
               >
-                {globalFeed.map((confession, i) => {
+                {globalFeed.map((confession: any, i: any) => {
                   const offset = i - activeIndex;
                   const absOffset = Math.abs(offset);
 
@@ -344,7 +364,8 @@ export default function ExplorePage() {
                           pointerEvents: absOffset === 0 ? "auto" : "none",
                         }}
                       >
-                        {confession.type === "canvas" || confession.canvasImageUrl ? (
+                        {confession.type === "canvas" ||
+                        confession.canvasImageUrl ? (
                           <DoodleConfessionCard
                             confession={confession as any}
                             boardSlug={confession.boardSlug}
@@ -447,7 +468,6 @@ export default function ExplorePage() {
         {(teaaOfDay || spillOfDay) && (
           <section className="px-4 mb-20">
             <div className="max-w-3xl mx-auto flex flex-col gap-16">
-              
               {/* Teaa of the Day */}
               {teaaOfDay && (
                 <div className="flex flex-col items-center w-full">
@@ -462,7 +482,7 @@ export default function ExplorePage() {
                   <div className="relative group w-full max-w-sm mx-auto">
                     <div className="relative flex justify-center transform group-hover:-translate-y-1 transition-transform duration-500 w-full">
                       <div className="w-full">
-                        <ConfessionFlipCard confession={teaaOfDay} />
+                        <ConfessionFlipCard confession={teaaOfDay as any} />
                       </div>
                     </div>
                   </div>
@@ -485,7 +505,6 @@ export default function ExplorePage() {
                     className="group block relative w-full"
                   >
                     <article className="relative overflow-hidden rounded-[2.5rem] border border-white/40 bg-white/60 p-6 md:p-8 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-500 flex flex-col sm:flex-row gap-6 md:gap-8 items-center sm:items-stretch group-hover:-translate-y-1">
-                      
                       {/* Image side */}
                       <div
                         className="w-full sm:w-40 aspect-[3/4] sm:aspect-auto rounded-2xl overflow-hidden shadow-lg flex-shrink-0 group-hover:scale-[1.02] transition-transform duration-500"
@@ -493,8 +512,8 @@ export default function ExplorePage() {
                           background: spillOfDay.aiImageUrl
                             ? `url(${spillOfDay.aiImageUrl}) center/cover`
                             : THEMES.find(
-                              (t) => t.key === spillOfDay.coverTheme,
-                            )?.bg || "#f5f5f5",
+                                (t) => t.key === spillOfDay.coverTheme,
+                              )?.bg || "#f5f5f5",
                         }}
                       >
                         <div
@@ -517,7 +536,7 @@ export default function ExplorePage() {
                           {spillOfDay.title}
                         </h3>
                         <p className="text-sm text-black/50 line-clamp-2 md:line-clamp-3 mb-6 leading-relaxed">
-                          {spillOfDay.content || "Read this juicy spill..."}
+                          {(spillOfDay as any).content || "Read this juicy spill..."}
                         </p>
                         <div className="flex items-center justify-center sm:justify-start gap-3 mt-auto">
                           <span className="text-[11px] font-bold text-black/60 px-3 py-1 rounded-full border border-black/10">
@@ -532,7 +551,6 @@ export default function ExplorePage() {
                   </Link>
                 </div>
               )}
-
             </div>
           </section>
         )}
@@ -611,8 +629,9 @@ export default function ExplorePage() {
                             }}
                           >
                             <div
-                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${spill.aiImageUrl ? "bg-black/35" : ""
-                                }`}
+                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${
+                                spill.aiImageUrl ? "bg-black/35" : ""
+                              }`}
                             >
                               <span
                                 className="text-[8px] font-black uppercase tracking-[0.3em]"
@@ -679,7 +698,6 @@ export default function ExplorePage() {
             </div>
           </section>
         )}
-
       </main>
 
       {/* Confess Back CTA */}
@@ -693,7 +711,7 @@ export default function ExplorePage() {
             className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
             style={{
               background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+              boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
             }}
           >
             <div className="p-5 flex flex-col gap-3 relative">
@@ -717,7 +735,8 @@ export default function ExplorePage() {
                     Your turn now ✨
                   </h4>
                   <p className="text-[11px] text-white/70 leading-relaxed font-medium mb-3 pr-2">
-                    Get anonymous messages from friends. You choose the vibe, they spill the tea, and everyone can react!
+                    Get anonymous messages from friends. You choose the vibe,
+                    they spill the tea, and everyone can react!
                   </p>
 
                   <div className="flex flex-wrap gap-1.5">

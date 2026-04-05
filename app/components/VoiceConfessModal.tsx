@@ -16,26 +16,59 @@ interface VoiceConfessModalProps {
 }
 
 const CATEGORIES = [
-  "regret", "love", "guilt", "relief", "longing",
-  "mischief", "obsession", "pride", "fear", "envy", "deep-dark",
+  "regret",
+  "love",
+  "guilt",
+  "relief",
+  "longing",
+  "mischief",
+  "obsession",
+  "pride",
+  "fear",
+  "envy",
+  "deep-dark",
 ];
 
 const CATEGORY_EMOJIS: Record<string, string> = {
-  regret: "🌊", love: "💗", guilt: "⚖️", relief: "🌬️", longing: "🎵",
-  mischief: "😈", obsession: "🔥", pride: "✨", fear: "👻", envy: "💚",
+  regret: "🌊",
+  love: "💗",
+  guilt: "⚖️",
+  relief: "🌬️",
+  longing: "🎵",
+  mischief: "😈",
+  obsession: "🔥",
+  pride: "✨",
+  fear: "👻",
+  envy: "💚",
   "deep-dark": "🕳️",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  regret: "#3b82f6", love: "#ec4899", guilt: "#eab308", relief: "#22c55e",
-  longing: "#a855f7", mischief: "#f97316", obsession: "#ef4444", pride: "#f59e0b",
-  fear: "#6366f1", envy: "#14b8a6", "deep-dark": "#475569",
+  regret: "#3b82f6",
+  love: "#ec4899",
+  guilt: "#eab308",
+  relief: "#22c55e",
+  longing: "#a855f7",
+  mischief: "#f97316",
+  obsession: "#ef4444",
+  pride: "#f59e0b",
+  fear: "#6366f1",
+  envy: "#14b8a6",
+  "deep-dark": "#475569",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  regret: "Regret", love: "Love", guilt: "Guilt", relief: "Relief",
-  longing: "Longing", mischief: "Mischief", obsession: "Obsession", pride: "Pride",
-  fear: "Fear", envy: "Envy", "deep-dark": "Deep Dark",
+  regret: "Regret",
+  love: "Love",
+  guilt: "Guilt",
+  relief: "Relief",
+  longing: "Longing",
+  mischief: "Mischief",
+  obsession: "Obsession",
+  pride: "Pride",
+  fear: "Fear",
+  envy: "Envy",
+  "deep-dark": "Deep Dark",
 };
 
 type ModalStep = "category" | "details" | "record" | "success";
@@ -48,11 +81,15 @@ export const VoiceConfessModal = ({
   onSuccess,
 }: VoiceConfessModalProps) => {
   const [step, setStep] = useState<ModalStep>("category");
-  const [selectedCategory, setSelectedCategory] = useState(defaultCategory || "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    defaultCategory || "",
+  );
   const [voiceTitle, setVoiceTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { uploadVoiceConfession, error } = useVoiceConfessionUpload({ boardId });
+  const { uploadVoiceConfession, error } = useVoiceConfessionUpload({
+    boardId,
+  });
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     if (!selectedCategory) return;
@@ -132,7 +169,8 @@ export const VoiceConfessModal = ({
             <div
               className="rounded-[1.75rem] shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden border border-black/[0.06]"
               style={{
-                background: "linear-gradient(168deg, #fefdfb 0%, #faf7f2 50%, #f5f0e8 100%)",
+                background:
+                  "linear-gradient(168deg, #fefdfb 0%, #faf7f2 50%, #f5f0e8 100%)",
               }}
             >
               {/* ── Success State ── */}
@@ -149,7 +187,12 @@ export const VoiceConfessModal = ({
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 200,
+                        damping: 12,
+                        delay: 0.1,
+                      }}
                       className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center"
                       style={{
                         background: `linear-gradient(135deg, ${CATEGORY_COLORS[selectedCategory]}, ${CATEGORY_COLORS[selectedCategory]}cc)`,
@@ -159,7 +202,11 @@ export const VoiceConfessModal = ({
                       <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.3, type: "spring", stiffness: 250 }}
+                        transition={{
+                          delay: 0.3,
+                          type: "spring",
+                          stiffness: 250,
+                        }}
                       >
                         <Sparkles size={32} className="text-white" />
                       </motion.div>
@@ -210,9 +257,15 @@ export const VoiceConfessModal = ({
                     <motion.div
                       initial={{ scaleX: 0 }}
                       animate={{ scaleX: 1 }}
-                      transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
+                      transition={{
+                        delay: 0.6,
+                        duration: 0.8,
+                        ease: "easeOut",
+                      }}
                       className="mt-6 mx-auto h-1 w-24 rounded-full origin-left"
-                      style={{ background: `linear-gradient(90deg, transparent, ${CATEGORY_COLORS[selectedCategory]}, transparent)` }}
+                      style={{
+                        background: `linear-gradient(90deg, transparent, ${CATEGORY_COLORS[selectedCategory]}, transparent)`,
+                      }}
                     />
                   </motion.div>
                 ) : (
@@ -226,7 +279,11 @@ export const VoiceConfessModal = ({
                             animate={{ opacity: 1, x: 0 }}
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setStep(step === "record" ? "details" : "category")}
+                            onClick={() =>
+                              setStep(
+                                step === "record" ? "details" : "category",
+                              )
+                            }
                             className="p-1 hover:bg-black/5 rounded-lg transition-colors"
                           >
                             <ChevronLeft size={18} className="text-black/40" />
@@ -253,19 +310,31 @@ export const VoiceConfessModal = ({
 
                     {/* Steps indicator */}
                     <div className="px-6 pt-4 pb-2 flex items-center gap-2">
-                      {(["category", "details", "record"] as ModalStep[]).map((s, i) => (
-                        <div key={s} className="flex items-center gap-2 flex-1">
+                      {(["category", "details", "record"] as ModalStep[]).map(
+                        (s, i) => (
                           <div
-                            className="h-1 flex-1 rounded-full transition-all duration-500"
-                            style={{
-                              background:
-                                (["category", "details", "record"] as ModalStep[]).indexOf(step) >= i
-                                  ? (CATEGORY_COLORS[selectedCategory] || "#000")
-                                  : "rgba(0,0,0,0.06)",
-                            }}
-                          />
-                        </div>
-                      ))}
+                            key={s}
+                            className="flex items-center gap-2 flex-1"
+                          >
+                            <div
+                              className="h-1 flex-1 rounded-full transition-all duration-500"
+                              style={{
+                                background:
+                                  (
+                                    [
+                                      "category",
+                                      "details",
+                                      "record",
+                                    ] as ModalStep[]
+                                  ).indexOf(step) >= i
+                                    ? CATEGORY_COLORS[selectedCategory] ||
+                                      "#000"
+                                    : "rgba(0,0,0,0.06)",
+                              }}
+                            />
+                          </div>
+                        ),
+                      )}
                     </div>
 
                     {/* Content */}
@@ -293,13 +362,21 @@ export const VoiceConfessModal = ({
                                       onClick={() => setSelectedCategory(cat)}
                                       className="relative py-4 px-2 rounded-2xl font-medium transition-all flex flex-col items-center gap-1.5 overflow-hidden"
                                       style={{
-                                        background: isSelected ? color : "rgba(0,0,0,0.02)",
-                                        color: isSelected ? "white" : "rgba(0,0,0,0.5)",
+                                        background: isSelected
+                                          ? color
+                                          : "rgba(0,0,0,0.02)",
+                                        color: isSelected
+                                          ? "white"
+                                          : "rgba(0,0,0,0.5)",
                                         border: `1px solid ${isSelected ? "transparent" : "rgba(0,0,0,0.05)"}`,
-                                        boxShadow: isSelected ? `0 4px 20px ${color}40` : "none",
+                                        boxShadow: isSelected
+                                          ? `0 4px 20px ${color}40`
+                                          : "none",
                                       }}
                                     >
-                                      <span className="text-2xl">{CATEGORY_EMOJIS[cat]}</span>
+                                      <span className="text-2xl">
+                                        {CATEGORY_EMOJIS[cat]}
+                                      </span>
                                       <span className="text-[10px] font-bold leading-tight text-center capitalize">
                                         {CATEGORY_LABELS[cat]}
                                       </span>
@@ -316,15 +393,25 @@ export const VoiceConfessModal = ({
 
                               <motion.button
                                 whileHover={selectedCategory ? { y: -2 } : {}}
-                                whileTap={selectedCategory ? { scale: 0.98 } : {}}
+                                whileTap={
+                                  selectedCategory ? { scale: 0.98 } : {}
+                                }
                                 onClick={handleCategoryNext}
                                 disabled={!selectedCategory}
                                 className="w-full py-4 px-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 relative overflow-hidden group"
                                 style={{
-                                  background: selectedCategory ? CATEGORY_COLORS[selectedCategory] : "rgba(0,0,0,0.05)",
-                                  color: selectedCategory ? "white" : "rgba(0,0,0,0.25)",
-                                  boxShadow: selectedCategory ? `0 4px 20px ${CATEGORY_COLORS[selectedCategory]}40` : "none",
-                                  cursor: selectedCategory ? "pointer" : "not-allowed",
+                                  background: selectedCategory
+                                    ? CATEGORY_COLORS[selectedCategory]
+                                    : "rgba(0,0,0,0.05)",
+                                  color: selectedCategory
+                                    ? "white"
+                                    : "rgba(0,0,0,0.25)",
+                                  boxShadow: selectedCategory
+                                    ? `0 4px 20px ${CATEGORY_COLORS[selectedCategory]}40`
+                                    : "none",
+                                  cursor: selectedCategory
+                                    ? "pointer"
+                                    : "not-allowed",
                                 }}
                               >
                                 Next
@@ -349,11 +436,14 @@ export const VoiceConfessModal = ({
                                 <div
                                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white"
                                   style={{
-                                    background: CATEGORY_COLORS[selectedCategory],
+                                    background:
+                                      CATEGORY_COLORS[selectedCategory],
                                     boxShadow: `0 2px 12px ${CATEGORY_COLORS[selectedCategory]}30`,
                                   }}
                                 >
-                                  <span>{CATEGORY_EMOJIS[selectedCategory]}</span>
+                                  <span>
+                                    {CATEGORY_EMOJIS[selectedCategory]}
+                                  </span>
                                   {CATEGORY_LABELS[selectedCategory]}
                                 </div>
                               </div>
@@ -366,13 +456,16 @@ export const VoiceConfessModal = ({
                                 <input
                                   type="text"
                                   value={voiceTitle}
-                                  onChange={(e) => setVoiceTitle(e.target.value.slice(0, 80))}
+                                  onChange={(e) =>
+                                    setVoiceTitle(e.target.value.slice(0, 80))
+                                  }
                                   placeholder="e.g. The night I couldn't sleep..."
                                   className="w-full px-4 py-3.5 rounded-xl bg-black/[0.03] border border-black/[0.06] text-sm font-medium text-black placeholder:text-black/20 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all"
                                   autoFocus
                                 />
                                 <p className="text-[9px] text-black/20 font-medium px-1">
-                                  {voiceTitle.length}/80 · Leave empty for untitled
+                                  {voiceTitle.length}/80 · Leave empty for
+                                  untitled
                                 </p>
                               </div>
 
@@ -388,14 +481,18 @@ export const VoiceConfessModal = ({
                                   boxShadow: `0 4px 20px ${CATEGORY_COLORS[selectedCategory]}40`,
                                 }}
                               >
-                                <Mic size={18} className="group-hover:scale-110 transition-transform" />
+                                <Mic
+                                  size={18}
+                                  className="group-hover:scale-110 transition-transform"
+                                />
                                 Start Recording
                                 <div className="absolute inset-0 bg-white/10 translate-x-full group-hover:translate-x-0 transition-all duration-500" />
                               </motion.button>
 
                               <div className="text-center">
                                 <p className="text-[10px] text-black/25 font-medium">
-                                  🫖 100% anonymous · Max 30 seconds · No sign up
+                                  🫖 100% anonymous · Max 30 seconds · No sign
+                                  up
                                 </p>
                               </div>
                             </motion.div>
@@ -433,29 +530,43 @@ export const VoiceConfessModal = ({
                                   <div className="relative w-16 h-16 mb-4">
                                     <motion.div
                                       className="absolute inset-0 rounded-full"
-                                      style={{ border: `3px solid ${CATEGORY_COLORS[selectedCategory]}20` }}
+                                      style={{
+                                        border: `3px solid ${CATEGORY_COLORS[selectedCategory]}20`,
+                                      }}
                                     />
                                     <motion.div
                                       className="absolute inset-0 rounded-full"
                                       style={{
                                         border: `3px solid transparent`,
-                                        borderTopColor: CATEGORY_COLORS[selectedCategory],
+                                        borderTopColor:
+                                          CATEGORY_COLORS[selectedCategory],
                                       }}
                                       animate={{ rotate: 360 }}
-                                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                      transition={{
+                                        repeat: Infinity,
+                                        duration: 1,
+                                        ease: "linear",
+                                      }}
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center">
                                       <motion.div
                                         animate={{ scale: [1, 1.2, 1] }}
-                                        transition={{ repeat: Infinity, duration: 1.5 }}
+                                        transition={{
+                                          repeat: Infinity,
+                                          duration: 1.5,
+                                        }}
                                         className="text-xl"
                                       >
                                         🎙️
                                       </motion.div>
                                     </div>
                                   </div>
-                                  <p className="text-sm font-black text-black/70">Uploading your confession...</p>
-                                  <p className="text-[10px] text-black/30 font-medium mt-1">Almost there</p>
+                                  <p className="text-sm font-black text-black/70">
+                                    Uploading your confession...
+                                  </p>
+                                  <p className="text-[10px] text-black/30 font-medium mt-1">
+                                    Almost there
+                                  </p>
                                 </motion.div>
                               )}
                             </motion.div>

@@ -2,7 +2,15 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Download, Share2, Check, X, Quote, Crown } from "lucide-react";
+import {
+  Sparkles,
+  Download,
+  Share2,
+  Check,
+  X,
+  Quote,
+  Crown,
+} from "lucide-react";
 import { toPng } from "html-to-image";
 
 interface SummaryCardProps {
@@ -11,7 +19,11 @@ interface SummaryCardProps {
   onClose?: () => void;
 }
 
-export default function SummaryCard({ summary, type, onClose }: SummaryCardProps) {
+export default function SummaryCard({
+  summary,
+  type,
+  onClose,
+}: SummaryCardProps) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -57,7 +69,8 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
       primary: "#e85555",
       primarySoft: "rgba(232, 85, 85, 0.15)",
       primaryGlow: "rgba(232, 85, 85, 0.4)",
-      background: "linear-gradient(165deg, #1a0e0e 0%, #2d1515 25%, #1f0a0a 50%, #150808 75%, #0d0505 100%)",
+      background:
+        "linear-gradient(165deg, #1a0e0e 0%, #2d1515 25%, #1f0a0a 50%, #150808 75%, #0d0505 100%)",
       text: "#faf0ed",
       textMuted: "rgba(250, 240, 237, 0.6)",
       accent: "#ff7b7b",
@@ -70,7 +83,8 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
       primary: "#d4a857",
       primarySoft: "rgba(212, 168, 87, 0.15)",
       primaryGlow: "rgba(212, 168, 87, 0.4)",
-      background: "linear-gradient(165deg, #1a1520 0%, #2a2035 25%, #1a1520 50%, #12101a 75%, #0d0b12 100%)",
+      background:
+        "linear-gradient(165deg, #1a1520 0%, #2a2035 25%, #1a1520 50%, #12101a 75%, #0d0b12 100%)",
       text: "#f5f0e8",
       textMuted: "rgba(245, 240, 232, 0.6)",
       accent: "#f0d78c",
@@ -90,7 +104,7 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
       exit={{ opacity: 0, scale: 0.92, y: 20 }}
       transition={{
         duration: 0.5,
-        ease: [0.25, 0.46, 0.45, 0.94]
+        ease: [0.25, 0.46, 0.45, 0.94],
       }}
       className="w-full max-w-[480px] mx-auto mb-10"
       onMouseEnter={() => setIsHovered(true)}
@@ -115,8 +129,10 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
           }}
         >
           {/* Inner content wrapper */}
-          <div className="relative p-10 overflow-hidden" style={{ padding: "48px 40px" }}>
-
+          <div
+            className="relative p-10 overflow-hidden"
+            style={{ padding: "48px 40px" }}
+          >
             {/* Ambient glow effects - top right */}
             <div
               className="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-[100px] transition-opacity duration-700"
@@ -130,7 +146,7 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
             <div
               className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full blur-[100px] transition-opacity duration-700"
               style={{
-                background: `radial-gradient(circle, ${c.primarySoft.replace('0.15', '0.08')} 0%, transparent 70%)`,
+                background: `radial-gradient(circle, ${c.primarySoft.replace("0.15", "0.08")} 0%, transparent 70%)`,
                 opacity: isHovered ? 1 : 0.6,
               }}
             />
@@ -173,14 +189,14 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
                 )`,
                 mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                 maskComposite: "exclude",
-                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMask:
+                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                 WebkitMaskComposite: "xor",
               }}
             />
 
             {/* Content */}
             <div className="relative z-10 flex flex-col items-center text-center">
-
               {/* Premium badge */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -261,7 +277,9 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
                   className="text-[11px] font-bold uppercase tracking-[0.35em] whitespace-nowrap"
                   style={{ color: c.textMuted }}
                 >
-                  {isBoard ? "✦ Board Vibe Revealed ✦" : "✦ Global Teapot Summary ✦"}
+                  {isBoard
+                    ? "✦ Board Vibe Revealed ✦"
+                    : "✦ Global Teapot Summary ✦"}
                 </h2>
               </div>
 
@@ -339,7 +357,6 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
                   teaaa.me
                 </span>
               </div>
-
             </div>
           </div>
         </div>
@@ -363,7 +380,7 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
         >
           {/* Rotating Gradient Border */}
           <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#10b981_0%,#3b82f6_50%,#10b981_100%)]" />
-          
+
           {/* Inner button surface */}
           <span className="inline-flex h-full w-full items-center justify-center gap-3 rounded-full bg-white px-8 text-[11px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
             {downloading ? (
@@ -393,7 +410,7 @@ export default function SummaryCard({ summary, type, onClose }: SummaryCardProps
         >
           {/* Rotating Gradient Border */}
           <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)]" />
-          
+
           {/* Inner button surface */}
           <span className="inline-flex h-full w-full items-center justify-center gap-3 rounded-full bg-white px-8 text-[11px] uppercase tracking-[0.2em] text-[#111] backdrop-blur-3xl transition-colors group-hover:bg-white/95">
             <AnimatePresence mode="wait">

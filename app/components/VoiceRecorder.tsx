@@ -68,8 +68,9 @@ export const VoiceRecorder = ({
       streamRef.current = stream;
 
       // Setup audio analyzer
-      audioContextRef.current = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      audioContextRef.current = new (
+        window.AudioContext || (window as any).webkitAudioContext
+      )();
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 128;
       analyserRef.current.smoothingTimeConstant = 0.8;
@@ -188,7 +189,10 @@ export const VoiceRecorder = ({
           {/* Circular timer ring */}
           <div className="relative w-32 h-32 mx-auto">
             {/* Background ring */}
-            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <svg
+              className="absolute inset-0 w-full h-full -rotate-90"
+              viewBox="0 0 100 100"
+            >
               <circle
                 cx="50"
                 cy="50"
@@ -266,10 +270,14 @@ export const VoiceRecorder = ({
               className="text-2xl font-black tracking-tight text-black tabular-nums"
             >
               {timeDisplay}
-              <span className="text-black/20 text-base ml-1">/{maxDisplay}</span>
+              <span className="text-black/20 text-base ml-1">
+                /{maxDisplay}
+              </span>
             </motion.p>
             <p className="text-[10px] text-black/30 font-medium">
-              {isRecording ? "Recording... tap to stop" : "Tap to start recording"}
+              {isRecording
+                ? "Recording... tap to stop"
+                : "Tap to start recording"}
             </p>
           </div>
 
@@ -308,7 +316,9 @@ export const VoiceRecorder = ({
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs font-bold text-black/70">Recording ready</span>
+              <span className="text-xs font-bold text-black/70">
+                Recording ready
+              </span>
             </div>
             <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
               ✓ {Math.round(audioBlob.size / 1024)}KB

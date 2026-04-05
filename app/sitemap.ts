@@ -1,42 +1,42 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: 'https://teaa.xyz',
+      url: "https://teaa.xyz",
       lastModified: new Date(),
-      changeFrequency: 'yearly',
+      changeFrequency: "yearly",
       priority: 1,
     },
     {
-      url: 'https://teaa.xyz/explore',
+      url: "https://teaa.xyz/explore",
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 0.8,
     },
     {
-      url: 'https://teaa.xyz/confess',
+      url: "https://teaa.xyz/confess",
       lastModified: new Date(),
-      changeFrequency: 'weekly',
+      changeFrequency: "weekly",
       priority: 0.8,
     },
     {
-      url: 'https://teaa.xyz/explore/voice',
+      url: "https://teaa.xyz/explore/voice",
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 0.8,
     },
     {
-      url: 'https://teaa.xyz/create',
+      url: "https://teaa.xyz/create",
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: 'https://teaa.xyz/forum',
+      url: "https://teaa.xyz/forum",
       lastModified: new Date(),
-      changeFrequency: 'daily',
+      changeFrequency: "daily",
       priority: 0.8,
     },
-  ]
+  ];
 }

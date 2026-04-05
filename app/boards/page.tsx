@@ -67,8 +67,9 @@ export default function BoardsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {publicBoards.map((board) => {
-              const theme = THEMES.find((t) => t.key === board.theme) || THEMES[0];
+            {publicBoards.map((board: any) => {
+              const theme =
+                THEMES.find((t) => t.key === board.theme) || THEMES[0];
               const newlyCreated = isNew(board.createdAt);
 
               return (
@@ -78,12 +79,11 @@ export default function BoardsPage() {
                   className="group relative flex flex-col p-5 rounded-2xl border border-black/5 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-inner relative"
                       style={{ background: theme.bg }}
                     >
-                      🫖
-                      {/* New Badge */}
+                      🫖{/* New Badge */}
                       {newlyCreated && (
                         <div className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-md animate-pulse">
                           NEW
@@ -105,13 +105,17 @@ export default function BoardsPage() {
                       {board.name}
                     </h3>
                     <p className="text-xs text-black/40 mt-1 line-clamp-2 leading-relaxed h-8">
-                      {board.tagline ? `"${board.tagline}"` : "A space for secrets."}
+                      {board.tagline
+                        ? `"${board.tagline}"`
+                        : "A space for secrets."}
                     </p>
                   </div>
 
                   <div className="mt-5 pt-4 border-t border-black/5 flex items-center justify-between">
                     <span className="text-[10px] font-medium text-black/30 uppercase tracking-widest">
-                      {board.boardType === "secret-admirer" ? "💝 Admirer" : "💬 Standard"}
+                      {board.boardType === "secret-admirer"
+                        ? "💝 Admirer"
+                        : "💬 Standard"}
                     </span>
                     <ArrowRight
                       size={16}

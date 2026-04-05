@@ -5,7 +5,15 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { getVisitorId, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
-import { ArrowLeft, Home, MessageSquare, ChevronUp, Check, Clock, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  Home,
+  MessageSquare,
+  ChevronUp,
+  Check,
+  Clock,
+  Zap,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ForumPage() {
@@ -20,8 +28,14 @@ export default function ForumPage() {
     setVisitorId(getVisitorId());
   }, []);
 
-  const featureRequests = useQuery(api.forum.listFeatureRequests, filter === "all" ? {} : { status: filter });
-  const userUpvotes = useQuery(api.forum.getUserUpvotes, visitorId ? { visitorId } : "skip");
+  const featureRequests = useQuery(
+    api.forum.listFeatureRequests,
+    filter === "all" ? {} : { status: filter },
+  );
+  const userUpvotes = useQuery(
+    api.forum.getUserUpvotes,
+    visitorId ? { visitorId } : "skip",
+  );
   const upvotedSet = new Set(userUpvotes || []);
 
   const toggleUpvote = useMutation(api.forum.toggleUpvote);
@@ -119,7 +133,8 @@ export default function ForumPage() {
             What should we build next?
           </h2>
           <p className="text-[12px] text-black/40 max-w-md mx-auto leading-relaxed font-medium">
-            Vote on upcoming features or suggest your own ideas. We actively review the top requested features to decide our roadmap.
+            Vote on upcoming features or suggest your own ideas. We actively
+            review the top requested features to decide our roadmap.
           </p>
         </div>
 
@@ -170,7 +185,7 @@ export default function ForumPage() {
             animate={{ opacity: 1 }}
             className="space-y-4"
           >
-            {featureRequests.map((req) => {
+            {featureRequests.map((req: any) => {
               const hasUpvoted = upvotedSet.has(req._id);
               return (
                 <motion.div
@@ -187,8 +202,13 @@ export default function ForumPage() {
                         : "bg-[#faf8f5] border-black/5 text-black/30 hover:border-black/15 hover:text-black"
                     }`}
                   >
-                    <ChevronUp size={24} className={hasUpvoted ? "translate-y-0.5" : ""} />
-                    <span className="text-[11px] font-black">{req.upvotes}</span>
+                    <ChevronUp
+                      size={24}
+                      className={hasUpvoted ? "translate-y-0.5" : ""}
+                    />
+                    <span className="text-[11px] font-black">
+                      {req.upvotes}
+                    </span>
                   </button>
 
                   <div className="flex-1 min-w-0 py-1">
@@ -230,10 +250,13 @@ export default function ForumPage() {
               className="relative w-full max-w-lg bg-white rounded-3xl p-6 md:p-8 shadow-2xl shadow-black/10 overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-[100px] pointer-events-none" />
-              
-              <h2 className="text-2xl font-black serif mb-2 relative z-10">Suggest a Feature</h2>
+
+              <h2 className="text-2xl font-black serif mb-2 relative z-10">
+                Suggest a Feature
+              </h2>
               <p className="text-[11px] text-black/40 font-medium mb-6 relative z-10">
-                What's missing? Keep it concise and specific so others can understand and vote for it.
+                What's missing? Keep it concise and specific so others can
+                understand and vote for it.
               </p>
 
               <form onSubmit={handleSubmit} className="relative z-10 space-y-4">
@@ -280,10 +303,14 @@ export default function ForumPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={!title.trim() || !description.trim() || isSubmitting}
+                    disabled={
+                      !title.trim() || !description.trim() || isSubmitting
+                    }
                     className="flex-[2] flex items-center justify-center gap-2 py-3.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:scale-100"
                   >
-                    {isSubmitting && <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+                    {isSubmitting && (
+                      <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    )}
                     Submit Idea
                   </button>
                 </div>

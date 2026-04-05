@@ -382,8 +382,8 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
       const targetSlug =
         mode === "board" && slug
           ? slug
-          : publicBoards?.find((b) => b._id === selectedBoardId)?.slug ||
-          "global";
+          : publicBoards?.find((b: any) => b._id === selectedBoardId)?.slug ||
+            "global";
       router.push(`/b/${targetSlug}/s/${res.spillId}`);
     } catch (err: any) {
       console.error(err);
@@ -392,7 +392,9 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
         const errMsg = err?.message || err?.data?.message || "";
         const errData = JSON.parse(errMsg);
         if (errData.type === "moderation_error") {
-          const words = errData.flaggedWords?.map((f: any) => f.word).join(", ");
+          const words = errData.flaggedWords
+            ?.map((f: any) => f.word)
+            .join(", ");
           alert(`🛡️ ${errData.message}\n\nFlagged words: ${words}`);
           return;
         }
@@ -464,12 +466,13 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
-                className={`h-1 rounded-full transition-all duration-500 ${s === step
-                  ? "w-6 bg-black/50"
-                  : s < step
-                    ? "w-3 bg-black/20"
-                    : "w-3 bg-black/8"
-                  }`}
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  s === step
+                    ? "w-6 bg-black/50"
+                    : s < step
+                      ? "w-3 bg-black/20"
+                      : "w-3 bg-black/8"
+                }`}
               />
             ))}
           </div>
@@ -725,8 +728,9 @@ function StepCover({
         >
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
           <div
-            className={`absolute inset-0 flex flex-col items-center justify-between p-8 text-center ${aiImageUrl ? "bg-black/40 backdrop-blur-[1px]" : ""
-              }`}
+            className={`absolute inset-0 flex flex-col items-center justify-between p-8 text-center ${
+              aiImageUrl ? "bg-black/40 backdrop-blur-[1px]" : ""
+            }`}
           >
             <div className="flex flex-col items-center gap-2 mt-2">
               <span
@@ -787,10 +791,11 @@ function StepCover({
               key={t.key}
               type="button"
               onClick={() => setTheme(t.key)}
-              className={`group relative w-12 h-12 rounded-xl border-2 transition-all duration-300 ${theme === t.key
-                ? "border-black/30 scale-110 shadow-lg"
-                : "border-black/5 hover:border-black/15 hover:scale-105"
-                }`}
+              className={`group relative w-12 h-12 rounded-xl border-2 transition-all duration-300 ${
+                theme === t.key
+                  ? "border-black/30 scale-110 shadow-lg"
+                  : "border-black/5 hover:border-black/15 hover:scale-105"
+              }`}
               style={{ background: t.bg }}
             >
               <span className="absolute inset-0 flex items-center justify-center text-lg">
@@ -819,10 +824,11 @@ function StepCover({
               key={e}
               type="button"
               onClick={() => setEmoji(e)}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all ${emoji === e
-                ? "bg-black/8 scale-110 shadow-lg ring-1 ring-black/10"
-                : "bg-black/[0.04] hover:bg-black/8 hover:scale-105"
-                }`}
+              className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg transition-all ${
+                emoji === e
+                  ? "bg-black/8 scale-110 shadow-lg ring-1 ring-black/10"
+                  : "bg-black/[0.04] hover:bg-black/8 hover:scale-105"
+              }`}
             >
               {e}
             </button>
@@ -831,7 +837,6 @@ function StepCover({
       </div>
 
       {/* ─── AI Cover Section ─── */}
-
 
       {/* ─── Upload Your Own ─── */}
       <div className="rounded-2xl border border-black/[0.06] bg-black/[0.02] p-5 space-y-4">
@@ -848,8 +853,9 @@ function StepCover({
         </p>
 
         <label
-          className={`w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-black/10 bg-black/[0.02] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-black/35 transition-all hover:bg-black/[0.04] hover:border-black/15 hover:text-black/50 cursor-pointer ${isUploading ? "opacity-30 pointer-events-none" : ""
-            }`}
+          className={`w-full inline-flex items-center justify-center gap-2 rounded-xl border border-dashed border-black/10 bg-black/[0.02] py-4 text-[10px] font-black uppercase tracking-[0.2em] text-black/35 transition-all hover:bg-black/[0.04] hover:border-black/15 hover:text-black/50 cursor-pointer ${
+            isUploading ? "opacity-30 pointer-events-none" : ""
+          }`}
         >
           <input
             type="file"
@@ -950,16 +956,17 @@ function StepPages({
               key={`dot-${idx}`}
               type="button"
               onClick={() => setActivePage(idx)}
-              className={`relative flex items-center justify-center w-9 h-9 rounded-xl text-[11px] font-black transition-all ${idx === activePage
-                ? pageOver
-                  ? "bg-red-500/20 text-red-400 scale-110 ring-1 ring-red-500/30"
-                  : "bg-black/10 text-black scale-110 shadow-sm"
-                : pageOver
-                  ? "bg-red-500/8 text-red-400/50"
-                  : pageEmpty
-                    ? "bg-[#f5f3f0] text-black/20 border border-dashed border-black/10"
-                    : "bg-[#f0eeeb] text-black/40 hover:bg-black/8 hover:text-black/60"
-                }`}
+              className={`relative flex items-center justify-center w-9 h-9 rounded-xl text-[11px] font-black transition-all ${
+                idx === activePage
+                  ? pageOver
+                    ? "bg-red-500/20 text-red-400 scale-110 ring-1 ring-red-500/30"
+                    : "bg-black/10 text-black scale-110 shadow-sm"
+                  : pageOver
+                    ? "bg-red-500/8 text-red-400/50"
+                    : pageEmpty
+                      ? "bg-[#f5f3f0] text-black/20 border border-dashed border-black/10"
+                      : "bg-[#f0eeeb] text-black/40 hover:bg-black/8 hover:text-black/60"
+              }`}
             >
               {idx + 1}
               {idx === activePage && (
@@ -1025,20 +1032,22 @@ function StepPages({
               value={activePageData.text}
               onChange={(e) => updatePage(activePage, "text", e.target.value)}
               placeholder="Write your story for this page..."
-              className={`w-full min-h-[240px] sm:min-h-[300px] resize-y rounded-2xl border bg-[#faf8f5] px-5 py-4 text-[15px] leading-8 serif outline-none placeholder:text-black/15 transition-all ${isOverLimit
-                ? "border-red-500/30 focus:border-red-500/50"
-                : "border-black/10 focus:border-black/20 focus:bg-white"
-                }`}
+              className={`w-full min-h-[240px] sm:min-h-[300px] resize-y rounded-2xl border bg-[#faf8f5] px-5 py-4 text-[15px] leading-8 serif outline-none placeholder:text-black/15 transition-all ${
+                isOverLimit
+                  ? "border-red-500/30 focus:border-red-500/50"
+                  : "border-black/10 focus:border-black/20 focus:bg-white"
+              }`}
             />
 
             {/* Word counter */}
             <div
-              className={`absolute bottom-3 right-4 text-[10px] font-bold tabular-nums transition-colors ${isOverLimit
-                ? "text-red-400"
-                : currentWordCount > MAX_WORDS_PER_PAGE * 0.85
-                  ? "text-orange-400/60"
-                  : "text-black/20"
-                }`}
+              className={`absolute bottom-3 right-4 text-[10px] font-bold tabular-nums transition-colors ${
+                isOverLimit
+                  ? "text-red-400"
+                  : currentWordCount > MAX_WORDS_PER_PAGE * 0.85
+                    ? "text-orange-400/60"
+                    : "text-black/20"
+              }`}
             >
               {currentWordCount} / {MAX_WORDS_PER_PAGE}
             </div>
@@ -1147,8 +1156,9 @@ function StepReview({
           }}
         >
           <div
-            className={`size-full flex flex-col items-center justify-center p-3 text-center gap-1 ${aiImageUrl ? "bg-black/40" : ""
-              }`}
+            className={`size-full flex flex-col items-center justify-center p-3 text-center gap-1 ${
+              aiImageUrl ? "bg-black/40" : ""
+            }`}
           >
             {!aiImageUrl && <span className="text-lg">{emoji}</span>}
             <span
@@ -1226,8 +1236,8 @@ function StepReview({
               <span className="text-xs font-medium text-black/40">
                 {selectedBoardId
                   ? publicBoards?.find(
-                    (b) => (b._id as string) === selectedBoardId,
-                  )?.name || "Selected board"
+                      (b) => (b._id as string) === selectedBoardId,
+                    )?.name || "Selected board"
                   : "Global (default)"}
               </span>
               <ChevronDown
@@ -1244,8 +1254,9 @@ function StepReview({
                     setSelectedBoardId("");
                     setShowBoardPicker(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors rounded-t-xl ${!selectedBoardId ? "bg-black/[0.03]" : ""
-                    }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors rounded-t-xl ${
+                    !selectedBoardId ? "bg-black/[0.03]" : ""
+                  }`}
                 >
                   <span className="text-sm">{"\u{1F30D}"}</span>
                   <div className="flex-1">
@@ -1266,10 +1277,11 @@ function StepReview({
                       setSelectedBoardId(b._id as string);
                       setShowBoardPicker(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors ${index === (publicBoards?.length ?? 0) - 1
-                      ? "rounded-b-xl"
-                      : ""
-                      } ${selectedBoardId === (b._id as string) ? "bg-black/[0.03]" : ""}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.03] transition-colors ${
+                      index === (publicBoards?.length ?? 0) - 1
+                        ? "rounded-b-xl"
+                        : ""
+                    } ${selectedBoardId === (b._id as string) ? "bg-black/[0.03]" : ""}`}
                   >
                     <span className="text-sm">{"\u{1F4DA}"}</span>
                     <div className="flex-1 min-w-0">

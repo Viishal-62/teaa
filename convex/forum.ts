@@ -38,17 +38,19 @@ export const listFeatureRequests = query({
     status: v.optional(v.string()), // "under-review", "planned", "shipped"
   },
   handler: async (ctx, args) => {
-    let requestsQuery = ctx.db.query("featureRequests");
-    
+    let allRequests;
     if (args.status) {
-      requestsQuery = requestsQuery.withIndex("by_status", (q) => q.eq("status", args.status));
+      allRequests = await ctx.db.query("featureRequests")
+        .withIndex("by_status", (q) => q.eq("status", args.status as string))
+        .collect();
+    } else {
+      allRequests = await ctx.db.query("featureRequests").collect();
     }
-    
-    // Fetch all and sort logically (Convex does not support multi-field sorting natively without pagination keys)
-    const allRequests = await requestsQuery.collect();
-    
+
     // Sort by upvotes (descending), then by date (newest first)
-    return allRequests.sort((a, b) => b.upvotes - a.upvotes || b.createdAt - a.createdAt);
+    return allRequests.sort(
+      (a, b) => b.upvotes - a.upvotes || b.createdAt - a.createdAt,
+    );
   },
 });
 
@@ -61,7 +63,7 @@ export const toggleUpvote = mutation({
     const existingUpvote = await ctx.db
       .query("featureUpvotes")
       .withIndex("by_requestId_visitorId", (q) =>
-        q.eq("requestId", args.requestId).eq("visitorId", args.visitorId)
+        q.eq("requestId", args.requestId).eq("visitorId", args.visitorId),
       )
       .first();
 
@@ -100,9 +102,11 @@ export const getUserUpvotes = query({
     if (!args.visitorId) return [];
     const upvotes = await ctx.db
       .query("featureUpvotes")
-      .withIndex("by_visitorId", (q) => q.eq("visitorId", args.visitorId as string))
+      .withIndex("by_visitorId", (q) =>
+        q.eq("visitorId", args.visitorId as string),
+      )
       .collect();
-    
+
     // Return array of requestId strings for easier checking on client
     return upvotes.map((u) => u.requestId);
   },

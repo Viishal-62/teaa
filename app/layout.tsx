@@ -29,7 +29,8 @@ export const metadata: Metadata = {
     url: "https://teaa.xyz",
     siteName: "Teaa 🫣",
     title: "Teaa 🫣 — Anonymous Confessions",
-    description: "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
+    description:
+      "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
     images: [
       {
         url: "/og-image.jpg", // Add a nice image at public/og-image.jpg for social sharing preview!
@@ -42,7 +43,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Teaa 🫣 — Anonymous Confessions",
-    description: "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
+    description:
+      "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
     images: ["/og-image.jpg"],
   },
   robots: {
@@ -71,12 +73,13 @@ export default function RootLayout({
     "@type": "WebSite",
     name: "Teaa 🫣",
     url: "https://teaa.xyz",
-    description: "The ultimate platform for anonymous confessions. Spill your secrets, create personal confession boards.",
+    description:
+      "The ultimate platform for anonymous confessions. Spill your secrets, create personal confession boards.",
     potentialAction: {
       "@type": "SearchAction",
       target: "https://teaa.xyz/explore?category={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
+      "query-input": "required name=search_term_string",
+    },
   };
 
   return (
@@ -106,4 +109,3 @@ export default function RootLayout({
     </html>
   );
 }
-

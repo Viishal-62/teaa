@@ -23,6 +23,7 @@ import type * as moderationAction from "../moderationAction.js";
 import type * as notifications from "../notifications.js";
 import type * as reactions from "../reactions.js";
 import type * as reports from "../reports.js";
+import type * as seed from "../seed.js";
 import type * as spillReactions from "../spillReactions.js";
 import type * as spills from "../spills.js";
 
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   reactions: typeof reactions;
   reports: typeof reports;
+  seed: typeof seed;
   spillReactions: typeof spillReactions;
   spills: typeof spills;
 }>;

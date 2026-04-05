@@ -22,7 +22,7 @@ export const getConfessorNotifications = query({
     const myConfessions = await ctx.db
       .query("confessions")
       .withIndex("by_visitorId_createdAt", (q) =>
-        q.eq("visitorId", args.visitorId)
+        q.eq("visitorId", args.visitorId),
       )
       .order("desc")
       .take(20);
@@ -51,13 +51,16 @@ export const getConfessorNotifications = query({
       const board = await ctx.db.get(confession.boardId);
       const boardSlug = board?.slug ?? "global";
       const boardName = board?.name ?? "Unknown Board";
-      const confessionPreview = (confession.text ?? "Your confession").slice(0, 60);
+      const confessionPreview = (confession.text ?? "Your confession").slice(
+        0,
+        60,
+      );
 
       // Check for creator reply
       const creatorReply = await ctx.db
         .query("creatorReplies")
         .withIndex("by_confessionId", (q) =>
-          q.eq("confessionId", confession._id)
+          q.eq("confessionId", confession._id),
         )
         .first();
 
@@ -76,19 +79,23 @@ export const getConfessorNotifications = query({
       const reactions = await ctx.db
         .query("reactions")
         .withIndex("by_confessionId", (q) =>
-          q.eq("confessionId", confession._id)
+          q.eq("confessionId", confession._id),
         )
         .collect();
 
       const comments = await ctx.db
         .query("comments")
         .withIndex("by_confessionId", (q) =>
-          q.eq("confessionId", confession._id)
+          q.eq("confessionId", confession._id),
         )
         .collect();
 
-      const newReactions = reactions.filter((r) => r.createdAt > args.lastSeenAt).length;
-      const newComments = comments.filter((c) => c.createdAt > args.lastSeenAt).length;
+      const newReactions = reactions.filter(
+        (r) => r.createdAt > args.lastSeenAt,
+      ).length;
+      const newComments = comments.filter(
+        (c) => c.createdAt > args.lastSeenAt,
+      ).length;
       const views = confession.views ?? 0;
 
       // Only show stats if there's meaningful activity
@@ -109,7 +116,9 @@ export const getConfessorNotifications = query({
 
     return {
       creatorReplies: creatorReplyNotifs,
-      stats: statsNotifs.filter((s) => s.reactionCount > 0 || s.commentCount > 0),
+      stats: statsNotifs.filter(
+        (s) => s.reactionCount > 0 || s.commentCount > 0,
+      ),
     };
   },
 });
@@ -129,7 +138,7 @@ export const getCreatorNotifications = query({
     const boards = await ctx.db
       .query("boards")
       .withIndex("by_creatorToken", (q) =>
-        q.eq("creatorToken", args.creatorToken)
+        q.eq("creatorToken", args.creatorToken),
       )
       .take(10);
 

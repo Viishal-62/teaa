@@ -18,11 +18,14 @@ export const create = mutation({
     const board = await ctx.db.get(args.boardId);
     const titleMod = moderateText(args.title, board?.bannedWords ?? []);
     if (!titleMod.isClean) {
-      throw new Error(JSON.stringify({
-        type: "moderation_error",
-        flaggedWords: titleMod.flaggedWords,
-        message: "Your spill title contains restricted words. Please change it.",
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: titleMod.flaggedWords,
+          message:
+            "Your spill title contains restricted words. Please change it.",
+        }),
+      );
     }
 
     const displayName = generateAnonName();

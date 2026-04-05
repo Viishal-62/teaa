@@ -13,14 +13,18 @@ import { summarizeConfessions } from "../services/ai.service";
  */
 export const summarizeBoard = action({
   args: { boardId: v.id("boards") },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<string> => {
     // 1. Fetch board info
-    const board = await ctx.runQuery(api.boards.getById, { boardId: args.boardId });
+    const board = await ctx.runQuery(api.boards.getById, {
+      boardId: args.boardId,
+    });
     if (!board) throw new Error("Board not found");
 
     // 2. Check restrictions
     if (board.boardType === "secret-admirer") {
-      throw new Error("Summarization is not available for Secret Admirer boards.");
+      throw new Error(
+        "Summarization is not available for Secret Admirer boards.",
+      );
     }
     if (board.visibility === "private") {
       throw new Error("Summarization is not available for Private boards.");
@@ -29,8 +33,8 @@ export const summarizeBoard = action({
     // 3. Check cache (1 hour)
     const ONE_HOUR = 60 * 60 * 1000;
     if (
-      board.aiSummary && 
-      board.aiSummaryUpdatedAt && 
+      board.aiSummary &&
+      board.aiSummaryUpdatedAt &&
       Date.now() - board.aiSummaryUpdatedAt < ONE_HOUR
     ) {
       return board.aiSummary;
@@ -40,7 +44,7 @@ export const summarizeBoard = action({
     const confessions = await ctx.runQuery(api.confessions.listByBoard, {
       boardId: args.boardId,
     });
-    
+
     if (!confessions || confessions.length < 10) {
       throw new Error("Need at least 10 confessions to generate a summary.");
     }
@@ -61,7 +65,7 @@ export const summarizeBoard = action({
           spillId: spill._id,
         });
         if (chapters && chapters.length > 0) {
-          const spillText = `[SPILL: "${spill.title}"] ${chapters.map(ch => ch.text).join(" ")}`;
+          const spillText = `[SPILL: "${spill.title}"] ${chapters.map((ch) => ch.text).join(" ")}`;
           spillTexts.push(spillText.slice(0, 500));
         }
       }
@@ -90,20 +94,22 @@ export const summarizeBoard = action({
  */
 export const summarizeGlobal = action({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<string> => {
     // 1. Check cache (30 mins)
     const latestGlobal = await ctx.runQuery(internal.ai.getLatestGlobalSummary);
     const THIRTY_MINS = 30 * 60 * 1000;
-    
+
     if (latestGlobal && Date.now() - latestGlobal.createdAt < THIRTY_MINS) {
       return latestGlobal.summary;
     }
 
     // 2. Fetch top recent confessions
     const confessions = await ctx.runQuery(api.confessions.listAll, {});
-    
+
     if (!confessions || confessions.length < 10) {
-      throw new Error("Need at least 10 confessions in the global feed to generate a summary.");
+      throw new Error(
+        "Need at least 10 confessions in the global feed to generate a summary.",
+      );
     }
 
     const confessionTexts = confessions
@@ -120,7 +126,7 @@ export const summarizeGlobal = action({
           spillId: spill._id,
         });
         if (chapters && chapters.length > 0) {
-          const spillText = `[SPILL: "${spill.title}"] ${chapters.map(ch => ch.text).join(" ")}`;
+          const spillText = `[SPILL: "${spill.title}"] ${chapters.map((ch) => ch.text).join(" ")}`;
           spillTexts.push(spillText.slice(0, 500));
         }
       }
@@ -128,7 +134,8 @@ export const summarizeGlobal = action({
 
     const allTexts = [...confessionTexts, ...spillTexts];
 
-    if (allTexts.length < 5) throw new Error("Not enough content to summarize yet.");
+    if (allTexts.length < 5)
+      throw new Error("Not enough content to summarize yet.");
 
     // 4. Generate
     const summary = await summarizeConfessions(allTexts);

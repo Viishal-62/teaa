@@ -93,8 +93,13 @@ export const SHARE_PROMPTS = [
  * Robustly parses Convex server errors to extract structured JSON data
  * handles "Uncaught Error: {...}" prefix by extracting the JSON part.
  */
-export function parseConvexError(error: any): { type: string; message: string;[key: string]: any } | null {
-  const errorStr = typeof error === 'string' ? error : (error.message || error.data?.message || "");
+export function parseConvexError(
+  error: any,
+): { type: string; message: string; [key: string]: any } | null {
+  const errorStr =
+    typeof error === "string"
+      ? error
+      : error.message || error.data?.message || "";
 
   // Regex to find a JSON object in the string: starts with { and ends with }
   const jsonMatch = errorStr.match(/\{.*\}/);
@@ -108,13 +113,22 @@ export function parseConvexError(error: any): { type: string; message: string;[k
 
   // Fallback for legacy or hardcoded string-only errors
   if (errorStr.includes("spilling too much tea")) {
-    return { type: "rate_limit_error", message: "Whoa! You're spilling too much tea. Take a 10-minute break." };
+    return {
+      type: "rate_limit_error",
+      message: "Whoa! You're spilling too much tea. Take a 10-minute break.",
+    };
   }
   if (errorStr.includes("commenting too fast")) {
-    return { type: "rate_limit_error", message: "You're commenting too fast! Take a breath." };
+    return {
+      type: "rate_limit_error",
+      message: "You're commenting too fast! Take a breath.",
+    };
   }
   if (errorStr.includes("reacting too fast")) {
-    return { type: "rate_limit_error", message: "Slow down! You're reacting too fast." };
+    return {
+      type: "rate_limit_error",
+      message: "Slow down! You're reacting too fast.",
+    };
   }
 
   return null;

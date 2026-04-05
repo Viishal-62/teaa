@@ -38,12 +38,48 @@ const READING_PALETTES = [
 
 /* ─── Animated background orbs ─── */
 const ORBS = [
-  { color: "rgba(155, 58, 92, 0.35)", size: 420, x: "12%", y: "18%", duration: 18 },
-  { color: "rgba(100, 40, 120, 0.25)", size: 340, x: "78%", y: "72%", duration: 22 },
-  { color: "rgba(200, 100, 150, 0.18)", size: 280, x: "55%", y: "25%", duration: 15 },
-  { color: "rgba(80, 30, 80, 0.3)", size: 500, x: "30%", y: "80%", duration: 25 },
-  { color: "rgba(180, 80, 130, 0.12)", size: 220, x: "85%", y: "15%", duration: 20 },
-  { color: "rgba(60, 20, 60, 0.4)", size: 380, x: "5%", y: "60%", duration: 16 },
+  {
+    color: "rgba(155, 58, 92, 0.35)",
+    size: 420,
+    x: "12%",
+    y: "18%",
+    duration: 18,
+  },
+  {
+    color: "rgba(100, 40, 120, 0.25)",
+    size: 340,
+    x: "78%",
+    y: "72%",
+    duration: 22,
+  },
+  {
+    color: "rgba(200, 100, 150, 0.18)",
+    size: 280,
+    x: "55%",
+    y: "25%",
+    duration: 15,
+  },
+  {
+    color: "rgba(80, 30, 80, 0.3)",
+    size: 500,
+    x: "30%",
+    y: "80%",
+    duration: 25,
+  },
+  {
+    color: "rgba(180, 80, 130, 0.12)",
+    size: 220,
+    x: "85%",
+    y: "15%",
+    duration: 20,
+  },
+  {
+    color: "rgba(60, 20, 60, 0.4)",
+    size: 380,
+    x: "5%",
+    y: "60%",
+    duration: 16,
+  },
 ];
 
 const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
@@ -248,7 +284,8 @@ export default function AdmirersPage() {
       <motion.div
         className="absolute inset-[-30%] pointer-events-none"
         style={{
-          background: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(155,58,92,0.08) 15%, transparent 30%, rgba(80,30,120,0.06) 45%, transparent 60%, rgba(200,80,140,0.05) 75%, transparent 90%)",
+          background:
+            "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(155,58,92,0.08) 15%, transparent 30%, rgba(80,30,120,0.06) 45%, transparent 60%, rgba(200,80,140,0.05) 75%, transparent 90%)",
           filter: "blur(80px)",
         }}
         animate={{ rotate: [0, 360] }}
@@ -286,7 +323,8 @@ export default function AdmirersPage() {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(8,4,10,0.6) 100%)",
+          background:
+            "radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(8,4,10,0.6) 100%)",
         }}
       />
 
@@ -396,7 +434,11 @@ export default function AdmirersPage() {
                         "radial-gradient(ellipse at 50% 55%, rgba(255,255,255,0.04) 0%, transparent 50%)",
                       ],
                     }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{
+                      duration: 6,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   />
                   {admirers.map((confession, index) => {
                     const position = cardPositions[index];
@@ -487,10 +529,25 @@ export default function AdmirersPage() {
                 className="w-full max-w-4xl text-center"
               >
                 <div className="mx-auto max-w-3xl rounded-[30px] border border-white/20 bg-white/8 backdrop-blur-2xl px-6 sm:px-10 py-10 shadow-[0_28px_80px_rgba(0,0,0,0.45)]">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/70 font-semibold flex items-center justify-center gap-2">
-                    <Sparkles size={12} />
-                    {formatCategory(currentConfession.category)}
-                  </p>
+                  <div className="mx-auto max-w-max relative rounded-full p-[1px] overflow-hidden mb-6 shadow-lg shadow-black/20">
+                    <div
+                      className="absolute inset-[-100%] animate-[borderSpin_4s_linear_infinite]"
+                      style={{
+                        background:
+                          "conic-gradient(from 0deg, transparent 0%, rgba(200,80,140,0.1) 40%, rgba(232,70,124,0.8) 50%, transparent 60%)",
+                      }}
+                    />
+                    <div className="relative bg-[#140b12]/80 backdrop-blur-md rounded-full px-4 py-1.5 flex items-center gap-2.5 border border-white/[0.03]">
+                      <motion.div
+                        className="w-1.5 h-1.5 rounded-full bg-pink-400 shadow-[0_0_8px_rgba(232,70,124,0.8)]"
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <span className="text-[9px] uppercase tracking-[0.25em] text-white/80 font-bold mt-[1px]">
+                        A Hidden Whisper
+                      </span>
+                    </div>
+                  </div>
                   <h1 className="mt-5 text-3xl sm:text-4xl md:text-5xl font-black serif italic leading-[1.28] text-white drop-shadow-[0_6px_30px_rgba(0,0,0,0.55)]">
                     "{currentConfession.text}"
                   </h1>

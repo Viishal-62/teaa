@@ -17,10 +17,17 @@ import EmojiPicker from "@/app/components/EmojiPicker";
 import GifPicker from "@/app/components/GifPicker";
 import CreatorReplyCard from "@/app/components/CreatorReplyCard";
 import Link from "next/link";
-import { ArrowLeft, MessageCircle, Send, X, Timer, Sparkles, Shield } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageCircle,
+  Send,
+  X,
+  Timer,
+  Sparkles,
+  Shield,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import RateLimitModal from "@/app/components/RateLimitModal";
-
 
 function CommentItem({
   comment,
@@ -86,7 +93,9 @@ export default function ConfessionDetailPage() {
   const commentCount = useQuery(api.comments.countByConfession, {
     confessionId,
   });
-  const creatorReply = useQuery(api.creatorReplies.getByConfession, { confessionId });
+  const creatorReply = useQuery(api.creatorReplies.getByConfession, {
+    confessionId,
+  });
   const addComment = useMutation(api.comments.create);
   const incrementView = useMutation(api.confessions.incrementView);
   const toggleReaction = useMutation(api.reactions.toggle);
@@ -116,7 +125,7 @@ export default function ConfessionDetailPage() {
     const counts = useQuery(api.reactions.getCounts, { confessionId });
     const myReactions = useQuery(
       api.reactions.getVisitorReactions,
-      visitorId ? { confessionId, visitorId } : "skip"
+      visitorId ? { confessionId, visitorId } : "skip",
     );
 
     const count = counts?.[type] ?? 0;
@@ -172,7 +181,14 @@ export default function ConfessionDetailPage() {
         })
         .catch(console.error);
     }
-  }, [confession, displayedConfession, confessionId, incrementView, slug, router]);
+  }, [
+    confession,
+    displayedConfession,
+    confessionId,
+    incrementView,
+    slug,
+    router,
+  ]);
 
   const handleAddComment = async () => {
     if (!commentText.trim() && !selectedGif) return;
@@ -342,14 +358,17 @@ export default function ConfessionDetailPage() {
                 <div className="flex gap-2.5 justify-center flex-wrap">
                   {(() => {
                     const activeReactions =
-                      board?.allowedReactions && board.allowedReactions.length > 0
+                      board?.allowedReactions &&
+                      board.allowedReactions.length > 0
                         ? board.allowedReactions
-                        : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+                        : [
+                            "holding-you",
+                            "feels-heavy",
+                            "youll-be-ok",
+                            "no-it-burns",
+                          ];
                     return activeReactions.map((type: string) => (
-                      <LocalReactionButton
-                        key={type}
-                        type={type}
-                      />
+                      <LocalReactionButton key={type} type={type} />
                     ));
                   })()}
                 </div>
@@ -359,189 +378,194 @@ export default function ConfessionDetailPage() {
         </motion.div>
 
         {!isDisappearing && (
-        <>
-          {/* ═══════════════ CREATOR REPLY SECTION ═══════════════ */}
+          <>
+            {/* ═══════════════ CREATOR REPLY SECTION ═══════════════ */}
 
-          {/* Show existing creator reply */}
-          {creatorReply && (
-            <div className="mb-6">
-              <CreatorReplyCard
-                reply={creatorReply}
-                boardName={board?.name}
-                isOwner={isOwner}
-                onEdit={handleEditReply}
-                onDelete={handleDeleteReply}
-              />
-            </div>
-          )}
+            {/* Show existing creator reply */}
+            {creatorReply && (
+              <div className="mb-6">
+                <CreatorReplyCard
+                  reply={creatorReply}
+                  boardName={board?.name}
+                  isOwner={isOwner}
+                  onEdit={handleEditReply}
+                  onDelete={handleDeleteReply}
+                />
+              </div>
+            )}
 
-          {/* Reply as Board Owner button + input (only for creator, only if no reply yet) */}
-          {isOwner && !creatorReply && (
-            <div className="mb-6">
-              {!showReplyInput ? (
-                <motion.button
-                  type="button"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={() => setShowReplyInput(true)}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-amber-300/40 bg-amber-50/50 text-amber-700/70 text-[10px] font-black uppercase tracking-[0.2em] hover:border-amber-400/60 hover:bg-amber-50 transition-all"
-                >
-                  <Sparkles size={14} /> Reply as Board Owner
-                </motion.button>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl border border-amber-200/60 bg-[#fef9f0] p-5 space-y-3"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-300/40">
-                      <Shield size={10} className="text-amber-600" />
-                      <span className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-700">
-                        Replying as Board Owner
-                      </span>
+            {/* Reply as Board Owner button + input (only for creator, only if no reply yet) */}
+            {isOwner && !creatorReply && (
+              <div className="mb-6">
+                {!showReplyInput ? (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => setShowReplyInput(true)}
+                    className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl border-2 border-dashed border-amber-300/40 bg-amber-50/50 text-amber-700/70 text-[10px] font-black uppercase tracking-[0.2em] hover:border-amber-400/60 hover:bg-amber-50 transition-all"
+                  >
+                    <Sparkles size={14} /> Reply as Board Owner
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl border border-amber-200/60 bg-[#fef9f0] p-5 space-y-3"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-300/40">
+                        <Shield size={10} className="text-amber-600" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-700">
+                          Replying as Board Owner
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <textarea
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value.slice(0, 500))}
-                    placeholder="Your verified reply to this confession..."
-                    rows={3}
-                    autoFocus
-                    className="w-full bg-white rounded-xl border border-amber-200/50 px-4 py-3 text-sm outline-none focus:border-amber-400 resize-none placeholder:text-amber-300/50"
-                  />
-
-                  {replyError && (
-                    <p className="text-[10px] text-red-500 font-medium">{replyError}</p>
-                  )}
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] text-amber-400/60 font-mono">
-                      {replyText.length}/500
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowReplyInput(false);
-                          setReplyText("");
-                          setReplyError("");
-                        }}
-                        className="px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-black/30 hover:text-black/60 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSubmitReply}
-                        disabled={!replyText.trim() || isSubmittingReply}
-                        className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider disabled:opacity-30 hover:opacity-90 transition-all flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
-                      >
-                        {isSubmittingReply ? (
-                          <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <Sparkles size={10} />
-                        )}
-                        Post Reply
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          )}
-
-          {/* ═══════════════ COMMENTS SECTION ═══════════════ */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-5">
-              <MessageCircle size={16} className="text-black/30" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-black/30">
-                Responses {commentCount ? `(${commentCount})` : ""}
-              </h2>
-            </div>
-
-            {/* Comment Input */}
-            <div className="rounded-2xl border border-black/8 bg-black/[0.01] mb-5 transition-all focus-within:border-black/15">
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value.slice(0, 300))}
-                placeholder="Say something..."
-                rows={2}
-                className="w-full px-5 py-4 bg-transparent resize-none outline-none text-sm leading-relaxed text-black placeholder-black/20"
-              />
-              {/* GIF preview */}
-              {selectedGif && (
-                <div className="px-5 pb-2">
-                  <div className="relative inline-block">
-                    <img
-                      src={selectedGif}
-                      alt="Selected GIF"
-                      className="h-24 rounded-lg object-contain"
+                    <textarea
+                      value={replyText}
+                      onChange={(e) =>
+                        setReplyText(e.target.value.slice(0, 500))
+                      }
+                      placeholder="Your verified reply to this confession..."
+                      rows={3}
+                      autoFocus
+                      className="w-full bg-white rounded-xl border border-amber-200/50 px-4 py-3 text-sm outline-none focus:border-amber-400 resize-none placeholder:text-amber-300/50"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setSelectedGif(null)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform"
-                    >
-                      <X size={10} />
-                    </button>
+
+                    {replyError && (
+                      <p className="text-[10px] text-red-500 font-medium">
+                        {replyError}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-amber-400/60 font-mono">
+                        {replyText.length}/500
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowReplyInput(false);
+                            setReplyText("");
+                            setReplyError("");
+                          }}
+                          className="px-4 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-black/30 hover:text-black/60 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSubmitReply}
+                          disabled={!replyText.trim() || isSubmittingReply}
+                          className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider disabled:opacity-30 hover:opacity-90 transition-all flex items-center gap-1.5 shadow-lg shadow-amber-500/20"
+                        >
+                          {isSubmittingReply ? (
+                            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            <Sparkles size={10} />
+                          )}
+                          Post Reply
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {/* ═══════════════ COMMENTS SECTION ═══════════════ */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-5">
+                <MessageCircle size={16} className="text-black/30" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-black/30">
+                  Responses {commentCount ? `(${commentCount})` : ""}
+                </h2>
+              </div>
+
+              {/* Comment Input */}
+              <div className="rounded-2xl border border-black/8 bg-black/[0.01] mb-5 transition-all focus-within:border-black/15">
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value.slice(0, 300))}
+                  placeholder="Say something..."
+                  rows={2}
+                  className="w-full px-5 py-4 bg-transparent resize-none outline-none text-sm leading-relaxed text-black placeholder-black/20"
+                />
+                {/* GIF preview */}
+                {selectedGif && (
+                  <div className="px-5 pb-2">
+                    <div className="relative inline-block">
+                      <img
+                        src={selectedGif}
+                        alt="Selected GIF"
+                        className="h-24 rounded-lg object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedGif(null)}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-              <div className="flex items-center justify-between px-5 pb-3">
-                <div className="flex items-center gap-1.5">
-                  <div className="relative">
-                    <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                )}
+                <div className="flex items-center justify-between px-5 pb-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="relative">
+                      <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                    </div>
+                    <GifPicker onGifSelect={(url) => setSelectedGif(url)} />
+                    <span className="text-[10px] font-mono text-black/20 ml-1">
+                      {commentText.length}/300
+                    </span>
                   </div>
-                  <GifPicker onGifSelect={(url) => setSelectedGif(url)} />
-                  <span className="text-[10px] font-mono text-black/20 ml-1">
-                    {commentText.length}/300
-                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddComment}
+                    disabled={
+                      (!commentText.trim() && !selectedGif) || isSubmitting
+                    }
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-black text-white transition-all active:scale-95 disabled:opacity-30 hover:opacity-90"
+                  >
+                    {isSubmitting ? (
+                      <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <Send size={12} />
+                    )}
+                    Reply
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddComment}
-                  disabled={(!commentText.trim() && !selectedGif) || isSubmitting}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-black text-white transition-all active:scale-95 disabled:opacity-30 hover:opacity-90"
-                >
-                  {isSubmitting ? (
-                    <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Send size={12} />
-                  )}
-                  Reply
-                </button>
+              </div>
+
+              {/* Comments List */}
+              <div className="grid gap-2.5">
+                {comments === undefined ? (
+                  <div className="flex justify-center py-8">
+                    <div className="w-5 h-5 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
+                  </div>
+                ) : comments.length === 0 ? (
+                  <p className="text-sm text-center py-8 text-black/25">
+                    No responses yet. Be the first to say something.
+                  </p>
+                ) : (
+                  comments.map((comment: any) => (
+                    <CommentItem key={comment._id} comment={comment} />
+                  ))
+                )}
               </div>
             </div>
-
-            {/* Comments List */}
-            <div className="grid gap-2.5">
-              {comments === undefined ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
-                </div>
-              ) : comments.length === 0 ? (
-                <p className="text-sm text-center py-8 text-black/25">
-                  No responses yet. Be the first to say something.
-                </p>
-              ) : (
-                comments.map((comment: any) => (
-                  <CommentItem key={comment._id} comment={comment} />
-                ))
-              )}
-            </div>
-          </div>
-        </>
+          </>
         )}
       </main>
 
-      <RateLimitModal 
-        isOpen={showRateLimit} 
-        onClose={() => setShowRateLimit(false)} 
+      <RateLimitModal
+        isOpen={showRateLimit}
+        onClose={() => setShowRateLimit(false)}
         message={rateLimitMessage}
       />
     </div>
   );
 }
-

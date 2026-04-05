@@ -207,10 +207,14 @@ export default function VoiceConfessionsPage() {
                   onClick={() => setSelectedCategory(cat.key)}
                   className="px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap"
                   style={{
-                    background: isActive ? (catInfo?.color ?? "#000") : "transparent",
+                    background: isActive
+                      ? (catInfo?.color ?? "#000")
+                      : "transparent",
                     color: isActive ? "#fff" : "rgba(0,0,0,0.3)",
                     border: `1px solid ${isActive ? "transparent" : "rgba(0,0,0,0.06)"}`,
-                    boxShadow: isActive ? `0 2px 10px ${catInfo?.color ?? "#000"}30` : "none",
+                    boxShadow: isActive
+                      ? `0 2px 10px ${catInfo?.color ?? "#000"}30`
+                      : "none",
                   }}
                 >
                   {cat.label}
@@ -255,7 +259,8 @@ export default function VoiceConfessionsPage() {
                 No voice confessions yet
               </p>
               <p className="text-xs text-black/30 mb-6 max-w-xs mx-auto">
-                Be the first to drop a voice confession. Record your thoughts anonymously.
+                Be the first to drop a voice confession. Record your thoughts
+                anonymously.
               </p>
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
@@ -293,7 +298,7 @@ export default function VoiceConfessionsPage() {
                 className="relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
                 style={{ height: "440px", perspective: "1200px" }}
               >
-                {voiceFeed.map((confession, i) => {
+                {voiceFeed.map((confession: any, i: any) => {
                   const offset = i - activeIndex;
                   const absOffset = Math.abs(offset);
 
@@ -364,7 +369,7 @@ export default function VoiceConfessionsPage() {
               {/* Dot indicators */}
               {voiceFeed.length > 1 && (
                 <div className="flex items-center justify-center gap-1.5 mb-6">
-                  {voiceFeed.map((_, i) => (
+                  {voiceFeed.map((_: any, i: any) => (
                     <button
                       key={i}
                       type="button"

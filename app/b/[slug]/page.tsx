@@ -105,11 +105,11 @@ export default function BoardViewPage() {
     api.confessions.listByBoard,
     board && !isLocked
       ? {
-        boardId: board._id,
-        category: selectedCategory,
-        pin: pinToVerify,
-        creatorToken,
-      }
+          boardId: board._id,
+          category: selectedCategory,
+          pin: pinToVerify,
+          creatorToken,
+        }
       : "skip",
   );
 
@@ -183,7 +183,7 @@ export default function BoardViewPage() {
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
           osc.start();
           osc.stop(ctx.currentTime + 0.1);
-        } catch (e) { }
+        } catch (e) {}
 
         setShowToast(true);
         setTimeout(() => setShowToast(false), 3500);
@@ -195,22 +195,37 @@ export default function BoardViewPage() {
 
   // Track viewed confessions for CTA
   useEffect(() => {
-    if (mixedItems && mixedItems.length > 0 && board && !isOwner && board.visibility === "public") {
+    if (
+      mixedItems &&
+      mixedItems.length > 0 &&
+      board &&
+      !isOwner &&
+      board.visibility === "public"
+    ) {
       viewedIndexes.current.add(activeIndex);
-      
+
       const hasDismissed = localStorage.getItem("teaa_dismissed_cta");
-      if (viewedIndexes.current.size >= 3 && !hasDismissed && !showConfessBackCTA) {
+      if (
+        viewedIndexes.current.size >= 3 &&
+        !hasDismissed &&
+        !showConfessBackCTA
+      ) {
         setShowConfessBackCTA(true);
         // Play pop sound
         try {
-          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          const ctx = new (
+            window.AudioContext || (window as any).webkitAudioContext
+          )();
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.connect(gain);
           gain.connect(ctx.destination);
           osc.type = "sine";
           osc.frequency.setValueAtTime(500, ctx.currentTime); // Slight lower pitch pop
-          osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+          osc.frequency.exponentialRampToValueAtTime(
+            900,
+            ctx.currentTime + 0.15,
+          );
           gain.gain.setValueAtTime(0.2, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
           osc.start();
@@ -309,7 +324,10 @@ export default function BoardViewPage() {
     }
   };
 
-  const hasEnoughForSummary = !isAdmirerMode && board?.visibility === "public" && (confessions?.length ?? 0) >= 10;
+  const hasEnoughForSummary =
+    !isAdmirerMode &&
+    board?.visibility === "public" &&
+    (confessions?.length ?? 0) >= 10;
 
   if (board === undefined) {
     return (
@@ -364,10 +382,11 @@ export default function BoardViewPage() {
                 setPinError(false);
               }}
               placeholder="Enter PIN"
-              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${pinError
+              className={`w-full text-3xl font-mono font-bold text-center tracking-[0.5em] bg-[#faf8f5] border rounded-xl px-4 py-4 outline-none transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-base mb-4 ${
+                pinError
                   ? "border-red-300 ring-2 ring-red-100 animate-[shake_0.3s_ease-in-out]"
                   : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                }`}
+              }`}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handlePinSubmit();
               }}
@@ -429,8 +448,12 @@ export default function BoardViewPage() {
       <header
         className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 backdrop-blur-xl border-b"
         style={{
-          background: isAdmirerMode ? "rgba(255, 248, 243, 0.85)" : "rgba(255,255,255,0.85)",
-          borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.12)" : "rgba(0,0,0,0.05)",
+          background: isAdmirerMode
+            ? "rgba(255, 248, 243, 0.85)"
+            : "rgba(255,255,255,0.85)",
+          borderColor: isAdmirerMode
+            ? "rgba(201, 169, 110, 0.12)"
+            : "rgba(0,0,0,0.05)",
         }}
       >
         <Link
@@ -441,7 +464,9 @@ export default function BoardViewPage() {
         </Link>
         <h1
           className={`text-[10px] font-black uppercase tracking-[0.25em] ${isAdmirerMode ? "flex items-center gap-1.5" : "text-black/25"}`}
-          style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.35)" : undefined }}
+          style={{
+            color: isAdmirerMode ? "rgba(155, 58, 92, 0.35)" : undefined,
+          }}
         >
           {isAdmirerMode && <Heart size={8} fill="currentColor" />}
           {board.name}
@@ -456,7 +481,7 @@ export default function BoardViewPage() {
                 title="Board Settings"
               >
                 <div style={{ transform: "scale(0.85)" }}>⚙️</div>
-                Settings
+                <span className="hidden sm:inline">Settings</span>
               </Link>
               <Link
                 href={`/b/${slug}/inbox`}
@@ -464,7 +489,7 @@ export default function BoardViewPage() {
                 title="Creator inbox"
               >
                 <Inbox size={12} />
-                Inbox
+                <span className="hidden sm:inline">Inbox</span>
                 {(inboxUnread ?? 0) > 0 && (
                   <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
                     {inboxUnread}
@@ -503,62 +528,71 @@ export default function BoardViewPage() {
                 setTimeout(() => setBoardCopied(false), 2000);
               }
             }}
-            className="flex items-center gap-1 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
             {boardCopied ? (
               <>
-                <Check size={12} className="text-green-500" />
-                <span className="text-green-500">Copied!</span>
+                <Check size={14} className="text-green-500" />
+                <span className="hidden sm:inline text-green-500">Copied!</span>
               </>
             ) : (
               <>
-                <Share2 size={12} />
-                Share
+                <Share2 size={14} />
+                <span className="hidden sm:inline">Share</span>
               </>
             )}
           </button>
           <Link
             href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
-            className={`text-[10px] ${isAdmirerMode ? "text-[#be185d]" : "text-black/40"} hover:opacity-70 font-medium transition-colors`}
+            className={`flex items-center gap-1.5 text-[10px] ${isAdmirerMode ? "text-[#be185d]" : "text-black/40"} hover:opacity-70 font-medium transition-colors`}
           >
-            {isAdmirerMode ? "Send Love Letter" : "Add confession"}
+            <Plus size={14} />
+            <span className="hidden sm:inline">
+              {isAdmirerMode ? "Send Love Letter" : "Add confession"}
+            </span>
           </Link>
           <Link
             href={`/b/${slug}/spill`}
-            className="text-[10px] text-rose-900/60 hover:text-rose-900 font-medium transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-rose-900/60 hover:text-rose-900 font-medium transition-colors"
           >
-            Long gossip
+            <BookOpen size={14} />
+            <span className="hidden sm:inline">Long gossip</span>
           </Link>
           {/* Premium Shine Summarize Button */}
           {hasEnoughForSummary && (
             <button
               onClick={handleSummarize}
               disabled={isGenerating}
-              className="group relative h-8 px-4 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60"
+              className="group relative h-8 px-3 sm:px-4 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60 ml-1"
               style={{
                 background: "linear-gradient(135deg, #1a0e0e, #2d1515)",
-                boxShadow: "0 2px 12px rgba(196, 58, 58, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
+                boxShadow:
+                  "0 2px 12px rgba(196, 58, 58, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
               {/* Animated shimmer sweep */}
               <div
                 className="absolute inset-0 opacity-30"
                 style={{
-                  background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
+                  background:
+                    "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)",
                   backgroundSize: "200% 100%",
                   animation: "shimmerSweep 3s ease-in-out infinite",
                 }}
               />
-              <span className="relative z-10 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em]" style={{ color: "#f5e6e0" }}>
+              <span
+                className="relative z-10 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em]"
+                style={{ color: "#f5e6e0" }}
+              >
                 {isGenerating ? (
                   <>
                     <div className="w-2.5 h-2.5 border-[1.5px] border-pink-200/30 border-t-pink-300 rounded-full animate-spin" />
-                    Brewing...
+                    <span className="hidden sm:inline">Brewing...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles size={10} style={{ color: "#c43a3a" }} />
-                    Vibe
+                    <span className="hidden md:inline">Vibe</span>
                   </>
                 )}
               </span>
@@ -591,7 +625,11 @@ export default function BoardViewPage() {
           {board.tagline && (
             <p
               className="text-xs italic font-medium"
-              style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.4)" : "rgba(0,0,0,0.3)" }}
+              style={{
+                color: isAdmirerMode
+                  ? "rgba(155, 58, 92, 0.4)"
+                  : "rgba(0,0,0,0.3)",
+              }}
             >
               &quot;{board.tagline}&quot;
             </p>
@@ -606,7 +644,6 @@ export default function BoardViewPage() {
               <span style={{ color: "rgba(201, 169, 110, 0.4)" }}>✦</span>
             </p>
           )}
-
         </div>
 
         {/* Mood Ring */}
@@ -639,7 +676,9 @@ export default function BoardViewPage() {
             </div>
           ) : mixedItems.length === 0 ? (
             <div className="text-center py-16">
-              <span className="text-4xl block mb-4">{isAdmirerMode ? "💌" : "🤫"}</span>
+              <span className="text-4xl block mb-4">
+                {isAdmirerMode ? "💌" : "🤫"}
+              </span>
               <p
                 className="text-lg font-bold serif mb-1"
                 style={{ color: isAdmirerMode ? "#5C1A2A" : undefined }}
@@ -648,7 +687,11 @@ export default function BoardViewPage() {
               </p>
               <p
                 className="text-xs mb-6"
-                style={{ color: isAdmirerMode ? "rgba(155, 58, 92, 0.4)" : "rgba(0,0,0,0.35)" }}
+                style={{
+                  color: isAdmirerMode
+                    ? "rgba(155, 58, 92, 0.4)"
+                    : "rgba(0,0,0,0.35)",
+                }}
               >
                 {isAdmirerMode
                   ? "Be the first to pour your heart out anonymously..."
@@ -674,7 +717,9 @@ export default function BoardViewPage() {
                   href={`/b/${slug}/spill`}
                   className="inline-flex items-center gap-2 px-6 py-3 border rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
                   style={{
-                    borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.2)" : "rgba(0,0,0,0.1)",
+                    borderColor: isAdmirerMode
+                      ? "rgba(201, 169, 110, 0.2)"
+                      : "rgba(0,0,0,0.1)",
                     color: isAdmirerMode ? "#5C1A2A" : "#000",
                   }}
                 >
@@ -686,14 +731,21 @@ export default function BoardViewPage() {
           ) : (
             <>
               {isAdmirerMode ? (
-                <div 
+                <div
                   className="relative w-full overflow-hidden border border-[rgba(201,169,110,0.1)] rounded-[2rem] bg-black/[0.02]"
-                  style={{ height: '600px', background: 'radial-gradient(circle at center, rgba(255,255,255,0.8), rgba(255,245,240,0.4))' }}
+                  style={{
+                    height: "600px",
+                    background:
+                      "radial-gradient(circle at center, rgba(255,255,255,0.8), rgba(255,245,240,0.4))",
+                  }}
                 >
                   <p className="absolute top-6 w-full text-center text-[10px] font-bold uppercase tracking-widest text-[#9B3A5C]/40 z-10 pointer-events-none">
                     Drag the memories. Tap to immerse.
                   </p>
-                  <div className="absolute inset-0" style={{ perspective: '1200px' }}>
+                  <div
+                    className="absolute inset-0"
+                    style={{ perspective: "1200px" }}
+                  >
                     {(() => {
                       const previewCards = mixedItems.slice(0, 5);
                       const count = previewCards.length;
@@ -706,13 +758,15 @@ export default function BoardViewPage() {
                         { x: 0, y: -60 },
                       ];
                       return previewCards.map((item, i) => (
-                        <MemoryStickyCard 
+                        <MemoryStickyCard
                           key={item._id}
                           confession={item}
                           rotateAmount={(i % 2 === 0 ? 1 : -1) * (3 + i * 2.5)}
                           offsetX={offsets[i % offsets.length].x}
                           offsetY={offsets[i % offsets.length].y}
-                          onClick={() => router.push(`/b/${slug}/admirers?index=${i}`)}
+                          onClick={() =>
+                            router.push(`/b/${slug}/admirers?index=${i}`)
+                          }
                         />
                       ));
                     })()}
@@ -728,24 +782,32 @@ export default function BoardViewPage() {
                         <div
                           className="absolute inset-[-50%] animate-[borderSpin_3s_linear_infinite]"
                           style={{
-                            background: "conic-gradient(from 0deg, transparent, #e8467c, #c95884, #ffd4e8, transparent, #9B3A5C, transparent)",
+                            background:
+                              "conic-gradient(from 0deg, transparent, #e8467c, #c95884, #ffd4e8, transparent, #9B3A5C, transparent)",
                           }}
                         />
                         <div
                           className="relative flex items-center gap-2.5 px-6 py-3 rounded-full transition-all active:scale-95"
                           style={{
-                            background: "linear-gradient(135deg, #2a0e1a, #4a1a30, #3a1222)",
-                            boxShadow: "0 8px 30px rgba(155,58,92,0.3), 0 2px 8px rgba(155,58,92,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
+                            background:
+                              "linear-gradient(135deg, #2a0e1a, #4a1a30, #3a1222)",
+                            boxShadow:
+                              "0 8px 30px rgba(155,58,92,0.3), 0 2px 8px rgba(155,58,92,0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
                           }}
                         >
-                          <Heart size={13} fill="currentColor" className="text-[#e8467c] group-hover:scale-110 transition-transform" />
+                          <Heart
+                            size={13}
+                            fill="currentColor"
+                            className="text-[#e8467c] group-hover:scale-110 transition-transform"
+                          />
                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#ffd4e8]">
                             View All Letters
                           </span>
                           <span
                             className="min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white"
                             style={{
-                              background: "linear-gradient(135deg, #e8467c, #c95884)",
+                              background:
+                                "linear-gradient(135deg, #e8467c, #c95884)",
                               boxShadow: "0 2px 8px rgba(232,70,124,0.4)",
                             }}
                           >
@@ -788,7 +850,12 @@ export default function BoardViewPage() {
                         absOffset === 0
                           ? 1
                           : Math.max(0.65 - absOffset * 0.12, 0.15);
-                      const rotateY = offset > 0 ? -rotateAmount : offset < 0 ? rotateAmount : 0;
+                      const rotateY =
+                        offset > 0
+                          ? -rotateAmount
+                          : offset < 0
+                            ? rotateAmount
+                            : 0;
                       const zIndex = 20 - absOffset;
 
                       return (
@@ -812,7 +879,8 @@ export default function BoardViewPage() {
                           >
                             {item._type === "spill" ? (
                               <DeepSpillCard slug={slug} spill={item} />
-                            ) : item.type === "canvas" || item.canvasImageUrl ? (
+                            ) : item.type === "canvas" ||
+                              item.canvasImageUrl ? (
                               <DoodleConfessionCard
                                 confession={item}
                                 boardSlug={slug}
@@ -921,7 +989,9 @@ export default function BoardViewPage() {
               href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
               className="flex-1 block relative overflow-hidden rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99]"
               style={{
-                borderColor: isAdmirerMode ? "rgba(201, 169, 110, 0.15)" : "rgba(0,0,0,0.05)",
+                borderColor: isAdmirerMode
+                  ? "rgba(201, 169, 110, 0.15)"
+                  : "rgba(0,0,0,0.05)",
               }}
             >
               <div
@@ -934,23 +1004,39 @@ export default function BoardViewPage() {
               />
               <div
                 className="absolute top-3 right-3 w-16 h-16 rounded-full"
-                style={{ background: isAdmirerMode ? "rgba(201,169,110,0.04)" : "rgba(0,0,0,0.02)" }}
+                style={{
+                  background: isAdmirerMode
+                    ? "rgba(201,169,110,0.04)"
+                    : "rgba(0,0,0,0.02)",
+                }}
               />
               <div
                 className="absolute bottom-2 left-2 w-10 h-10 rounded-full"
-                style={{ background: isAdmirerMode ? "rgba(201,169,110,0.04)" : "rgba(0,0,0,0.02)" }}
+                style={{
+                  background: isAdmirerMode
+                    ? "rgba(201,169,110,0.04)"
+                    : "rgba(0,0,0,0.02)",
+                }}
               />
               <div className="relative flex flex-col items-center text-center py-8 px-6">
-                <span className="text-3xl mb-3">{isAdmirerMode ? "💌" : "🫖"}</span>
+                <span className="text-3xl mb-3">
+                  {isAdmirerMode ? "💌" : "🫖"}
+                </span>
                 <h3
                   className="text-base font-black tracking-tight serif mb-1"
                   style={{ color: isAdmirerMode ? "#5C1A2A" : "#000" }}
                 >
-                  {isAdmirerMode ? "Write a Love Letter" : "Got something to confess?"}
+                  {isAdmirerMode
+                    ? "Write a Love Letter"
+                    : "Got something to confess?"}
                 </h3>
                 <p
                   className="text-[11px] mb-4 leading-relaxed"
-                  style={{ color: isAdmirerMode ? "rgba(155,58,92,0.45)" : "rgba(0,0,0,0.35)" }}
+                  style={{
+                    color: isAdmirerMode
+                      ? "rgba(155,58,92,0.45)"
+                      : "rgba(0,0,0,0.35)",
+                  }}
                 >
                   {isAdmirerMode
                     ? "Pour your heart out anonymously. They'll never know."
@@ -1044,12 +1130,18 @@ export default function BoardViewPage() {
           }}
         >
           {isAdmirerMode ? (
-            <Heart size={14} fill="currentColor" style={{ color: "rgba(255,200,200,0.6)" }} />
+            <Heart
+              size={14}
+              fill="currentColor"
+              style={{ color: "rgba(255,200,200,0.6)" }}
+            />
           ) : (
             <Bell size={14} className="text-green-400 rotate-12" />
           )}
           <span className="text-[11px] font-bold uppercase tracking-widest">
-            {isAdmirerMode ? "Someone sent a love letter! 💌" : "Someone spilled new tea!"}
+            {isAdmirerMode
+              ? "Someone sent a love letter! 💌"
+              : "Someone spilled new tea!"}
           </span>
         </div>
       )}
@@ -1065,11 +1157,11 @@ export default function BoardViewPage() {
             className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
             style={{
               background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
-              boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+              boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
             }}
           >
             <div className="p-5 flex flex-col gap-3 relative">
-              <button 
+              <button
                 onClick={() => {
                   setShowConfessBackCTA(false);
                   localStorage.setItem("teaa_dismissed_cta", "true");
@@ -1079,7 +1171,7 @@ export default function BoardViewPage() {
               >
                 <X size={16} />
               </button>
-              
+
               <div className="flex items-start gap-4 mb-2">
                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">
                   {isAdmirerMode ? "💌" : "🫖"}
@@ -1093,7 +1185,7 @@ export default function BoardViewPage() {
                       ? "Create your own board. Find out who secretly admires you and let them react!"
                       : "Get anonymous messages from friends. You choose the vibe, they spill the tea!"}
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-1.5">
                     {!isAdmirerMode && (
                       <span className="px-2 py-1 bg-white/10 border border-white/10 rounded-md text-[9px] font-bold text-white/90 uppercase tracking-widest flex items-center gap-1">
@@ -1116,10 +1208,12 @@ export default function BoardViewPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-3 flex gap-3">
                 <Link
-                  href={isAdmirerMode ? "/create?type=secret-admirer" : "/create"}
+                  href={
+                    isAdmirerMode ? "/create?type=secret-admirer" : "/create"
+                  }
                   className="flex-1 bg-white text-black py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-center hover:scale-[1.02] hover:bg-white/90 active:scale-95 transition-all shadow-lg"
                 >
                   Create My Board →

@@ -25,13 +25,19 @@ function getCategoryEmoji(cat: string): string {
   return CATEGORY_INFO[cat]?.emoji ?? "✨";
 }
 function getCategoryLabel(cat: string): string {
-  return CATEGORY_INFO[cat]?.label ?? cat.charAt(0).toUpperCase() + cat.slice(1);
+  return (
+    CATEGORY_INFO[cat]?.label ?? cat.charAt(0).toUpperCase() + cat.slice(1)
+  );
 }
 
 // Build a conic-gradient string from distribution
-function buildConicGradient(distribution: Record<string, number>, total: number): string {
-  if (total === 0) return "conic-gradient(from 0deg, #333 0%, #555 50%, #333 100%)";
-  
+function buildConicGradient(
+  distribution: Record<string, number>,
+  total: number,
+): string {
+  if (total === 0)
+    return "conic-gradient(from 0deg, #333 0%, #555 50%, #333 100%)";
+
   const entries = Object.entries(distribution).sort((a, b) => b[1] - a[1]);
   const stops: string[] = [];
   let accumulated = 0;
@@ -54,7 +60,11 @@ function buildConicGradient(distribution: Record<string, number>, total: number)
 }
 
 // Generate mood phrase
-function getMoodPhrase(distribution: Record<string, number>, total: number, isAdmirer: boolean): string {
+function getMoodPhrase(
+  distribution: Record<string, number>,
+  total: number,
+  isAdmirer: boolean,
+): string {
   if (total === 0) return "Waiting for the first confession...";
   if (isAdmirer) {
     if (total === 1) return "A spark of love energy";
@@ -98,8 +108,19 @@ function getActivityLabel(recentActivity: number): string {
 }
 
 // Orbiting particles based on distribution
-function generateParticles(distribution: Record<string, number>, total: number) {
-  const particles: { id: number; color: string; angle: number; distance: number; size: number; duration: number; delay: number }[] = [];
+function generateParticles(
+  distribution: Record<string, number>,
+  total: number,
+) {
+  const particles: {
+    id: number;
+    color: string;
+    angle: number;
+    distance: number;
+    size: number;
+    duration: number;
+    delay: number;
+  }[] = [];
   if (total === 0) return particles;
 
   const entries = Object.entries(distribution).sort((a, b) => b[1] - a[1]);
@@ -124,7 +145,10 @@ function generateParticles(distribution: Record<string, number>, total: number) 
   return particles.slice(0, 14);
 }
 
-export default function MoodRing({ moodData, isAdmirerMode = false }: MoodRingProps) {
+export default function MoodRing({
+  moodData,
+  isAdmirerMode = false,
+}: MoodRingProps) {
   const [expanded, setExpanded] = useState(false);
   const { total, distribution, dominant, recentActivity } = moodData;
 
@@ -287,9 +311,15 @@ export default function MoodRing({ moodData, isAdmirerMode = false }: MoodRingPr
           transition={{ duration: 2, repeat: Infinity }}
         >
           {expanded ? (
-            <ChevronUp size={14} className={isAdmirerMode ? "text-white/30" : "text-black/20"} />
+            <ChevronUp
+              size={14}
+              className={isAdmirerMode ? "text-white/30" : "text-black/20"}
+            />
           ) : (
-            <ChevronDown size={14} className={isAdmirerMode ? "text-white/30" : "text-black/20"} />
+            <ChevronDown
+              size={14}
+              className={isAdmirerMode ? "text-white/30" : "text-black/20"}
+            />
           )}
         </motion.div>
       </button>
@@ -306,15 +336,23 @@ export default function MoodRing({ moodData, isAdmirerMode = false }: MoodRingPr
       </motion.p>
 
       <div className="flex items-center gap-2 mt-1">
-        <span className={`text-[9px] font-medium uppercase tracking-widest ${
-          isAdmirerMode ? "text-white/30" : "text-black/20"
-        }`}>
+        <span
+          className={`text-[9px] font-medium uppercase tracking-widest ${
+            isAdmirerMode ? "text-white/30" : "text-black/20"
+          }`}
+        >
           {activityLabel}
         </span>
-        <span className={`text-[9px] ${isAdmirerMode ? "text-white/20" : "text-black/15"}`}>•</span>
-        <span className={`text-[9px] font-medium uppercase tracking-widest ${
-          isAdmirerMode ? "text-white/30" : "text-black/20"
-        }`}>
+        <span
+          className={`text-[9px] ${isAdmirerMode ? "text-white/20" : "text-black/15"}`}
+        >
+          •
+        </span>
+        <span
+          className={`text-[9px] font-medium uppercase tracking-widest ${
+            isAdmirerMode ? "text-white/30" : "text-black/20"
+          }`}
+        >
           {total} confessions
         </span>
       </div>
@@ -336,9 +374,11 @@ export default function MoodRing({ moodData, isAdmirerMode = false }: MoodRingPr
                   : "bg-white border-black/5 shadow-lg shadow-black/[0.03]"
               }`}
             >
-              <p className={`text-[9px] font-bold uppercase tracking-[0.2em] mb-3 ${
-                isAdmirerMode ? "text-white/40" : "text-black/25"
-              }`}>
+              <p
+                className={`text-[9px] font-bold uppercase tracking-[0.2em] mb-3 ${
+                  isAdmirerMode ? "text-white/40" : "text-black/25"
+                }`}
+              >
                 Emotion Breakdown
               </p>
 
@@ -362,35 +402,49 @@ export default function MoodRing({ moodData, isAdmirerMode = false }: MoodRingPr
                   const pct = Math.round((count / total) * 100);
                   return (
                     <div key={cat} className="flex items-center gap-2.5">
-                      <span className="text-sm flex-shrink-0">{getCategoryEmoji(cat)}</span>
+                      <span className="text-sm flex-shrink-0">
+                        {getCategoryEmoji(cat)}
+                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className={`text-[10px] font-bold ${
-                            isAdmirerMode ? "text-white/70" : "text-black/60"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-bold ${
+                              isAdmirerMode ? "text-white/70" : "text-black/60"
+                            }`}
+                          >
                             {getCategoryLabel(cat)}
                           </span>
-                          <span className={`text-[10px] font-mono ${
-                            isAdmirerMode ? "text-white/40" : "text-black/30"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-mono ${
+                              isAdmirerMode ? "text-white/40" : "text-black/30"
+                            }`}
+                          >
                             {pct}%
                           </span>
                         </div>
-                        <div className={`h-1 rounded-full overflow-hidden ${
-                          isAdmirerMode ? "bg-white/10" : "bg-black/5"
-                        }`}>
+                        <div
+                          className={`h-1 rounded-full overflow-hidden ${
+                            isAdmirerMode ? "bg-white/10" : "bg-black/5"
+                          }`}
+                        >
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pct}%` }}
-                            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
+                            transition={{
+                              duration: 0.8,
+                              delay: 0.1,
+                              ease: "easeOut",
+                            }}
                             className="h-full rounded-full"
                             style={{ background: getCategoryColor(cat) }}
                           />
                         </div>
                       </div>
-                      <span className={`text-[9px] font-mono flex-shrink-0 ${
-                        isAdmirerMode ? "text-white/25" : "text-black/20"
-                      }`}>
+                      <span
+                        className={`text-[9px] font-mono flex-shrink-0 ${
+                          isAdmirerMode ? "text-white/25" : "text-black/20"
+                        }`}
+                      >
                         {count}
                       </span>
                     </div>

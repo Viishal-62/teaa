@@ -28,7 +28,7 @@ export async function summarizeConfessions(texts: string[]): Promise<string> {
   }
 
   const context = texts.join("\n---\n").slice(0, 8000); // limit context
-  
+
   const openai = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: openRouterAPIKey,
@@ -57,7 +57,7 @@ export async function summarizeConfessions(texts: string[]): Promise<string> {
 
   const summary = response.choices?.[0]?.message?.content;
   if (!summary) throw new Error("AI failed to generate summary");
-  
+
   return summary.trim();
 }
 
@@ -231,7 +231,8 @@ export async function moderateTextWithAI(text: string): Promise<{
     const result = JSON.parse(content);
     return {
       isClean: result.isClean === true,
-      reason: result.reason || "This content doesn't meet our community standards.",
+      reason:
+        result.reason || "This content doesn't meet our community standards.",
     };
   } catch {
     // If JSON parsing fails, default to safe

@@ -9,42 +9,124 @@
 // These are always blocked across the entire platform
 const BASE_BANNED_WORDS = [
   // ─── Severe Slurs & Hate Speech ───
-  "nigger", "nigga", "faggot", "tranny", "kike", "paki", "retard", "retarded",
-  "spic", "chink", "wetback", "coon", "towelhead", "raghead", "gook", "dyke",
+  "nigger",
+  "nigga",
+  "faggot",
+  "tranny",
+  "kike",
+  "paki",
+  "retard",
+  "retarded",
+  "spic",
+  "chink",
+  "wetback",
+  "coon",
+  "towelhead",
+  "raghead",
+  "gook",
+  "dyke",
 
   // ─── Sexual Violence & Abuse ───
-  "rape", "raping", "rapist", "molest", "molester", "pedophile", "pedo",
+  "rape",
+  "raping",
+  "rapist",
+  "molest",
+  "molester",
+  "pedophile",
+  "pedo",
 
   // ─── Violence & Threats ───
-  "murder", "murdering", "kill yourself", "kys", "suicide", "go die",
-  "school shooting", "bomb threat", "hang yourself", "throat slit", "stab you",
+  "murder",
+  "murdering",
+  "kill yourself",
+  "kys",
+  "suicide",
+  "go die",
+  "school shooting",
+  "bomb threat",
+  "hang yourself",
+  "throat slit",
+  "stab you",
 
   // ─── Illegal Content ───
-  "child porn", "cp", "exploitation",
+  "child porn",
+  "cp",
+  "exploitation",
 
   // ─── Common Profanity (Broad Filter) ───
-  "fuck", "fucking", "fucked", "fucker", "fuckface", "fuckstick", "f@ck", "f*ck",
-  "shit", "shitting", "shitted", "shitter", "shithole", "sh*t", "s*it",
-  "bitch", "bitching", "bitched", "bitchy", "b!tch", "b*tch",
-  "ass", "asshole", "dumbass", "jackass", "asswipe", "arse",
-  "cunt", "twat", "pussy", "dick", "cock", "penis", "vagina", "clit",
-  "bastard", "motherfucker", "motherfucking", "son of a bitch",
-  "whore", "slut", "skank", "prostitute", "hooker",
-  "dickhead", "dipstick", "douche", "douchebag", "douchenozzle",
-  "wanker", "bloody", "bollocks", "bugger", "tosser",
-
-
+  "fuck",
+  "fucking",
+  "fucked",
+  "fucker",
+  "fuckface",
+  "fuckstick",
+  "f@ck",
+  "f*ck",
+  "shit",
+  "shitting",
+  "shitted",
+  "shitter",
+  "shithole",
+  "sh*t",
+  "s*it",
+  "bitch",
+  "bitching",
+  "bitched",
+  "bitchy",
+  "b!tch",
+  "b*tch",
+  "ass",
+  "asshole",
+  "dumbass",
+  "jackass",
+  "asswipe",
+  "arse",
+  "cunt",
+  "twat",
+  "pussy",
+  "dick",
+  "cock",
+  "penis",
+  "vagina",
+  "clit",
+  "bastard",
+  "motherfucker",
+  "motherfucking",
+  "son of a bitch",
+  "whore",
+  "slut",
+  "skank",
+  "prostitute",
+  "hooker",
+  "dickhead",
+  "dipstick",
+  "douche",
+  "douchebag",
+  "douchenozzle",
+  "wanker",
+  "bloody",
+  "bollocks",
+  "bugger",
+  "tosser",
 
   // ─── Variations & Leetspeak ───
-  "f u c k", "s h i t", "b i t c h", "c u n t",
-  "f.u.c.k", "s.h.i.t", "b.i.t.c.h",
-  "fck", "shit", "btch", "cnt",
+  "f u c k",
+  "s h i t",
+  "b i t c h",
+  "c u n t",
+  "f.u.c.k",
+  "s.h.i.t",
+  "b.i.t.c.h",
+  "fck",
+  "shit",
+  "btch",
+  "cnt",
 ];
 
 export type FlaggedWord = {
-  word: string;   // The matched banned word
-  start: number;  // Start index in original text
-  end: number;    // End index in original text (exclusive)
+  word: string; // The matched banned word
+  start: number; // Start index in original text
+  end: number; // End index in original text (exclusive)
 };
 
 export type ModerationResult = {
@@ -59,17 +141,22 @@ export type ModerationResult = {
  */
 export function moderateText(
   text: string,
-  customBannedWords: string[] = []
+  customBannedWords: string[] = [],
 ): ModerationResult {
   if (!text || text.trim().length === 0) {
     return { isClean: true, flaggedWords: [], message: "" };
   }
 
   const lowerText = text.toLowerCase();
-  const allBanned = [...BASE_BANNED_WORDS, ...customBannedWords.map(w => w.toLowerCase())];
+  const allBanned = [
+    ...BASE_BANNED_WORDS,
+    ...customBannedWords.map((w) => w.toLowerCase()),
+  ];
 
   // Deduplicate
-  const uniqueBanned = [...new Set(allBanned)].filter(w => w.trim().length > 0);
+  const uniqueBanned = [...new Set(allBanned)].filter(
+    (w) => w.trim().length > 0,
+  );
 
   const flaggedWords: FlaggedWord[] = [];
 
@@ -102,10 +189,11 @@ export function moderateText(
     return { isClean: true, flaggedWords: [], message: "" };
   }
 
-  const wordList = [...new Set(deduped.map(f => f.word.toLowerCase()))];
-  const message = wordList.length === 1
-    ? "Your text contains a restricted word. Please remove it and try again."
-    : `Your text contains ${wordList.length} restricted words. Please remove them and try again.`;
+  const wordList = [...new Set(deduped.map((f) => f.word.toLowerCase()))];
+  const message =
+    wordList.length === 1
+      ? "Your text contains a restricted word. Please remove it and try again."
+      : `Your text contains ${wordList.length} restricted words. Please remove them and try again.`;
 
   return {
     isClean: false,

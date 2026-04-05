@@ -22,22 +22,26 @@ export const add = mutation({
     // Check chapter text
     const textMod = moderateText(args.text, customWords);
     if (!textMod.isClean) {
-      throw new Error(JSON.stringify({
-        type: "moderation_error",
-        flaggedWords: textMod.flaggedWords,
-        message: `Chapter ${args.chapterNumber} contains restricted words. Please remove them.`,
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "moderation_error",
+          flaggedWords: textMod.flaggedWords,
+          message: `Chapter ${args.chapterNumber} contains restricted words. Please remove them.`,
+        }),
+      );
     }
 
     // Check chapter title if provided
     if (args.title) {
       const titleMod = moderateText(args.title, customWords);
       if (!titleMod.isClean) {
-        throw new Error(JSON.stringify({
-          type: "moderation_error",
-          flaggedWords: titleMod.flaggedWords,
-          message: `Chapter ${args.chapterNumber} title contains restricted words. Please change it.`,
-        }));
+        throw new Error(
+          JSON.stringify({
+            type: "moderation_error",
+            flaggedWords: titleMod.flaggedWords,
+            message: `Chapter ${args.chapterNumber} title contains restricted words. Please change it.`,
+          }),
+        );
       }
     }
 

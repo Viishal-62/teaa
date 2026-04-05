@@ -23,7 +23,10 @@ interface DoodleCanvasProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
 }
 
-export default function DoodleCanvas({ onDrawingChange, canvasRef }: DoodleCanvasProps) {
+export default function DoodleCanvas({
+  onDrawingChange,
+  canvasRef,
+}: DoodleCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [activeColor, setActiveColor] = useState(INK_COLORS[0].color);
@@ -60,64 +63,76 @@ export default function DoodleCanvas({ onDrawingChange, canvasRef }: DoodleCanva
     }
   }, [canvasRef]);
 
-  const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
+  const getPos = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
 
-    if ("touches" in e) {
+      if ("touches" in e) {
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top,
+        };
+      }
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
+        x: (e as React.MouseEvent).clientX - rect.left,
+        y: (e as React.MouseEvent).clientY - rect.top,
       };
-    }
-    return {
-      x: (e as React.MouseEvent).clientX - rect.left,
-      y: (e as React.MouseEvent).clientY - rect.top,
-    };
-  }, [canvasRef]);
+    },
+    [canvasRef],
+  );
 
-  const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const startDraw = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    // Save state before this stroke
-    const dpr = window.devicePixelRatio || 1;
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    setStrokeHistory(prev => [...prev.slice(-20), imageData]); // keep last 20
+      // Save state before this stroke
+      const dpr = window.devicePixelRatio || 1;
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      setStrokeHistory((prev) => [...prev.slice(-20), imageData]); // keep last 20
 
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.strokeStyle = activeColor;
-    ctx.lineWidth = brushSize;
-    setIsDrawing(true);
-  }, [canvasRef, getPos, activeColor, brushSize]);
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = activeColor;
+      ctx.lineWidth = brushSize;
+      setIsDrawing(true);
+    },
+    [canvasRef, getPos, activeColor, brushSize],
+  );
 
-  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const draw = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  }, [isDrawing, canvasRef, getPos]);
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    },
+    [isDrawing, canvasRef, getPos],
+  );
 
-  const endDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (isDrawing) {
-      setIsDrawing(false);
-      setHasStrokes(true);
-      onDrawingChange(true);
-    }
-  }, [isDrawing, onDrawingChange]);
+  const endDraw = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
+      if (isDrawing) {
+        setIsDrawing(false);
+        setHasStrokes(true);
+        onDrawingChange(true);
+      }
+    },
+    [isDrawing, onDrawingChange],
+  );
 
   const handleUndo = () => {
     const canvas = canvasRef.current;
@@ -127,7 +142,7 @@ export default function DoodleCanvas({ onDrawingChange, canvasRef }: DoodleCanva
 
     const lastState = strokeHistory[strokeHistory.length - 1];
     ctx.putImageData(lastState, 0, 0);
-    setStrokeHistory(prev => prev.slice(0, -1));
+    setStrokeHistory((prev) => prev.slice(0, -1));
 
     if (strokeHistory.length <= 1) {
       setHasStrokes(false);
@@ -169,17 +184,24 @@ export default function DoodleCanvas({ onDrawingChange, canvasRef }: DoodleCanva
               title={ink.name}
               className="relative w-6 h-6 rounded-full transition-all active:scale-90"
               style={{
-                background: ink.color === "#f5f0e8"
-                  ? "linear-gradient(135deg, #f5f0e8, #e8e0d0)"
-                  : ink.color,
-                boxShadow: activeColor === ink.color
-                  ? `0 0 0 2px #fff, 0 0 0 3.5px ${ink.color === "#f5f0e8" ? "#999" : ink.color}`
-                  : "0 1px 3px rgba(0,0,0,0.15)",
-                border: ink.color === "#f5f0e8" ? "1px solid rgba(0,0,0,0.15)" : "none",
+                background:
+                  ink.color === "#f5f0e8"
+                    ? "linear-gradient(135deg, #f5f0e8, #e8e0d0)"
+                    : ink.color,
+                boxShadow:
+                  activeColor === ink.color
+                    ? `0 0 0 2px #fff, 0 0 0 3.5px ${ink.color === "#f5f0e8" ? "#999" : ink.color}`
+                    : "0 1px 3px rgba(0,0,0,0.15)",
+                border:
+                  ink.color === "#f5f0e8"
+                    ? "1px solid rgba(0,0,0,0.15)"
+                    : "none",
               }}
             >
               {ink.color === "#f5f0e8" && (
-                <span className="absolute inset-0 flex items-center justify-center text-[9px] text-black/40 font-bold">E</span>
+                <span className="absolute inset-0 flex items-center justify-center text-[9px] text-black/40 font-bold">
+                  E
+                </span>
               )}
             </button>
           ))}

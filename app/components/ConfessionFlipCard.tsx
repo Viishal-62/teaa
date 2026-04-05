@@ -39,7 +39,7 @@ export default function ConfessionFlipCard({
   const toggleReaction = useMutation(api.reactions.toggle);
   const incrementView = useMutation(api.confessions.incrementView);
   const reportConfession = useMutation(api.reports.create);
-  
+
   const [reporting, setReporting] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
   const [showRateLimit, setShowRateLimit] = useState(false);
@@ -93,7 +93,7 @@ export default function ConfessionFlipCard({
   const handleReport = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (reporting || reportSuccess) return;
-    
+
     // For simplicity, we just trigger it. In a real app we'd have a reason selector.
     setReporting(true);
     try {
@@ -283,21 +283,25 @@ export default function ConfessionFlipCard({
                   className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/90 text-white px-3 py-1.5 rounded-full flex items-center gap-2 z-50 shadow-lg pointer-events-none"
                 >
                   <CheckCircle2 size={12} className="text-green-400" />
-                  <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">Reported! Thank you.</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">
+                    Reported! Thank you.
+                  </span>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
       </div>
-      {showRateLimit && typeof document !== "undefined" && createPortal(
-        <RateLimitModal 
-          isOpen={showRateLimit} 
-          onClose={() => setShowRateLimit(false)} 
-          message={rateLimitMessage}
-        />,
-        document.body
-      )}
+      {showRateLimit &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <RateLimitModal
+            isOpen={showRateLimit}
+            onClose={() => setShowRateLimit(false)}
+            message={rateLimitMessage}
+          />,
+          document.body,
+        )}
     </div>
   );
 }

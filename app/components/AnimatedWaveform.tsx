@@ -26,14 +26,14 @@ export const AnimatedWaveform = ({
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const animationIdRef = useRef<number | null>(null);
   const [springValues, setSpringValues] = useState<number[]>(
-    Array(barCount).fill(0)
+    Array(barCount).fill(0),
   );
 
   // Pre-generate random bounce heights for cartoonish effect (smooth, not jumpy)
   const baseHeightsRef = useRef<number[]>(
     Array(barCount)
       .fill(0)
-      .map(() => Math.random() * 0.6 + 0.2)
+      .map(() => Math.random() * 0.6 + 0.2),
   );
 
   // Spring animations for each bar
@@ -44,7 +44,7 @@ export const AnimatedWaveform = ({
         tension: 280,
         friction: 60,
       },
-    })
+    }),
   );
 
   useEffect(() => {
@@ -52,18 +52,15 @@ export const AnimatedWaveform = ({
 
     try {
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext ||
-          (window as any).webkitAudioContext)();
+        audioContextRef.current = new (
+          window.AudioContext || (window as any).webkitAudioContext
+        )();
       }
 
       const audioContext = audioContextRef.current;
 
-      if (
-        audioElement.paused ||
-        audioElement.ended ||
-        !analyserRef.current
-      ) {
-        const source = audioContext.createMediaElementAudioSource(audioElement);
+      if (audioElement.paused || audioElement.ended || !analyserRef.current) {
+        const source = audioContext.createMediaElementSource(audioElement);
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
@@ -76,7 +73,7 @@ export const AnimatedWaveform = ({
       const dataArray = dataArrayRef.current!;
 
       const draw = () => {
-        analyser.getByteFrequencyData(dataArray);
+        analyser.getByteFrequencyData(dataArray as any);
 
         // Calculate average frequency for each bar
         const barWidth = Math.floor(dataArray.length / barCount);

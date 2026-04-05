@@ -25,16 +25,20 @@ export const create = mutation({
     const FIVE_MINS = 5 * 60 * 1000;
     const recentComments = await ctx.db
       .query("comments")
-      .withIndex("by_visitorId_createdAt", (q) => 
-        q.eq("visitorId", args.visitorId).gt("createdAt", Date.now() - FIVE_MINS)
+      .withIndex("by_visitorId_createdAt", (q) =>
+        q
+          .eq("visitorId", args.visitorId)
+          .gt("createdAt", Date.now() - FIVE_MINS),
       )
       .collect();
 
     if (recentComments.length >= 10) {
-      throw new Error(JSON.stringify({
-        type: "rate_limit_error",
-        message: "You're commenting too fast! Take a breath."
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "rate_limit_error",
+          message: "You're commenting too fast! Take a breath.",
+        }),
+      );
     }
 
     const displayName = generateAnonName();

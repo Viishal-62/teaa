@@ -111,16 +111,21 @@ export const create = mutation({
     const TEN_MINS = 10 * 60 * 1000;
     const recentConfessions = await ctx.db
       .query("confessions")
-      .withIndex("by_visitorId_createdAt", (q) => 
-        q.eq("visitorId", args.visitorId).gt("createdAt", Date.now() - TEN_MINS)
+      .withIndex("by_visitorId_createdAt", (q) =>
+        q
+          .eq("visitorId", args.visitorId)
+          .gt("createdAt", Date.now() - TEN_MINS),
       )
       .collect();
 
     if (recentConfessions.length >= 5) {
-      throw new Error(JSON.stringify({
-        type: "rate_limit_error",
-        message: "Whoa! You're spilling too much tea. Take a 10-minute break."
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "rate_limit_error",
+          message:
+            "Whoa! You're spilling too much tea. Take a 10-minute break.",
+        }),
+      );
     }
 
     // ─── Content Moderation ───
@@ -130,11 +135,13 @@ export const create = mutation({
       const moderation = moderateText(args.text, board?.bannedWords ?? []);
       if (!moderation.isClean) {
         // Hard reject — do NOT create the confession
-        throw new Error(JSON.stringify({
-          type: "moderation_error",
-          flaggedWords: moderation.flaggedWords,
-          message: moderation.message,
-        }));
+        throw new Error(
+          JSON.stringify({
+            type: "moderation_error",
+            flaggedWords: moderation.flaggedWords,
+            message: moderation.message,
+          }),
+        );
       }
     }
 
@@ -142,11 +149,14 @@ export const create = mutation({
     if (args.voiceTitle) {
       const titleMod = moderateText(args.voiceTitle, board?.bannedWords ?? []);
       if (!titleMod.isClean) {
-        throw new Error(JSON.stringify({
-          type: "moderation_error",
-          flaggedWords: titleMod.flaggedWords,
-          message: "Your voice title contains restricted words. Please change it.",
-        }));
+        throw new Error(
+          JSON.stringify({
+            type: "moderation_error",
+            flaggedWords: titleMod.flaggedWords,
+            message:
+              "Your voice title contains restricted words. Please change it.",
+          }),
+        );
       }
     }
 
@@ -155,11 +165,21 @@ export const create = mutation({
     const confessionId = await ctx.db.insert("confessions", {
       boardId: args.boardId,
       type: confessionType,
-      text: confessionType === "text" ? args.text?.trim() : (confessionType === "canvas" && args.caption ? args.caption.trim() : undefined),
+      text:
+        confessionType === "text"
+          ? args.text?.trim()
+          : confessionType === "canvas" && args.caption
+            ? args.caption.trim()
+            : undefined,
       audioUrl: confessionType === "voice" ? args.audioUrl : undefined,
-      voiceTitle: confessionType === "voice" ? args.voiceTitle?.trim() : undefined,
-      isAnonymousVoice: confessionType === "voice" ? (args.isAnonymousVoice ?? false) : undefined,
-      canvasImageUrl: confessionType === "canvas" ? args.canvasImageUrl : undefined,
+      voiceTitle:
+        confessionType === "voice" ? args.voiceTitle?.trim() : undefined,
+      isAnonymousVoice:
+        confessionType === "voice"
+          ? (args.isAnonymousVoice ?? false)
+          : undefined,
+      canvasImageUrl:
+        confessionType === "canvas" ? args.canvasImageUrl : undefined,
       caption: confessionType === "canvas" ? args.caption?.trim() : undefined,
       category: args.category,
       displayName,
@@ -247,7 +267,9 @@ export const listByBoard = query({
         .take(100);
     }
 
-    return confessions.filter((c) => !isExpired(c.expiresAt, now) && !c.isFlagged);
+    return confessions.filter(
+      (c) => !isExpired(c.expiresAt, now) && !c.isFlagged,
+    );
   },
 });
 
@@ -261,7 +283,9 @@ export const listAll = query({
       .withIndex("by_createdAt")
       .order("desc")
       .take(100);
-    return confessions.filter((c) => !isExpired(c.expiresAt, now) && !c.isFlagged);
+    return confessions.filter(
+      (c) => !isExpired(c.expiresAt, now) && !c.isFlagged,
+    );
   },
 });
 
@@ -344,7 +368,15 @@ export const globalFeed = query({
         if (confession.category !== args.category) continue;
       }
 
-      const ADMIRER_CATEGORIES = ["crush", "compliment", "attraction", "gratitude", "admiration", "confession", "secret-admirer"];
+      const ADMIRER_CATEGORIES = [
+        "crush",
+        "compliment",
+        "attraction",
+        "gratitude",
+        "admiration",
+        "confession",
+        "secret-admirer",
+      ];
       if (ADMIRER_CATEGORIES.includes(confession.category)) continue;
 
       const board = await ctx.db.get(confession.boardId);
@@ -610,7 +642,15 @@ export const getGlobalMoodDistribution = query({
     const now = Date.now();
     const ONE_HOUR = 60 * 60 * 1000;
 
-    const ADMIRER_CATS = ["crush", "compliment", "attraction", "gratitude", "admiration", "confession", "secret-admirer"];
+    const ADMIRER_CATS = [
+      "crush",
+      "compliment",
+      "attraction",
+      "gratitude",
+      "admiration",
+      "confession",
+      "secret-admirer",
+    ];
 
     const confessions = await ctx.db
       .query("confessions")

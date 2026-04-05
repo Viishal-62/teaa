@@ -64,7 +64,10 @@ export default function BoardSettingsPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#faf8f5] text-center px-6">
         <h1 className="text-2xl font-black serif">Board not found</h1>
-        <Link href="/" className="mt-5 px-6 py-3 rounded-xl bg-black text-white text-sm font-bold">
+        <Link
+          href="/"
+          className="mt-5 px-6 py-3 rounded-xl bg-black text-white text-sm font-bold"
+        >
           Go Home
         </Link>
       </div>
@@ -79,7 +82,10 @@ export default function BoardSettingsPage() {
         <p className="text-sm text-black/40 mt-1">
           Only the creator of "{board.name}" can view this page.
         </p>
-        <Link href={`/b/${slug}`} className="mt-5 px-6 py-3 rounded-xl bg-black text-white text-sm font-bold">
+        <Link
+          href={`/b/${slug}`}
+          className="mt-5 px-6 py-3 rounded-xl bg-black text-white text-sm font-bold"
+        >
           Back to Board
         </Link>
       </div>
@@ -89,7 +95,10 @@ export default function BoardSettingsPage() {
   return (
     <div className="min-h-screen bg-[#faf8f5] text-black">
       <header className="sticky top-0 z-50 flex items-center px-4 sm:px-5 py-3 bg-[#faf8f5]/85 backdrop-blur-xl border-b border-black/5">
-        <Link href={`/b/${slug}`} className="flex items-center gap-1.5 text-black/35 hover:text-black transition-colors w-16">
+        <Link
+          href={`/b/${slug}`}
+          className="flex items-center gap-1.5 text-black/35 hover:text-black transition-colors w-16"
+        >
           <ArrowLeft size={16} />
         </Link>
         <h1 className="flex-1 text-center text-[10px] font-black uppercase tracking-[0.25em] text-black/25">
@@ -107,14 +116,15 @@ export default function BoardSettingsPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-black/5 p-6 shadow-xl shadow-black/[0.03] space-y-6">
-          
           {/* Confession Prompt */}
           <div>
             <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
               Viewer Prompt (Optional)
             </label>
             <p className="text-[10px] text-black/40 mb-3 leading-relaxed">
-              Give your visitors a direction! This will appear at the top of the confession box. e.g. "Rate me out of 10", "Tell me your favorite memory of us".
+              Give your visitors a direction! This will appear at the top of the
+              confession box. e.g. "Rate me out of 10", "Tell me your favorite
+              memory of us".
             </p>
             <input
               type="text"
@@ -138,7 +148,6 @@ export default function BoardSettingsPage() {
               className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15 italic"
             />
           </div>
-
         </div>
 
         <button

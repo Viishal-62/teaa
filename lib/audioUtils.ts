@@ -12,8 +12,9 @@ export const getWaveformData = async (
   samples: number = 100,
 ): Promise<number[]> => {
   try {
-    const audioContext = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
+    const audioContext = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )();
     const arrayBuffer = await audioBlob.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     const rawData = audioBuffer.getChannelData(0);

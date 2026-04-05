@@ -13,16 +13,20 @@ export const toggle = mutation({
     const FIVE_MINS = 5 * 60 * 1000;
     const recentReactions = await ctx.db
       .query("reactions")
-      .withIndex("by_visitorId_createdAt", (q) => 
-        q.eq("visitorId", args.visitorId).gt("createdAt", Date.now() - FIVE_MINS)
+      .withIndex("by_visitorId_createdAt", (q) =>
+        q
+          .eq("visitorId", args.visitorId)
+          .gt("createdAt", Date.now() - FIVE_MINS),
       )
       .collect();
 
     if (recentReactions.length >= 30) {
-      throw new Error(JSON.stringify({
-        type: "rate_limit_error",
-        message: "Slow down! You're reacting too fast."
-      }));
+      throw new Error(
+        JSON.stringify({
+          type: "rate_limit_error",
+          message: "Slow down! You're reacting too fast.",
+        }),
+      );
     }
 
     // Check if this visitor already reacted with this type

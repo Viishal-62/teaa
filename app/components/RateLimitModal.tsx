@@ -9,7 +9,11 @@ interface RateLimitModalProps {
   message?: string;
 }
 
-export default function RateLimitModal({ isOpen, onClose, message }: RateLimitModalProps) {
+export default function RateLimitModal({
+  isOpen,
+  onClose,
+  message,
+}: RateLimitModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -32,7 +36,8 @@ export default function RateLimitModal({ isOpen, onClose, message }: RateLimitMo
             className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-[#1a0e0e] p-8 text-center shadow-2xl shadow-rose-950/20"
             style={{
               border: "1px solid rgba(196, 58, 58, 0.2)",
-              backgroundImage: "radial-gradient(circle at top right, rgba(196, 58, 58, 0.1), transparent)",
+              backgroundImage:
+                "radial-gradient(circle at top right, rgba(196, 58, 58, 0.1), transparent)",
             }}
           >
             {/* Close Button */}
@@ -54,15 +59,23 @@ export default function RateLimitModal({ isOpen, onClose, message }: RateLimitMo
             {/* Content */}
             <div className="space-y-4">
               <h3 className="text-2xl font-black italic serif text-rose-50 tracking-tight">
-                Slow down, <br />teapot!
+                Slow down, <br />
+                teapot!
               </h3>
-              
+
               <div className="relative py-2">
-                <Sparkles size={16} className="absolute -left-2 -top-1 text-rose-400 opacity-50" />
+                <Sparkles
+                  size={16}
+                  className="absolute -left-2 -top-1 text-rose-400 opacity-50"
+                />
                 <p className="text-[14px] leading-relaxed text-rose-100/60 font-medium">
-                  {message || "You're spilling tea faster than we can brew it. Take a little break and let the water boil."}
+                  {message ||
+                    "You're spilling tea faster than we can brew it. Take a little break and let the water boil."}
                 </p>
-                <Sparkles size={14} className="absolute -right-2 -bottom-1 text-rose-400 opacity-50" />
+                <Sparkles
+                  size={14}
+                  className="absolute -right-2 -bottom-1 text-rose-400 opacity-50"
+                />
               </div>
             </div>
 

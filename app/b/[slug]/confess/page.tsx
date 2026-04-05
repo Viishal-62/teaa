@@ -8,7 +8,14 @@ import { CATEGORY_INFO, getVisitorId, parseConvexError } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import DoodleCanvas from "@/app/components/DoodleCanvas";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, AlertTriangle, X, Sparkles, Timer } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  AlertTriangle,
+  X,
+  Sparkles,
+  Timer,
+} from "lucide-react";
 import RateLimitModal from "@/app/components/RateLimitModal";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -36,7 +43,7 @@ const QUICK_STARTERS = [
 // ─── Render text with flagged words underlined in red ───
 function renderHighlightedText(
   text: string,
-  flaggedWords: { word: string; start: number; end: number }[]
+  flaggedWords: { word: string; start: number; end: number }[],
 ) {
   if (!flaggedWords || flaggedWords.length === 0) return text;
 
@@ -61,7 +68,7 @@ function renderHighlightedText(
         className="bg-red-100 text-red-600 underline decoration-red-500 decoration-wavy decoration-2 underline-offset-2 font-semibold px-0.5 rounded-sm"
       >
         {text.substring(start, end)}
-      </span>
+      </span>,
     );
 
     lastEnd = end;
@@ -91,13 +98,7 @@ export default function ConfessPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isGlobal, setIsGlobal] = useState(true);
   const [disappearMode, setDisappearMode] = useState<
-    | "never"
-    | "5m"
-    | "24h"
-    | "7d"
-    | "views25"
-    | "custom-time"
-    | "custom-views"
+    "never" | "5m" | "24h" | "7d" | "views25" | "custom-time" | "custom-views"
   >("never");
   const [customExpireAt, setCustomExpireAt] = useState("");
   const [customViews, setCustomViews] = useState("");
@@ -122,7 +123,7 @@ export default function ConfessPage() {
     api.confessions.checkModeration,
     debouncedText.trim().length > 2 && board
       ? { text: debouncedText, boardId: board._id as Id<"boards"> }
-      : "skip"
+      : "skip",
   );
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -224,7 +225,7 @@ export default function ConfessPage() {
       setSubmitted(true);
     } catch (error: any) {
       const parsedErr = parseConvexError(error);
-      
+
       if (parsedErr?.type === "moderation_error") {
         setModerationError({
           flaggedWords: parsedErr.flaggedWords || [],
@@ -453,7 +454,9 @@ export default function ConfessPage() {
               type="button"
               onClick={() => setMode("text")}
               className={`flex-1 py-3 px-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
-                mode === "text" ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
+                mode === "text"
+                  ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                  : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
               }`}
             >
               ✍️ Write
@@ -462,7 +465,9 @@ export default function ConfessPage() {
               type="button"
               onClick={() => setMode("doodle")}
               className={`flex-1 py-3 px-2 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
-                mode === "doodle" ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]" : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
+                mode === "doodle"
+                  ? "bg-white text-black shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+                  : "bg-transparent text-black/30 hover:text-black/60 hover:bg-black/[0.02]"
               }`}
             >
               🎨 Draw
@@ -471,7 +476,10 @@ export default function ConfessPage() {
 
           {mode === "doodle" && (
             <div className="p-4 bg-white border-b border-black/5">
-              <DoodleCanvas onDrawingChange={setHasDoodle} canvasRef={canvasRef} />
+              <DoodleCanvas
+                onDrawingChange={setHasDoodle}
+                canvasRef={canvasRef}
+              />
             </div>
           )}
 
@@ -481,7 +489,14 @@ export default function ConfessPage() {
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
                 Quick starters:
               </p>
-              <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              <div
+                className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                }}
+              >
                 <style jsx>{`
                   ::-webkit-scrollbar {
                     display: none;
@@ -504,15 +519,18 @@ export default function ConfessPage() {
           <div className="px-5 pb-0 pt-4">
             <div className="relative">
               {/* Underline overlay — renders behind the textarea */}
-              {mode === "text" && moderationCheck && !moderationCheck.isClean && text.length > 0 && (
-                <div
-                  className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
-                  style={{ color: "transparent", padding: "0" }}
-                  aria-hidden
-                >
-                  {renderHighlightedText(text, moderationCheck.flaggedWords)}
-                </div>
-              )}
+              {mode === "text" &&
+                moderationCheck &&
+                !moderationCheck.isClean &&
+                text.length > 0 && (
+                  <div
+                    className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
+                    style={{ color: "transparent", padding: "0" }}
+                    aria-hidden
+                  >
+                    {renderHighlightedText(text, moderationCheck.flaggedWords)}
+                  </div>
+                )}
               <textarea
                 value={text}
                 onChange={(e) => {
@@ -520,7 +538,11 @@ export default function ConfessPage() {
                   setText(e.target.value);
                   setModerationError(null);
                 }}
-                placeholder={mode === "doodle" ? "add a short optional caption..." : "write what's been sitting inside you..."}
+                placeholder={
+                  mode === "doodle"
+                    ? "add a short optional caption..."
+                    : "write what's been sitting inside you..."
+                }
                 rows={mode === "doodle" ? 2 : 5}
                 autoFocus={mode === "text"}
                 className={`w-full bg-transparent resize-none outline-none text-sm leading-relaxed placeholder:text-black/15 serif text-black/80 ${mode === "doodle" ? "text-center italic" : ""}`}
@@ -531,7 +553,8 @@ export default function ConfessPage() {
               <div className="flex items-start gap-2 text-red-500 bg-red-50 rounded-xl px-3 py-2 mt-2 mb-2">
                 <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
                 <p className="text-[10px] font-medium leading-relaxed">
-                  {moderationCheck.message} — The highlighted words need to be removed.
+                  {moderationCheck.message} — The highlighted words need to be
+                  removed.
                 </p>
               </div>
             )}
@@ -765,7 +788,9 @@ export default function ConfessPage() {
                 <Sparkles size={24} className="text-rose-500" />
               </div>
             </div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3">Brewing Interrupted</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3">
+              Brewing Interrupted
+            </h3>
             <p className="text-[15px] text-rose-50 leading-relaxed max-w-[280px] serif italic">
               &ldquo;{moderationError.message}&rdquo;
             </p>
@@ -793,7 +818,9 @@ export default function ConfessPage() {
             (mode === "text" && wordCount > 500) ||
             isCustomTimeInvalid ||
             isCustomViewsInvalid ||
-            (mode === "text" && moderationCheck ? !moderationCheck.isClean : false)
+            (mode === "text" && moderationCheck
+              ? !moderationCheck.isClean
+              : false)
           }
           className="w-full mt-5 py-4 bg-black text-white rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-15 flex items-center justify-center gap-2"
         >
@@ -826,9 +853,9 @@ export default function ConfessPage() {
         </div>
       </main>
 
-      <RateLimitModal 
-        isOpen={showRateLimit} 
-        onClose={() => setShowRateLimit(false)} 
+      <RateLimitModal
+        isOpen={showRateLimit}
+        onClose={() => setShowRateLimit(false)}
         message={rateLimitMessage}
       />
     </div>

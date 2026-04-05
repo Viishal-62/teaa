@@ -60,13 +60,17 @@ export const VoiceConfessionCard = ({
   const toggleReaction = useMutation(api.reactions.toggle);
   const incrementView = useMutation(api.confessions.incrementView);
   const reactionCounts = useQuery(api.reactions.getCounts, { confessionId });
-  const totalReactions = useQuery(api.reactions.getTotalCount, { confessionId });
+  const totalReactions = useQuery(api.reactions.getTotalCount, {
+    confessionId,
+  });
   const visitorId = getVisitorId();
   const visitorReactions = useQuery(
     api.reactions.getVisitorReactions,
     visitorId ? { confessionId, visitorId } : "skip",
   );
-  const commentCount = useQuery(api.comments.countByConfession, { confessionId });
+  const commentCount = useQuery(api.comments.countByConfession, {
+    confessionId,
+  });
 
   const progressSpring = useSpring({
     width: duration ? (currentTime / duration) * 100 : 0,
@@ -93,7 +97,10 @@ export const VoiceConfessionCard = ({
         const wave = Math.sin(time * 3 + i * 0.6) * 0.15;
         const wave2 = Math.sin(time * 5 + i * 0.3) * 0.1;
         const base = norm < playedPct ? 0.25 : 0.08;
-        return Math.min(1, Math.max(0.04, base + headBoost * 0.5 + wave + wave2));
+        return Math.min(
+          1,
+          Math.max(0.04, base + headBoost * 0.5 + wave + wave2),
+        );
       });
 
     setBars(newBars);
@@ -142,7 +149,7 @@ export const VoiceConfessionCard = ({
       audio.pause();
     } else {
       audio.play().catch(console.error);
-      incrementView({ confessionId }).catch(() => { });
+      incrementView({ confessionId }).catch(() => {});
     }
     setIsPlaying(!isPlaying);
   };
@@ -178,9 +185,10 @@ export const VoiceConfessionCard = ({
   };
 
   const handleShare = useCallback(async () => {
-    const url = typeof window !== "undefined"
-      ? `${window.location.origin}/b/${boardSlug}/c/${confessionId}`
-      : "";
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/b/${boardSlug}/c/${confessionId}`
+        : "";
     if (navigator.share) {
       try {
         await navigator.share({
@@ -191,7 +199,7 @@ export const VoiceConfessionCard = ({
           url,
         });
         return;
-      } catch { }
+      } catch {}
     }
     await navigator.clipboard.writeText(url);
     setCopied(true);
@@ -205,7 +213,9 @@ export const VoiceConfessionCard = ({
 
   const formatTime = (s: number) => {
     if (!s || isNaN(s)) return "0:00";
-    return `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, "0")}`;
+    return `${Math.floor(s / 60)}:${Math.floor(s % 60)
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const progressPct = duration ? (currentTime / duration) * 100 : 0;
@@ -220,7 +230,8 @@ export const VoiceConfessionCard = ({
       <div
         className="relative rounded-2xl overflow-hidden border border-black/[0.06] shadow-sm hover:shadow-xl transition-shadow duration-500"
         style={{
-          background: "linear-gradient(168deg, #fefdfb 0%, #faf7f2 60%, #f5f0e8 100%)",
+          background:
+            "linear-gradient(168deg, #fefdfb 0%, #faf7f2 60%, #f5f0e8 100%)",
         }}
       >
         {/* Top accent line */}
@@ -237,7 +248,11 @@ export const VoiceConfessionCard = ({
             <div className="flex items-center gap-2.5 min-w-0">
               <motion.div
                 // animate={isPlaying ? { rotate: [0, 360] } : {}}
-                transition={isPlaying ? { repeat: Infinity, duration: 3, ease: "linear" } : {}}
+                transition={
+                  isPlaying
+                    ? { repeat: Infinity, duration: 3, ease: "linear" }
+                    : {}
+                }
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: `${catColor}12` }}
               >
@@ -249,7 +264,9 @@ export const VoiceConfessionCard = ({
                     {voiceTitle}
                   </p>
                 ) : (
-                  <p className="text-xs font-bold text-black/50">Voice Confession</p>
+                  <p className="text-xs font-bold text-black/50">
+                    Voice Confession
+                  </p>
                 )}
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span
@@ -275,11 +292,15 @@ export const VoiceConfessionCard = ({
           {/* ── Waveform ── */}
           <div
             className="rounded-xl p-3 mb-3"
-            style={{ background: `${catColor}06`, border: `1px solid ${catColor}0a` }}
+            style={{
+              background: `${catColor}06`,
+              border: `1px solid ${catColor}0a`,
+            }}
           >
             <div className="flex items-end justify-center gap-[2px] h-12 mb-3">
               {bars.map((h, i) => {
-                const played = progressPct > 0 && (i / BAR_COUNT) * 100 < progressPct;
+                const played =
+                  progressPct > 0 && (i / BAR_COUNT) * 100 < progressPct;
                 return (
                   <motion.div
                     key={i}
@@ -312,16 +333,28 @@ export const VoiceConfessionCard = ({
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 shadow-md"
                 style={{
                   background: `linear-gradient(135deg, ${catColor}, ${catColor}dd)`,
-                  boxShadow: isPlaying ? `0 3px 14px ${catColor}40` : `0 2px 8px ${catColor}25`,
+                  boxShadow: isPlaying
+                    ? `0 3px 14px ${catColor}40`
+                    : `0 2px 8px ${catColor}25`,
                 }}
               >
                 <AnimatePresence mode="wait">
                   {isPlaying ? (
-                    <motion.div key="p" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                    <motion.div
+                      key="p"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                    >
                       <Pause size={16} />
                     </motion.div>
                   ) : (
-                    <motion.div key="l" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                    <motion.div
+                      key="l"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                    >
                       <Play size={16} className="ml-0.5" />
                     </motion.div>
                   )}
@@ -332,7 +365,11 @@ export const VoiceConfessionCard = ({
                     className="absolute inset-0 rounded-full"
                     style={{ border: `2px solid ${catColor}` }}
                     animate={{ scale: [1, 1.35], opacity: [0.4, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeOut" }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 1.5,
+                      ease: "easeOut",
+                    }}
                   />
                 )}
               </motion.button>
@@ -374,11 +411,15 @@ export const VoiceConfessionCard = ({
                   onClick={(e) => handleReactionClick(type, e)}
                   className="flex flex-col items-center gap-0.5"
                 >
-                  <span className={`text-base transition-transform ${isActive ? "scale-110 drop-shadow" : ""}`}>
+                  <span
+                    className={`text-base transition-transform ${isActive ? "scale-110 drop-shadow" : ""}`}
+                  >
                     {info.emoji}
                   </span>
                   {count > 0 && (
-                    <span className="text-[7px] font-black text-black/35 tabular-nums">{count}</span>
+                    <span className="text-[7px] font-black text-black/35 tabular-nums">
+                      {count}
+                    </span>
                   )}
                 </motion.button>
               );
@@ -404,7 +445,9 @@ export const VoiceConfessionCard = ({
               >
                 <MessageCircle size={9} />
                 {commentCount !== undefined && commentCount > 0 ? (
-                  <span>{commentCount} {commentCount === 1 ? "Reply" : "Replies"}</span>
+                  <span>
+                    {commentCount} {commentCount === 1 ? "Reply" : "Replies"}
+                  </span>
                 ) : (
                   <span>Reply</span>
                 )}
@@ -441,14 +484,16 @@ export const VoiceConfessionCard = ({
         />
       </div>
 
-      {showRateLimit && typeof document !== "undefined" && createPortal(
-        <RateLimitModal 
-          isOpen={showRateLimit} 
-          onClose={() => setShowRateLimit(false)} 
-          message={rateLimitMessage}
-        />,
-        document.body
-      )}
+      {showRateLimit &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <RateLimitModal
+            isOpen={showRateLimit}
+            onClose={() => setShowRateLimit(false)}
+            message={rateLimitMessage}
+          />,
+          document.body,
+        )}
     </motion.div>
   );
 };

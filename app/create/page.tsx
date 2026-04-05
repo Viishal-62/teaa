@@ -122,7 +122,10 @@ export default function CreateBoard() {
         allowedReactions,
         sharePrompt,
         prompt: prompt.trim() || undefined,
-        bannedWords: bannedWordsInput.split(",").map(w => w.trim()).filter(w => !!w),
+        bannedWords: bannedWordsInput
+          .split(",")
+          .map((w) => w.trim())
+          .filter((w) => !!w),
       });
       setResult({ slug: res.slug, pin: !isPublic ? pin : undefined });
     } catch (error) {
@@ -354,7 +357,7 @@ export default function CreateBoard() {
                   Pick a catchy link (optional)
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {suggestedSlugs.map((s) => (
+                  {suggestedSlugs.map((s: any) => (
                     <button
                       key={s}
                       type="button"
@@ -497,8 +500,8 @@ export default function CreateBoard() {
                   className="w-full text-[11px] font-medium bg-white border border-red-100/50 rounded-xl px-4 py-3 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100/50 transition-all placeholder:text-black/10 resize-none"
                 />
                 <p className="text-[9px] text-red-900/30 font-medium mt-1.5 leading-relaxed">
-                  Confessions containing these words will be automatically hidden.
-                  Global restricted words are filtered by default.
+                  Confessions containing these words will be automatically
+                  hidden. Global restricted words are filtered by default.
                 </p>
               </div>
             )}

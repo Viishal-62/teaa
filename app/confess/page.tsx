@@ -8,7 +8,15 @@ import { CATEGORY_INFO, getVisitorId, parseConvexError } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import { VoiceConfessModal } from "@/app/components/VoiceConfessModal";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, ChevronDown, Mic, Type, Sparkles, Timer } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronDown,
+  Mic,
+  Type,
+  Sparkles,
+  Timer,
+} from "lucide-react";
 import RateLimitModal from "@/app/components/RateLimitModal";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -50,13 +58,7 @@ export default function GlobalConfessPage() {
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [isGlobal, setIsGlobal] = useState(true);
   const [disappearMode, setDisappearMode] = useState<
-    | "never"
-    | "5m"
-    | "24h"
-    | "7d"
-    | "views25"
-    | "custom-time"
-    | "custom-views"
+    "never" | "5m" | "24h" | "7d" | "views25" | "custom-time" | "custom-views"
   >("never");
   const [customExpireAt, setCustomExpireAt] = useState("");
   const [customViews, setCustomViews] = useState("");
@@ -81,7 +83,7 @@ export default function GlobalConfessPage() {
     api.confessions.checkModeration,
     debouncedText.trim().length > 2 && globalBoardId
       ? { text: debouncedText, boardId: globalBoardId }
-      : "skip"
+      : "skip",
   );
 
   // Get global board ID on mount
@@ -92,9 +94,7 @@ export default function GlobalConfessPage() {
     })();
   }, [getOrCreateGlobal]);
 
-
-
-  const selectedBoard = publicBoards?.find((b) => b._id === selectedBoardId);
+  const selectedBoard = publicBoards?.find((b: any) => b._id === selectedBoardId);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const parsedCustomExpireAt = customExpireAt
@@ -169,7 +169,7 @@ export default function GlobalConfessPage() {
       setSubmitted(true);
     } catch (error: any) {
       const parsedErr = parseConvexError(error);
-      
+
       if (parsedErr?.type === "moderation_error") {
         setModerationError({
           flaggedWords: parsedErr.flaggedWords || [],
@@ -286,10 +286,11 @@ export default function GlobalConfessPage() {
             <button
               type="button"
               onClick={() => setConfessType("text")}
-              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${confessType === "text"
+              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                confessType === "text"
                   ? "bg-black text-white shadow-md shadow-black/10"
                   : "bg-[#faf8f5] text-black/40 border border-black/5 hover:border-black/15"
-                }`}
+              }`}
             >
               <Type size={14} />
               Write
@@ -300,10 +301,11 @@ export default function GlobalConfessPage() {
                 setConfessType("voice");
                 setShowVoiceModal(true);
               }}
-              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${confessType === "voice"
+              className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                confessType === "voice"
                   ? "bg-black text-white shadow-md shadow-black/10"
                   : "bg-[#faf8f5] text-black/40 border border-black/5 hover:border-black/15"
-                }`}
+              }`}
             >
               <Mic size={14} />
               Record
@@ -327,7 +329,14 @@ export default function GlobalConfessPage() {
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
                 Quick starters:
               </p>
-              <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+              <div
+                className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                }}
+              >
                 <style jsx>{`
                   ::-webkit-scrollbar {
                     display: none;
@@ -349,28 +358,35 @@ export default function GlobalConfessPage() {
             <div className="px-5 pb-0">
               <div className="relative">
                 {/* Highlight overlay */}
-                {moderationCheck && !moderationCheck.isClean && text.length > 0 && (
-                  <div
-                    className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
-                    style={{ color: "transparent", padding: "0" }}
-                    aria-hidden
-                  >
-                    {/* Reuse render function or inline it */}
-                    {text.split("").map((char, i) => {
-                      const isFlagged = moderationCheck.flaggedWords.some(
-                        (fw: { word: string; start: number; end: number }) => i >= fw.start && i < fw.end
-                      );
-                      return (
-                        <span
-                          key={i}
-                          className={isFlagged ? "bg-red-100 text-red-600 underline decoration-red-500 decoration-wavy decoration-2 underline-offset-2" : ""}
-                        >
-                          {char}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
+                {moderationCheck &&
+                  !moderationCheck.isClean &&
+                  text.length > 0 && (
+                    <div
+                      className="absolute inset-0 pointer-events-none text-sm leading-relaxed serif whitespace-pre-wrap break-words overflow-hidden"
+                      style={{ color: "transparent", padding: "0" }}
+                      aria-hidden
+                    >
+                      {/* Reuse render function or inline it */}
+                      {text.split("").map((char, i) => {
+                        const isFlagged = moderationCheck.flaggedWords.some(
+                          (fw: { word: string; start: number; end: number }) =>
+                            i >= fw.start && i < fw.end,
+                        );
+                        return (
+                          <span
+                            key={i}
+                            className={
+                              isFlagged
+                                ? "bg-red-100 text-red-600 underline decoration-red-500 decoration-wavy decoration-2 underline-offset-2"
+                                : ""
+                            }
+                          >
+                            {char}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 <textarea
                   value={text}
                   onChange={(e) => {
@@ -386,9 +402,10 @@ export default function GlobalConfessPage() {
               {/* Real-time warning */}
               {moderationCheck && !moderationCheck.isClean && (
                 <div className="flex items-start gap-2 text-red-500 bg-red-50 rounded-xl px-3 py-2 mt-2">
-                  < Sparkles size={14} className="flex-shrink-0 mt-0.5" />
+                  <Sparkles size={14} className="flex-shrink-0 mt-0.5" />
                   <p className="text-[10px] font-medium leading-relaxed">
-                    {moderationCheck.message} — Please remove the highlighted words.
+                    {moderationCheck.message} — Please remove the highlighted
+                    words.
                   </p>
                 </div>
               )}
@@ -436,10 +453,11 @@ export default function GlobalConfessPage() {
                       onClick={() =>
                         setDisappearMode(opt.key as typeof disappearMode)
                       }
-                      className={`rounded-xl border p-3 text-left transition-all ${active
+                      className={`rounded-xl border p-3 text-left transition-all ${
+                        active
                           ? "bg-black text-white border-black shadow-md shadow-black/10"
                           : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                        }`}
+                      }`}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-wider">
                         {opt.label}
@@ -459,10 +477,11 @@ export default function GlobalConfessPage() {
                 <button
                   type="button"
                   onClick={() => setDisappearMode("custom-time")}
-                  className={`w-full rounded-xl border p-3 text-left transition-all ${disappearMode === "custom-time"
+                  className={`w-full rounded-xl border p-3 text-left transition-all ${
+                    disappearMode === "custom-time"
                       ? "bg-black text-white border-black shadow-md shadow-black/10"
                       : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                    }`}
+                  }`}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wider">
                     Custom Time
@@ -477,10 +496,11 @@ export default function GlobalConfessPage() {
                 <button
                   type="button"
                   onClick={() => setDisappearMode("custom-views")}
-                  className={`w-full rounded-xl border p-3 text-left transition-all ${disappearMode === "custom-views"
+                  className={`w-full rounded-xl border p-3 text-left transition-all ${
+                    disappearMode === "custom-views"
                       ? "bg-black text-white border-black shadow-md shadow-black/10"
                       : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                    }`}
+                  }`}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wider">
                     Custom Views
@@ -502,10 +522,11 @@ export default function GlobalConfessPage() {
                     type="datetime-local"
                     value={customExpireAt}
                     onChange={(e) => setCustomExpireAt(e.target.value)}
-                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${isCustomTimeInvalid
+                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                      isCustomTimeInvalid
                         ? "border-red-300 focus:ring-2 focus:ring-red-100"
                         : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                      }`}
+                    }`}
                   />
                   {isCustomTimeInvalid && (
                     <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
@@ -527,10 +548,11 @@ export default function GlobalConfessPage() {
                     value={customViews}
                     onChange={(e) => setCustomViews(e.target.value)}
                     placeholder="e.g. 73"
-                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${isCustomViewsInvalid
+                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                      isCustomViewsInvalid
                         ? "border-red-300 focus:ring-2 focus:ring-red-100"
                         : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                      }`}
+                    }`}
                   />
                   {isCustomViewsInvalid && (
                     <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
@@ -555,10 +577,11 @@ export default function GlobalConfessPage() {
                       key={cat}
                       type="button"
                       onClick={() => setCategory(cat)}
-                      className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${isSelected
+                      className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${
+                        isSelected
                           ? "text-white shadow-sm"
                           : "bg-black/[0.02] text-black/40 border border-black/5 hover:border-black/10 hover:text-black/60"
-                        }`}
+                      }`}
                       style={
                         isSelected
                           ? { background: catInfo?.color ?? "#333" }
@@ -612,8 +635,9 @@ export default function GlobalConfessPage() {
                         setSelectedBoardId("");
                         setShowBoardPicker(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors rounded-t-xl ${!selectedBoardId ? "bg-black/[0.03]" : ""
-                        }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors rounded-t-xl ${
+                        !selectedBoardId ? "bg-black/[0.03]" : ""
+                      }`}
                     >
                       <span className="text-sm">🌍</span>
                       <div className="flex-1">
@@ -639,8 +663,9 @@ export default function GlobalConfessPage() {
                           setSelectedBoardId(board._id);
                           setShowBoardPicker(false);
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors ${i === publicBoards.length - 1 ? "rounded-b-xl" : ""
-                          } ${selectedBoardId === board._id ? "bg-black/[0.03]" : ""}`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/[0.02] transition-colors ${
+                          i === publicBoards.length - 1 ? "rounded-b-xl" : ""
+                        } ${selectedBoardId === board._id ? "bg-black/[0.03]" : ""}`}
                       >
                         <span className="text-sm">🫖</span>
                         <div className="flex-1 min-w-0">
@@ -683,12 +708,14 @@ export default function GlobalConfessPage() {
                   <button
                     type="button"
                     onClick={() => setIsGlobal(!isGlobal)}
-                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${isGlobal ? "bg-black" : "bg-black/10"
-                      }`}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                      isGlobal ? "bg-black" : "bg-black/10"
+                    }`}
                   >
                     <div
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${isGlobal ? "translate-x-5" : ""
-                        }`}
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
+                        isGlobal ? "translate-x-5" : ""
+                      }`}
                     />
                   </button>
                 </div>
@@ -724,7 +751,9 @@ export default function GlobalConfessPage() {
                 <Sparkles size={24} className="text-rose-500" />
               </div>
             </div>
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3">Brewing Interrupted</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/50 mb-3">
+              Brewing Interrupted
+            </h3>
             <p className="text-[15px] text-rose-50 leading-relaxed max-w-[280px] serif italic">
               &ldquo;{moderationError.message}&rdquo;
             </p>
@@ -768,9 +797,9 @@ export default function GlobalConfessPage() {
         </p>
       </main>
 
-      <RateLimitModal 
-        isOpen={showRateLimit} 
-        onClose={() => setShowRateLimit(false)} 
+      <RateLimitModal
+        isOpen={showRateLimit}
+        onClose={() => setShowRateLimit(false)}
         message={rateLimitMessage}
       />
     </div>
