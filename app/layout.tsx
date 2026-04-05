@@ -33,7 +33,7 @@ export const metadata: Metadata = {
       "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
     images: [
       {
-        url: "/og-image.jpg", // Add a nice image at public/og-image.jpg for social sharing preview!
+        url: "/og-image.jpeg", // Add a nice image at public/og-image.jpg for social sharing preview!
         width: 1200,
         height: 630,
         alt: "Teaa - Anonymous Confessions",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: "Teaa 🫣 — Anonymous Confessions",
     description:
       "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.jpeg"],
   },
   robots: {
     index: true,
