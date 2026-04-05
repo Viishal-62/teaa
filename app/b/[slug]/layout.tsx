@@ -75,7 +75,7 @@ export default async function BoardLayout({
         name: `${boardData.name} — Teaaa 🫖`,
         description:
           boardData.tagline || `Anonymous confessions on ${boardData.name}`,
-        url: `https://teaa.xyz/b/${slug}`,
+        url: `https://www.teaadrop.xyz/b/${slug}`,
       }
     : null;
 

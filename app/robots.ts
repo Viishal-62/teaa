@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/_next/"],
     },
-    sitemap: "https://teaa.xyz/sitemap.xml",
+    sitemap: "https://www.teaadrop.xyz/sitemap.xml",
   };
 }

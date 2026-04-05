@@ -4,7 +4,7 @@ import ConvexClientProvider from "./ConvexClientProvider";
 import NotificationCenter from "./components/NotificationCenter";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://teaa.xyz"),
+  metadataBase: new URL("https://www.teaadrop.xyz"),
   title: {
     default: "Teaa 🫣 — Anonymous Confessions & Secret Boards",
     template: "%s | Teaa",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://teaa.xyz",
+    url: "https://www.teaadrop.xyz",
     siteName: "Teaa 🫣",
     title: "Teaa 🫣 — Anonymous Confessions",
     description:
@@ -72,12 +72,12 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Teaa 🫣",
-    url: "https://teaa.xyz",
+    url: "https://www.teaadrop.xyz",
     description:
       "The ultimate platform for anonymous confessions. Spill your secrets, create personal confession boards.",
     potentialAction: {
       "@type": "SearchAction",
-      target: "https://teaa.xyz/explore?category={search_term_string}",
+      target: "https://www.teaadrop.xyz/explore?category={search_term_string}",
       "query-input": "required name=search_term_string",
     },
   };
