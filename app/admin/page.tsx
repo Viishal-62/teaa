@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 
 // ─── Constants ───
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "teaa-admin-2026";
 
 const TABS = [
   { id: "boards", label: "Boards", icon: LayoutDashboard },
@@ -173,16 +172,31 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState("");
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pw === ADMIN_PASSWORD) {
-      sessionStorage.setItem("teaa-admin-auth", "1");
-      onUnlock();
-    } else {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem("teaa-admin-auth", "1");
+        onUnlock();
+      } else {
+        setError(true);
+        setShake(true);
+        setTimeout(() => setShake(false), 600);
+      }
+    } catch {
       setError(true);
       setShake(true);
       setTimeout(() => setShake(false), 600);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -271,7 +285,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
               onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
               onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
             >
-              Unlock Dashboard
+              {loading ? "Verifying..." : "Unlock Dashboard"}
             </button>
           </form>
         </GlassPanel>
