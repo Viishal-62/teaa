@@ -20,6 +20,7 @@ import {
   Volume2,
   Menu,
   X,
+
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -1440,56 +1441,166 @@ export default function Home() {
       </section>
 
       {/* ── SEO BOTTOM TEXT ── */}
-      <section className="py-12 px-4 sm:px-6 bg-[#faf8f5]">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-[10px] text-black/30 leading-loose font-medium max-w-2xl mx-auto border-t border-black/5 pt-10">
-            Teaaa is the internet's most elegant{" "}
-            <strong className="font-bold font-serif text-black/40">
-              anonymous confession platform
-            </strong>
-            . Whether you want to share{" "}
-            <strong className="font-bold text-black/40">secret admirer</strong>{" "}
-            letters, listen to raw{" "}
-            <strong className="font-bold text-black/40">
-              anonymous voice drops
-            </strong>
-            , or read chronological
-            <strong className="font-bold text-black/40">
-              {" "}
-              gossip and deep spills
-            </strong>
-            , Teaaa provides a totally untraceable, account-free sanctuary.
-            Build your own anonymous boards for schools, colleges, and
-            communities. Free from toxic algorithms, focused entirely on
-            authentic human connection.
-          </p>
+      <section className="py-16 px-4 sm:px-6 bg-[#faf8f5]">
+        <div className="max-w-4xl mx-auto border-t border-black/5 pt-12">
+          {/* Main heading for SEO */}
+          <h2 className="text-center text-lg font-black serif text-black/20 mb-8">
+            The Best Anonymous Confession Platform — NGL Alternative
+          </h2>
+
+          <div className="space-y-5 text-[10px] text-black/30 leading-loose font-medium max-w-2xl mx-auto">
+            {/* Paragraph 1: NGL/competitor positioning */}
+            <p>
+              Looking for the{" "}
+              <strong className="font-bold text-black/40">
+                best NGL alternative
+              </strong>
+              ? Teaaa is a free, modern{" "}
+              <strong className="font-bold text-black/40">
+                anonymous confession app
+              </strong>{" "}
+              that goes way beyond simple anonymous Q&A. Unlike NGL, Sarahah, LMK, or Yolo, Teaaa lets you create fully customizable{" "}
+              <strong className="font-bold text-black/40">
+                anonymous confession boards
+              </strong>{" "}
+              with text confessions, voice drops, hand-drawn doodles, long-form stories, and secret admirer letters — all without any sign-up or login required.
+            </p>
+
+            {/* Paragraph 2: How it works / features */}
+            <p>
+              Want to{" "}
+              <strong className="font-bold text-black/40">
+                send an anonymous message
+              </strong>{" "}
+              to someone? Just create your personal{" "}
+              <strong className="font-bold text-black/40">
+                confession page
+              </strong>
+              , share the link on Instagram, Snapchat, WhatsApp, or any social media, and let people{" "}
+              <strong className="font-bold text-black/40">
+                confess anonymously
+              </strong>
+              . Every message is 100% untraceable. Teaaa is the perfect{" "}
+              <strong className="font-bold text-black/40">
+                anonymous message link for Instagram
+              </strong>{" "}
+              stories — just paste your board URL and watch the confessions pour in. No accounts. No data collection. No IP tracking.
+            </p>
+
+            {/* Paragraph 3: Voice & unique features */}
+            <p>
+              What makes Teaaa the best{" "}
+              <strong className="font-bold text-black/40">
+                confession website like NGL
+              </strong>
+              ? We offer features no other anonymous app has:{" "}
+              <strong className="font-bold text-black/40">
+                anonymous voice confessions
+              </strong>{" "}
+              (record up to 30 seconds of audio anonymously),{" "}
+              <strong className="font-bold text-black/40">
+                doodle confessions
+              </strong>{" "}
+              (draw and sketch your feelings on a digital canvas),{" "}
+              <strong className="font-bold text-black/40">
+                Deep Spills
+              </strong>{" "}
+              (long-form anonymous stories with AI-generated cover art), and{" "}
+              <strong className="font-bold text-black/40">
+                secret admirer messages
+              </strong>{" "}
+              with immersive ambient music. Plus, our disappearing tea feature lets confessions self-destruct after a set time or view count.
+            </p>
+
+            {/* Paragraph 4: Community / use cases */}
+            <p>
+              Build your own{" "}
+              <strong className="font-bold text-black/40">
+                anonymous confession board for college
+              </strong>
+              , school, university, friend group, or any online community. Teaaa is trusted as the go-to{" "}
+              <strong className="font-bold text-black/40">
+                online confession box
+              </strong>{" "}
+              and{" "}
+              <strong className="font-bold text-black/40">
+                anonymous gossip app
+              </strong>{" "}
+              by thousands of users. With built-in AI moderation, creator-verified replies, downloadable confession cards, and live inbox notifications — Teaaa is the most feature-rich{" "}
+              <strong className="font-bold text-black/40">
+                free anonymous messaging app
+              </strong>{" "}
+              available today. Whether you want to{" "}
+              <strong className="font-bold text-black/40">
+                send secret messages online
+              </strong>
+              , create an{" "}
+              <strong className="font-bold text-black/40">
+                ask me anything anonymous
+              </strong>{" "}
+              page, or just spill the tea — Teaaa is where unfiltered truth lives.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
       <footer className="py-10 border-t border-black/5 px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <span className="text-sm font-black serif">🫖 teaaa</span>
-          <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/10">
-            Anonymous. Unfiltered. Always.
-          </p>
-          <div className="flex gap-6">
-            {[
-              { href: "/explore", label: "Explore" },
-              { href: "/forum", label: "Community" },
-              { href: "/explore/voice", label: "Voice" },
-              { href: "/confess", label: "Confess" },
-              { href: "/spill/create", label: "Write Spill" },
-              { href: "/create", label: "Create" },
-            ].map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
-              >
-                {l.label}
-              </Link>
-            ))}
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
+          {/* Top row: brand + tagline + links */}
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
+            <span className="text-sm font-black serif">🫖 teaaa</span>
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/10">
+              Anonymous. Unfiltered. Always.
+            </p>
+            <div className="flex gap-6 flex-wrap justify-center">
+              {[
+                { href: "/explore", label: "Explore" },
+                { href: "/forum", label: "Community" },
+                { href: "/explore/voice", label: "Voice" },
+                { href: "/confess", label: "Confess" },
+                { href: "/spill/create", label: "Write Spill" },
+                { href: "/create", label: "Create" },
+              ].map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="w-full border-t border-black/[0.04]" />
+
+          {/* Bottom row: created by + social icons */}
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-medium text-black/20">
+              Created by{" "}
+              <span className="font-bold text-black/30">Vishal</span>
+            </span>
+            <span className="w-[1px] h-3 bg-black/10" />
+            <a
+              href="https://www.linkedin.com/in/vishal-pandey-3835a9330/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black/15 hover:text-[#0077B5] transition-colors"
+              aria-label="Vishal's LinkedIn"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a
+              href="https://github.com/viishal-62"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black/15 hover:text-black transition-colors"
+              aria-label="Vishal's GitHub"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            </a>
           </div>
         </div>
       </footer>

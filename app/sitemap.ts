@@ -5,14 +5,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: "https://www.teaadrop.xyz",
       lastModified: new Date(),
-      changeFrequency: "yearly",
+      changeFrequency: "daily",
       priority: 1,
     },
     {
       url: "https://www.teaadrop.xyz/explore",
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: "https://www.teaadrop.xyz/confess",
@@ -38,5 +38,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily",
       priority: 0.8,
     },
+    {
+      url: "https://www.teaadrop.xyz/spill/create",
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+
   ];
 }
