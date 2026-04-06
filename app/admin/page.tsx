@@ -14,6 +14,7 @@ import {
   Lightbulb,
   MessageCircle,
   Eye,
+  EyeOff,
   Trash2,
   ChevronDown,
   Activity,
@@ -170,6 +171,7 @@ function GlassPanel({
 // ═══════════════════════════════════════════════════
 function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState(false);
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -243,25 +245,51 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
             Enter the admin password to continue
           </p>
           <form onSubmit={handleSubmit}>
-            <input
-              type="password"
-              value={pw}
-              onChange={(e) => { setPw(e.target.value); setError(false); }}
-              placeholder="Password"
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "14px 16px",
-                borderRadius: 12,
-                border: `1px solid ${error ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`,
-                background: "rgba(255,255,255,0.05)",
-                color: "#fff",
-                fontSize: 15,
-                outline: "none",
-                transition: "border-color 0.2s",
-                boxSizing: "border-box",
-              }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPw ? "text" : "password"}
+                value={pw}
+                onChange={(e) => { setPw(e.target.value); setError(false); }}
+                placeholder="Password"
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "14px 44px 14px 16px",
+                  borderRadius: 12,
+                  border: `1px solid ${error ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`,
+                  background: "rgba(255,255,255,0.05)",
+                  color: "#fff",
+                  fontSize: 15,
+                  outline: "none",
+                  transition: "border-color 0.2s",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.35)",
+                  padding: 4,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "color 0.2s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
+                onMouseOut={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                aria-label={showPw ? "Hide password" : "Show password"}
+              >
+                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {error && (
               <p style={{ color: "#ef4444", fontSize: 13, margin: "12px 0 0", textAlign: "left" }}>
                 Wrong password. Try again.
