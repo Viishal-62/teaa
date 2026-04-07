@@ -759,7 +759,7 @@ function ExplorePageContent() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 bg-black/40 z-[9998] backdrop-blur-sm"
+                                className="fixed inset-0 bg-black/40 z-[9998]"
                                 onClick={() => setShowContextFilters(false)}
                                 style={{ touchAction: 'none' }}
                               />
@@ -767,14 +767,14 @@ function ExplorePageContent() {
                                 initial={{ y: "100%" }}
                                 animate={{ y: 0 }}
                                 exit={{ y: "100%" }}
-                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                                className="fixed bottom-0 left-0 right-0 z-[9999] rounded-t-[2rem] bg-white text-left px-4 pt-1 shadow-2xl max-h-[85dvh] overflow-y-auto w-full overscroll-contain overflow-x-hidden"
-                                style={{ paddingBottom: "env(safe-area-inset-bottom, 32px)" }}
+                                transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                                className="fixed bottom-0 left-0 right-0 z-[9999] rounded-t-[2rem] bg-white text-left shadow-2xl max-h-[75dvh] flex flex-col w-full overscroll-contain"
+                                style={{ paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
                               >
-                                <div className="sticky top-0 bg-white z-10 pt-4 pb-2 border-b border-black/5 flex justify-center cursor-ns-resize" onClick={() => setShowContextFilters(false)}>
+                                <div className="flex justify-center cursor-ns-resize pt-3 pb-2 flex-shrink-0" onClick={() => setShowContextFilters(false)}>
                                   <div className="w-12 h-1.5 bg-black/10 rounded-full" />
                                 </div>
-                                <div className="py-4 pb-12 w-full">
+                                <div className="px-4 pb-6 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
                                   {ContextFilterUI}
                                 </div>
                               </motion.div>

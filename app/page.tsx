@@ -188,16 +188,16 @@ export default function Home() {
       >
         {/* Subtle noise/grid overlay */}
         <div
-          className="absolute inset-0 z-0 opacity-[0.35] mix-blend-overlay pointer-events-none"
+          className="absolute inset-0 z-0 opacity-[0.35] mix-blend-overlay pointer-events-none hidden sm:block"
           style={{
             backgroundImage:
               "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')",
           }}
         ></div>
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_20%,transparent_100%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_20%,transparent_100%)] pointer-events-none hidden sm:block" />
 
         {/* ── Mesh gradient background ── */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 hidden sm:block">
           <motion.div
             animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
             transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
@@ -226,7 +226,7 @@ export default function Home() {
 
         {/* Cursor interactive glow */}
         <motion.div
-          className="absolute z-0 pointer-events-none w-[500px] h-[500px] rounded-full mix-blend-screen opacity-[0.15]"
+          className="absolute z-0 pointer-events-none w-[500px] h-[500px] rounded-full mix-blend-screen opacity-[0.15] hidden md:block"
           style={{
             background: "radial-gradient(circle, #ff0080, transparent 60%)",
             x: smoothX,
@@ -368,25 +368,25 @@ export default function Home() {
               transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
               className="flex justify-center mb-8"
             >
-              <div className="p-[1px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm inline-block select-none">
-                <div className="bg-[#faf8f5] rounded-full px-4 py-1.5 flex items-center gap-3">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500">
+              <div className="p-[1px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm inline-block select-none max-w-[calc(100vw-2rem)]">
+                <div className="bg-[#faf8f5] rounded-full px-3 sm:px-4 py-1.5 flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500 flex-shrink-0">
                     Trending
                   </span>
-                  <div className="w-px h-3 bg-black/10" />
-                  <div className="flex items-center gap-3">
+                  <div className="w-px h-3 bg-black/10 flex-shrink-0" />
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     {contextDistribution.cities.slice(0, 1).map((city) => (
-                      <Link key={city.key} href={`/explore?city=${encodeURIComponent(city.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                      <Link key={city.key} href={`/explore?city=${encodeURIComponent(city.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1 whitespace-nowrap">
                         <MapPin size={10} className="text-blue-500" /> {city.key}
                       </Link>
                     ))}
                     {contextDistribution.professions.slice(0, 1).map((prof) => (
-                      <Link key={prof.key} href={`/explore?profession=${encodeURIComponent(prof.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                      <Link key={prof.key} href={`/explore?profession=${encodeURIComponent(prof.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1 whitespace-nowrap">
                         <Briefcase size={10} className="text-amber-500" /> {prof.key}
                       </Link>
                     ))}
                     {contextDistribution.contexts.slice(0, 1).map((ctx) => (
-                      <Link key={ctx.key} href={`/explore?context=${encodeURIComponent(ctx.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                      <Link key={ctx.key} href={`/explore?context=${encodeURIComponent(ctx.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1 whitespace-nowrap">
                         <Heart size={10} className="text-purple-500" /> {ctx.key}
                       </Link>
                     ))}
@@ -404,7 +404,7 @@ export default function Home() {
                 heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
               }
               transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-black text-black tracking-tighter"
+              className="text-[2.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-black text-black tracking-tighter"
             >
               Unfiltered.
             </motion.h1>
@@ -415,9 +415,9 @@ export default function Home() {
                 heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
               }
               transition={{ delay: 0.35, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[3rem] sm:text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-serif italic tracking-tight relative -mt-3 sm:-mt-5 lg:-mt-6 z-10"
+              className="text-[1.75rem] sm:text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-serif italic tracking-tight relative -mt-1 sm:-mt-5 lg:-mt-6 z-10"
             >
-              <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm px-4">
+              <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm px-1 sm:px-4">
                 Raw. Anonymous.
               </span>
             </motion.h1>
