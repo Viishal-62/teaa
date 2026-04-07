@@ -3,6 +3,8 @@ import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 import NotificationCenter from "./components/NotificationCenter";
 import { Analytics } from "@vercel/analytics/next";
+import BottomNav from "./components/BottomNav";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.teaadrop.xyz"),
@@ -143,12 +145,35 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#111111" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Teaa" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="min-h-full flex flex-col">
         <ConvexClientProvider>
           {children}
           <NotificationCenter />
+          <BottomNav />
         </ConvexClientProvider>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: "#111",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "16px",
+              fontSize: "13px",
+              fontWeight: 600,
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+              padding: "14px 20px",
+            },
+          }}
+          offset={80}
+        />
         <Analytics />
       </body>
     </html>

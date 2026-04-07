@@ -21,6 +21,7 @@ export default defineSchema({
     aiSummary: v.optional(v.string()), // AI Vibe summary
     aiSummaryUpdatedAt: v.optional(v.number()), // For caching
     bannedWords: v.optional(v.array(v.string())), // Creator-defined banned words
+    contentType: v.optional(v.string()), // Added to fix validation crash
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
@@ -46,6 +47,10 @@ export default defineSchema({
     isFlagged: v.optional(v.boolean()), // Auto-flagged for moderation
     flagReason: v.optional(v.string()), // Reason for flagging
     visitorId: v.optional(v.string()), // For rate limiting
+    contentType: v.optional(v.string()), // "confession" | "question"
+    cityId: v.optional(v.string()), // Added to fix validation crash
+    contextId: v.optional(v.string()), // Added to fix validation crash
+    professionId: v.optional(v.string()), // Added to fix validation crash
     createdAt: v.number(),
   })
     .index("by_boardId", ["boardId"])

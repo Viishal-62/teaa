@@ -13,6 +13,9 @@ interface CardDownloadRendererProps {
     category: string;
     displayName: string;
     views?: number;
+    cityId?: string;
+    professionId?: string;
+    contextId?: string;
   };
   totalReactions?: number;
   reactionCounts?: Record<string, number>;
@@ -91,6 +94,20 @@ const CardDownloadRenderer = forwardRef<
               >
                 {catInfo?.label ?? confession.category}
               </span>
+              {/* Context Chips */}
+              {(confession.cityId || confession.professionId || confession.contextId) && (
+                <div style={{ display: "flex", gap: "6px", marginTop: "12px", flexWrap: "wrap", justifyContent: "center" }}>
+                  {confession.cityId && (
+                    <span style={{ fontSize: "9px", padding: "4px 8px", borderRadius: "12px", background: "rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>📍 {confession.cityId}</span>
+                  )}
+                  {confession.professionId && (
+                    <span style={{ fontSize: "9px", padding: "4px 8px", borderRadius: "12px", background: "rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>💼 {confession.professionId}</span>
+                  )}
+                  {confession.contextId && (
+                    <span style={{ fontSize: "9px", padding: "4px 8px", borderRadius: "12px", background: "rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}>🫂 {confession.contextId}</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Confession content */}

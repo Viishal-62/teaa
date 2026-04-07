@@ -550,9 +550,12 @@ function EndSlide({
     return id;
   });
 
-  const reactionCounts = useQuery(api.spillReactions.getCounts, {
+  const reactionCountsArray = useQuery(api.spillReactions.getCounts, {
     spillId: spill._id,
   });
+  const reactionCounts = reactionCountsArray 
+    ? Object.fromEntries(reactionCountsArray.map(r => [r.type, r.count])) 
+    : undefined;
   const myReactions = useQuery(
     api.spillReactions.getVisitorReactions,
     visitorId ? { spillId: spill._id, visitorId } : "skip",

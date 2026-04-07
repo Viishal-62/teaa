@@ -16,6 +16,9 @@ interface CardActionsProps {
     category: string;
     displayName: string;
     views?: number;
+    cityId?: string;
+    professionId?: string;
+    contextId?: string;
   };
   boardSlug: string;
   totalReactions?: number;

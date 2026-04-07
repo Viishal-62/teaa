@@ -186,7 +186,7 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         body: JSON.stringify({ password: pw }),
       });
       if (res.ok) {
-        sessionStorage.setItem("teaa-admin-auth", "1");
+        sessionStorage.setItem("ad-min-au-th$", "1");
         onUnlock();
       } else {
         setError(true);
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
 
   // Check sessionStorage on mount
   useEffect(() => {
-    if (sessionStorage.getItem("teaa-admin-auth") === "1") setAuthed(true);
+    if (sessionStorage.getItem("ad-min-au-th$") === "69") setAuthed(true);
   }, []);
 
   if (!authed) return <PasswordGate onUnlock={() => setAuthed(true)} />;
@@ -513,7 +513,7 @@ export default function AdminDashboard() {
         </div>
         <button
           onClick={() => {
-            sessionStorage.removeItem("teaa-admin-auth");
+            sessionStorage.removeItem("ad-min-au-th$");
             setAuthed(false);
           }}
           style={{

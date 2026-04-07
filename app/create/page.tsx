@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import { getCreatorToken, REACTION_INFO, SHARE_PROMPTS } from "@/app/lib/utils";
-import { ArrowRight, Check, Copy, Home, Lock } from "lucide-react";
+import { ArrowRight, Check, Copy, Home, Lock, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import Link from "next/link";
 
 const THEMES = [
@@ -69,11 +71,11 @@ export default function CreateBoard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSlug, setSelectedSlug] = useState("");
   const [allowedReactions, setAllowedReactions] = useState<string[]>([
-    "holding-you",
-    "feels-heavy",
-    "youll-be-ok",
-    "no-it-burns",
+    "❤️",
+    "🔥",
+    "😂",
   ]);
+  const [editingEmojiIndex, setEditingEmojiIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -82,10 +84,9 @@ export default function CreateBoard() {
         setBoardType("secret-admirer");
         setTheme("midnight-rose");
         setAllowedReactions([
-          "blushing",
-          "butterflies",
-          "crying-admirer",
-          "giggling",
+          "💝",
+          "🦋",
+          "🥺",
         ]);
       }
     }
@@ -96,6 +97,7 @@ export default function CreateBoard() {
     null,
   );
   const [copied, setCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const suggestedSlugs =
     useQuery(api.boards.suggestSlugs, { name: name.trim() }) || [];
@@ -151,7 +153,7 @@ export default function CreateBoard() {
   if (result) {
     const boardUrl = `${window.location.origin}/b/${result.slug}`;
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 sm:p-5 page-enter bg-[#faf8f5]">
+      <div className="min-h-[100dvh] flex items-center justify-center p-4 sm:p-5 page-enter bg-[#faf8f5]">
         <div className="max-w-sm w-full">
           <div className="bg-white rounded-2xl border border-black/5 p-8 shadow-xl shadow-black/[0.03]">
             <div className="text-center mb-6">
@@ -240,7 +242,7 @@ export default function CreateBoard() {
 
   // ── Create form ──
   return (
-    <div className="min-h-screen page-enter bg-[#faf8f5] text-black">
+    <div className="min-h-[100dvh] page-enter bg-[#faf8f5] text-black">
       {/* Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 bg-[#faf8f5]/85 backdrop-blur-xl border-b border-black/5">
         <Link
@@ -285,10 +287,9 @@ export default function CreateBoard() {
                 setBoardType("default");
                 setTheme("noir");
                 setAllowedReactions([
-                  "holding-you",
-                  "feels-heavy",
-                  "youll-be-ok",
-                  "no-it-burns",
+                  "❤️",
+                  "🔥",
+                  "😂",
                 ]);
               }}
               className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
@@ -305,10 +306,9 @@ export default function CreateBoard() {
                 setBoardType("secret-admirer");
                 setTheme("midnight-rose");
                 setAllowedReactions([
-                  "blushing",
-                  "butterflies",
-                  "crying-admirer",
-                  "giggling",
+                  "💝",
+                  "🦋",
+                  "🥺",
                 ]);
               }}
               className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
@@ -393,12 +393,37 @@ export default function CreateBoard() {
               />
             </div>
 
-            {/* Confession Prompt */}
-            <div>
-              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
-                Viewer Prompt (Optional)
-              </label>
-              <input
+            {/* Advanced Settings Toggle */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="w-full py-3 px-4 border border-black/5 hover:border-black/15 bg-[#faf8f5] hover:bg-black/[0.02] rounded-xl flex items-center justify-between transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md bg-black/5 flex items-center justify-center text-black/40 group-hover:text-black/60 transition-colors">
+                    <Settings2 size={12} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-black/60 group-hover:text-black transition-colors">
+                    Advanced Settings
+                  </span>
+                </div>
+                {showAdvanced ? (
+                  <ChevronUp size={14} className="text-black/30 group-hover:text-black/50 transition-transform" />
+                ) : (
+                  <ChevronDown size={14} className="text-black/30 group-hover:text-black/50 transition-transform" />
+                )}
+              </button>
+            </div>
+
+            {showAdvanced && (
+              <div className="space-y-6 pt-4 border-t border-black/5 animate-in fade-in slide-in-from-top-2 duration-300">
+                {/* Confession Prompt */}
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                    Viewer Prompt (Optional)
+                  </label>
+                  <input
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -411,48 +436,47 @@ export default function CreateBoard() {
               />
             </div>
 
-            {/* Custom Reactions */}
+            {/* Custom Reactions (Default Emojis) */}
             <div>
               <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
-                Choose 4 Reactions for your board
+                Default Board Reactions (Tap to change)
               </label>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(REACTION_INFO)
-                  .filter(([k]) => k !== "me-too")
-                  .map(([k, v]) => {
-                    const isSelected = allowedReactions.includes(k);
-                    return (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            setAllowedReactions(
-                              allowedReactions.filter((r) => r !== k),
-                            );
-                          } else if (allowedReactions.length < 4) {
-                            setAllowedReactions([...allowedReactions, k]);
-                          }
-                        }}
-                        className={`px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all ${
-                          isSelected
-                            ? "bg-green-100 text-green-900 border border-green-200"
-                            : "bg-white border border-black/10 text-black/50 hover:border-black/20"
-                        } ${!isSelected && allowedReactions.length >= 4 ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        <span>{v.emoji}</span>
-                        <span className="font-semibold text-[10px]">
-                          {v.label}
-                        </span>
-                      </button>
-                    );
-                  })}
+              <div className="flex gap-4 relative">
+                {allowedReactions.map((emoji, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                        if (editingEmojiIndex === idx) {
+                            setEditingEmojiIndex(null);
+                        } else {
+                            setEditingEmojiIndex(idx);
+                        }
+                    }}
+                    className={`w-14 h-14 flex items-center justify-center text-2xl rounded-2xl border transition-all ${editingEmojiIndex === idx ? 'bg-black/5 border-black/20 scale-110 shadow-sm z-10' : 'bg-white border-black/10 hover:border-black/20 hover:scale-105'}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+                {editingEmojiIndex !== null && (
+                    <div className="absolute top-16 left-0 z-50">
+                        <div className="fixed inset-0" onClick={() => setEditingEmojiIndex(null)} />
+                        <div className="relative shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <Picker 
+                                data={data} 
+                                onEmojiSelect={(e: any) => {
+                                    const newArr = [...allowedReactions];
+                                    newArr[editingEmojiIndex] = e.native;
+                                    setAllowedReactions(newArr);
+                                    setEditingEmojiIndex(null);
+                                }} 
+                                theme="light"
+                                previewPosition="none"
+                            />
+                        </div>
+                    </div>
+                )}
               </div>
-              <p className="text-[9px] text-black/30 font-medium mt-1.5">
-                {allowedReactions.length === 4
-                  ? "✅ 4/4 selected"
-                  : `${allowedReactions.length}/4 selected (Must select exactly 4)`}
-              </p>
             </div>
 
             {/* Share Prompt */}
@@ -581,6 +605,8 @@ export default function CreateBoard() {
                 <p className="text-[9px] text-amber-600/40 font-medium mt-1.5">
                   Visitors need this PIN to view confessions on your board
                 </p>
+              </div>
+            )}
               </div>
             )}
           </div>

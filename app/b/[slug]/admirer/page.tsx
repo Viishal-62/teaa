@@ -119,7 +119,7 @@ export default function AdmirerConfessPage() {
 
   if (board === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#110A0E]">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#110A0E]">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-white/60" />
       </div>
     );
@@ -127,7 +127,7 @@ export default function AdmirerConfessPage() {
 
   if (board === null) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#110A0E] text-white">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center bg-[#110A0E] text-white">
         <p className="text-5xl mb-4">💔</p>
         <h1 className="text-2xl font-bold serif">Board not found</h1>
         <p className="text-white/60 mt-2 text-sm">
@@ -145,7 +145,7 @@ export default function AdmirerConfessPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-5 bg-[radial-gradient(circle_at_top,#3b1026_0%,#110A0E_55%)]">
+      <div className="min-h-[100dvh] flex items-center justify-center px-5 bg-[radial-gradient(circle_at_top,#3b1026_0%,#110A0E_55%)]">
         <motion.div
           initial={{ opacity: 0, y: 18, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -185,7 +185,7 @@ export default function AdmirerConfessPage() {
   }
 
   return (
-    <div className="min-h-screen text-white bg-[radial-gradient(circle_at_top,#2f1022_0%,#130b12_45%,#0d090f_100%)]">
+    <div className="min-h-[100dvh] text-white bg-[radial-gradient(circle_at_top,#2f1022_0%,#130b12_45%,#0d090f_100%)]">
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#120b12]/80 backdrop-blur-2xl">
         <div className="mx-auto max-w-2xl px-5 py-4 flex items-center">
           <Link

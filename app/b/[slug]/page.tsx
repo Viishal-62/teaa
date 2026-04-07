@@ -58,6 +58,7 @@ export default function BoardViewPage() {
   const slug = params.slug as string;
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [showAllFilters, setShowAllFilters] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState(false);
@@ -81,8 +82,6 @@ export default function BoardViewPage() {
   const creatorToken = typeof window !== "undefined" ? getCreatorToken() : "";
   const isOwner = board?.creatorToken === creatorToken;
   const isAdmirerMode = board?.boardType === "secret-admirer";
-
-  const categoriesToUse = isAdmirerMode ? ADMIRER_CATEGORIES : CATEGORIES;
 
   const sessionKey = `board-pin-${slug}`;
   const savedPin =
@@ -126,6 +125,25 @@ export default function BoardViewPage() {
     api.confessions.getMoodDistribution,
     board && !isLocked ? { boardId: board._id } : "skip",
   );
+
+  const categoriesToUse = useMemo(() => {
+    const base = isAdmirerMode ? ADMIRER_CATEGORIES : CATEGORIES;
+    const defaultCats = base.map(c => ({ ...c, isCustom: false }));
+    const dynamicCats = [...defaultCats];
+
+    if (moodData?.distribution) {
+      Object.keys(moodData.distribution).forEach(key => {
+        if (!defaultCats.find(c => c.key === key)) {
+          dynamicCats.push({ 
+            key, 
+            label: key, 
+            isCustom: true 
+          });
+        }
+      });
+    }
+    return dynamicCats;
+  }, [isAdmirerMode, moodData]);
 
   const mixedItems = useMemo(() => {
     if (!confessions) return undefined;
@@ -305,6 +323,7 @@ export default function BoardViewPage() {
   }, [unlocked, pinVerified, slug]);
 
   const handlePinSubmit = () => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
     setPinToVerify(pinInput);
     if (pinInput.length < 4) return;
     sessionStorage.setItem(`board-pin-value-${slug}`, pinInput);
@@ -458,7 +477,7 @@ export default function BoardViewPage() {
       >
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-black/35 hover:text-black transition-colors"
+          className="flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-black/35 hover:text-black transition-colors"
         >
           <Home size={16} />
         </Link>
@@ -474,29 +493,29 @@ export default function BoardViewPage() {
         </h1>
         <div className="flex items-center gap-3">
           {isOwner && (
-            <>
-              <Link
-                href={`/b/${slug}/settings`}
-                className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1 mr-1"
-                title="Board Settings"
-              >
-                <div style={{ transform: "scale(0.85)" }}>⚙️</div>
-                <span className="hidden sm:inline">Settings</span>
-              </Link>
-              <Link
-                href={`/b/${slug}/inbox`}
-                className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center gap-1"
-                title="Creator inbox"
-              >
-                <Inbox size={12} />
-                <span className="hidden sm:inline">Inbox</span>
-                {(inboxUnread ?? 0) > 0 && (
-                  <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
-                    {inboxUnread}
-                  </span>
-                )}
-              </Link>
-            </>
+            <Link
+              href={`/b/${slug}/settings`}
+              className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1 mr-1"
+              title="Board Settings"
+            >
+              <div style={{ transform: "scale(0.85)" }}>⚙️</div>
+              <span className="hidden sm:inline">Settings</span>
+            </Link>
+          )}
+          {(isOwner || board.visibility !== "private") && (
+            <Link
+              href={`/b/${slug}/inbox`}
+              className="relative text-[10px] text-black/40 hover:text-black font-medium transition-colors inline-flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1 mr-1"
+              title={isOwner ? "Creator inbox" : "Public inbox"}
+            >
+              <Inbox size={12} />
+              <span className="hidden sm:inline">Inbox</span>
+              {isOwner && (inboxUnread ?? 0) > 0 && (
+                <span className="absolute -top-2 -right-4 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[8px] font-black flex items-center justify-center">
+                  {inboxUnread}
+                </span>
+              )}
+            </Link>
           )}
           <button
             type="button"
@@ -528,7 +547,7 @@ export default function BoardViewPage() {
                 setTimeout(() => setBoardCopied(false), 2000);
               }
             }}
-            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            className="flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
             {boardCopied ? (
               <>
@@ -544,7 +563,7 @@ export default function BoardViewPage() {
           </button>
           <Link
             href={`/b/${slug}/${isAdmirerMode ? "admirer" : "confess"}`}
-            className={`flex items-center gap-1.5 text-[10px] ${isAdmirerMode ? "text-[#be185d]" : "text-black/40"} hover:opacity-70 font-medium transition-colors`}
+            className={`flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] ${isAdmirerMode ? "text-[#be185d]" : "text-black/40"} hover:opacity-70 font-medium transition-colors`}
           >
             <Plus size={14} />
             <span className="hidden sm:inline">
@@ -553,7 +572,7 @@ export default function BoardViewPage() {
           </Link>
           <Link
             href={`/b/${slug}/spill`}
-            className="flex items-center gap-1.5 text-[10px] text-rose-900/60 hover:text-rose-900 font-medium transition-colors"
+            className="flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-rose-900/60 hover:text-rose-900 font-medium transition-colors"
           >
             <BookOpen size={14} />
             <span className="hidden sm:inline">Long gossip</span>
@@ -563,7 +582,7 @@ export default function BoardViewPage() {
             <button
               onClick={handleSummarize}
               disabled={isGenerating}
-              className="group relative h-8 px-3 sm:px-4 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60 ml-1"
+              className="group relative h-10 min-w-[44px] sm:h-8 px-3 sm:px-4 rounded-full overflow-hidden transition-all active:scale-95 disabled:opacity-60 ml-1 flex items-center justify-center"
               style={{
                 background: "linear-gradient(135deg, #1a0e0e, #2d1515)",
                 boxShadow:
@@ -602,7 +621,7 @@ export default function BoardViewPage() {
       </header>
 
       {/* Shimmer animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmerSweep {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -953,32 +972,62 @@ export default function BoardViewPage() {
           )}
         </div>
 
-        <div className="mb-8 overflow-x-auto pb-3 px-4 no-scrollbar">
-          <div className="flex gap-1.5 min-w-max justify-center">
-            {categoriesToUse.map((cat) => {
-              const isActive = selectedCategory === cat.key;
-              const catInfo = CATEGORY_INFO[cat.key];
-              return (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(cat.key);
-                    setActiveIndex(0);
-                  }}
-                  className="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95"
-                  style={{
-                    background: isActive
-                      ? (catInfo?.color ?? "#000")
-                      : "transparent",
-                    color: isActive ? "#fff" : "rgba(0,0,0,0.35)",
-                    border: `1px solid ${isActive ? "transparent" : "rgba(0,0,0,0.08)"}`,
-                  }}
-                >
-                  {cat.label}
-                </button>
-              );
+        <div className="mb-8 px-4 font-sans border-b border-black/5 pb-4">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {categoriesToUse
+              .slice(0, showAllFilters ? categoriesToUse.length : 8)
+              .map((cat: any) => {
+                const isActive = selectedCategory === cat.key;
+                const catInfo = CATEGORY_INFO[cat.key];
+
+                if (cat.isCustom) {
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(cat.key);
+                        setActiveIndex(0);
+                      }}
+                      className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-8 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                    >
+                      <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)] opacity-70 group-hover:opacity-100" />
+                      <span className={`inline-flex h-full w-full items-center justify-center rounded-full px-3.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-[#faf8f5] text-[#111] group-hover:bg-[#faf8f5]/90"}`}>
+                        {cat.label}
+                      </span>
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(cat.key);
+                      setActiveIndex(0);
+                    }}
+                    className="px-4 py-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 border"
+                    style={{
+                      background: isActive ? (catInfo?.color ?? "#000") : "transparent",
+                      color: isActive ? "#fff" : "rgba(0,0,0,0.35)",
+                      borderColor: isActive ? "transparent" : "rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                );
             })}
+
+            {!showAllFilters && categoriesToUse.length > 8 && (
+               <button
+                  type="button"
+                  onClick={() => setShowAllFilters(true)}
+                  className="px-4 py-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 bg-black/[0.03] text-black/40 hover:text-black hover:bg-black/5"
+               >
+                 +{categoriesToUse.length - 8} More
+               </button>
+            )}
           </div>
         </div>
 

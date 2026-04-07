@@ -15,6 +15,8 @@ import {
 } from "@/app/lib/utils";
 import EmojiPicker from "@/app/components/EmojiPicker";
 import GifPicker from "@/app/components/GifPicker";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import CreatorReplyCard from "@/app/components/CreatorReplyCard";
 import Link from "next/link";
 import {
@@ -80,6 +82,7 @@ export default function ConfessionDetailPage() {
   const [displayedConfession, setDisplayedConfession] = useState<any>(null);
   const [showRateLimit, setShowRateLimit] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Creator Reply state
   const [replyText, setReplyText] = useState("");
@@ -118,16 +121,25 @@ export default function ConfessionDetailPage() {
     return false;
   };
 
-  // Internal Reaction Button component to share state
-  const LocalReactionButton = ({ type }: { type: string }) => {
-    const info = REACTION_INFO[type];
-    const visitorId = getVisitorId();
-    const counts = useQuery(api.reactions.getCounts, { confessionId });
-    const myReactions = useQuery(
-      api.reactions.getVisitorReactions,
-      visitorId ? { confessionId, visitorId } : "skip",
-    );
+  // Fetch reactions state globally for the confession
+  const visitorId = typeof window !== "undefined" ? getVisitorId() : null;
+  const countsArray = useQuery(api.reactions.getCounts, { confessionId });
+  const counts = countsArray 
+    ? Object.fromEntries(countsArray.map(r => [r.type, r.count])) 
+    : undefined;
+  const myReactions = useQuery(
+    api.reactions.getVisitorReactions,
+    visitorId ? { confessionId, visitorId } : "skip",
+  );
 
+  const activeReactions = Array.from(new Set([
+    ...(board?.allowedReactions && board.allowedReactions.length > 0 ? board.allowedReactions : ["❤️", "🔥", "😂"]),
+    ...(counts ? Object.keys(counts) : [])
+  ])).slice(0, 10);
+
+  // Internal Reaction Button component
+  const LocalReactionButton = ({ type }: { type: string }) => {
+    const emoji = REACTION_INFO[type]?.emoji || type;
     const count = counts?.[type] ?? 0;
     const isActive = myReactions?.includes(type) ?? false;
 
@@ -152,13 +164,12 @@ export default function ConfessionDetailPage() {
             : "bg-black/[0.02] border-black/5 hover:bg-black/[0.04]"
         }`}
       >
-        <span className="text-xl">{info?.emoji ?? "❓"}</span>
+        <span className="text-xl">{emoji}</span>
         <span
           className={`text-lg font-bold tabular-nums ${isActive ? "text-black" : "text-black/70"}`}
         >
           {count}
         </span>
-        <span className="text-[10px] text-black/40">{info?.label ?? type}</span>
       </button>
     );
   };
@@ -356,21 +367,51 @@ export default function ConfessionDetailPage() {
               {/* Only show reactions if confession still exists */}
               {confession && (
                 <div className="flex gap-2.5 justify-center flex-wrap">
-                  {(() => {
-                    const activeReactions =
-                      board?.allowedReactions &&
-                      board.allowedReactions.length > 0
-                        ? board.allowedReactions
-                        : [
-                            "holding-you",
-                            "feels-heavy",
-                            "youll-be-ok",
-                            "no-it-burns",
-                          ];
-                    return activeReactions.map((type: string) => (
-                      <LocalReactionButton key={type} type={type} />
-                    ));
-                  })()}
+                  {activeReactions.map((type: string) => (
+                    <LocalReactionButton key={type} type={type} />
+                  ))}
+                  {/* Add Reaction Button */}
+                  {activeReactions.length < 10 && (
+                    <div className="relative flex">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowEmojiPicker(!showEmojiPicker);
+                        }}
+                        className="flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl transition-all active:scale-90 min-w-[72px] border bg-black/[0.02] border-black/5 hover:bg-black/[0.04] text-black/40 hover:text-black"
+                      >
+                        <span className="text-xl">+</span>
+                      </button>
+                      
+                      {showEmojiPicker && (
+                        <>
+                           <div className="fixed inset-0 z-[90]" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(false); }} />
+                           <div 
+                             className="absolute top-full left-0 mt-2 z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
+                             onClick={(e) => e.stopPropagation()}
+                           >
+                             <Picker 
+                              data={data} 
+                              theme="light"
+                              previewPosition="none"
+                              onEmojiSelect={async (e: any) => {
+                                 const emoji = e.native;
+                                 if (visitorId) {
+                                   try {
+                                     await toggleReaction({ confessionId, type: emoji, visitorId });
+                                   } catch (err) {
+                                     handleConvexError(err);
+                                   }
+                                 }
+                                 setShowEmojiPicker(false);
+                              }}
+                            />
+                           </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </>

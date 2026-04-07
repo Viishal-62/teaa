@@ -8,6 +8,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, REACTION_INFO, getVisitorId } from "@/app/lib/utils";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import Link from "next/link";
 import RateLimitModal from "./RateLimitModal";
 import { createPortal } from "react-dom";
@@ -22,6 +24,10 @@ interface VoiceConfessionCardProps {
   views?: number;
   boardSlug?: string;
   boardReactions?: string[];
+  contentType?: string;
+  cityId?: string;
+  professionId?: string;
+  contextId?: string;
 }
 
 const BAR_COUNT = 40;
@@ -41,6 +47,10 @@ export const VoiceConfessionCard = ({
   views,
   boardSlug: propBoardSlug,
   boardReactions,
+  contentType,
+  cityId,
+  professionId,
+  contextId,
 }: VoiceConfessionCardProps) => {
   const confessionId = id as Id<"confessions">;
   const boardSlug = propBoardSlug || "global";
@@ -51,6 +61,7 @@ export const VoiceConfessionCard = ({
   const [copied, setCopied] = useState(false);
   const [showRateLimit, setShowRateLimit] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -59,7 +70,10 @@ export const VoiceConfessionCard = ({
   const catColor = catInfo?.color ?? "#d13d3d";
   const toggleReaction = useMutation(api.reactions.toggle);
   const incrementView = useMutation(api.confessions.incrementView);
-  const reactionCounts = useQuery(api.reactions.getCounts, { confessionId });
+  const reactionCountsArray = useQuery(api.reactions.getCounts, { confessionId });
+  const reactionCounts = reactionCountsArray 
+    ? Object.fromEntries(reactionCountsArray.map(r => [r.type, r.count])) 
+    : undefined;
   const totalReactions = useQuery(api.reactions.getTotalCount, {
     confessionId,
   });
@@ -162,8 +176,8 @@ export const VoiceConfessionCard = ({
     audio.currentTime = pct * duration;
   };
 
-  const handleReactionClick = async (type: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleReactionClick = async (type: string, e?: React.MouseEvent | any) => {
+    if (e?.stopPropagation) e.stopPropagation();
     if (!visitorId) return;
     try {
       await toggleReaction({ confessionId, type: type as any, visitorId });
@@ -206,10 +220,14 @@ export const VoiceConfessionCard = ({
     setTimeout(() => setCopied(false), 2000);
   }, [boardSlug, confessionId, voiceTitle]);
 
-  const activeReactions =
-    boardReactions && boardReactions.length > 0
-      ? boardReactions
-      : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+  const resolveEmoji = (type: string) => {
+    return REACTION_INFO[type]?.emoji || type;
+  };
+
+  const activeReactions = Array.from(new Set([
+    ...(boardReactions && boardReactions.length > 0 ? boardReactions : ["❤️", "🔥", "😂"]),
+    ...(reactionCounts ? Object.keys(reactionCounts) : [])
+  ])).slice(0, 10);
 
   const formatTime = (s: number) => {
     if (!s || isNaN(s)) return "0:00";
@@ -228,21 +246,23 @@ export const VoiceConfessionCard = ({
       className="group w-full"
     >
       <div
-        className="relative rounded-2xl overflow-hidden border border-black/[0.06] shadow-sm hover:shadow-xl transition-shadow duration-500"
-        style={{
-          background:
-            "linear-gradient(168deg, #fefdfb 0%, #faf7f2 60%, #f5f0e8 100%)",
-        }}
+        className="relative rounded-2xl border border-black/[0.06] shadow-sm hover:shadow-xl transition-shadow duration-500"
       >
-        {/* Top accent line */}
-        <div
-          className="h-[2px]"
-          style={{
-            background: `linear-gradient(90deg, transparent 5%, ${catColor} 50%, transparent 95%)`,
-          }}
-        />
+        {/* Background layer */}
+        <div 
+          className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none"
+          style={{ background: "linear-gradient(168deg, #fefdfb 0%, #faf7f2 60%, #f5f0e8 100%)" }}
+        >
+          {/* Top accent line */}
+          <div
+            className="h-[2px]"
+            style={{
+              background: `linear-gradient(90deg, transparent 5%, ${catColor} 50%, transparent 95%)`,
+            }}
+          />
+        </div>
 
-        <div className="p-5">
+        <div className="relative p-5">
           {/* ── Header ── */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -273,12 +293,20 @@ export const VoiceConfessionCard = ({
                     className="text-[8px] font-black uppercase tracking-[0.1em] px-1.5 py-0.5 rounded"
                     style={{ color: catColor, background: `${catColor}12` }}
                   >
-                    {catInfo?.label ?? category}
+                    {contentType === "question" ? "❓ Q & A • " : ""}{catInfo?.label ?? category}
                   </span>
                   <span className="text-[9px] text-black/20 font-medium">
                     {timestamp}
                   </span>
                 </div>
+                
+                {(cityId || professionId || contextId) && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {cityId && <span className="text-[8px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">📍 {cityId}</span>}
+                    {professionId && <span className="text-[8px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">💼 {professionId}</span>}
+                    {contextId && <span className="text-[8px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60 max-w-[120px] truncate">🫂 {contextId}</span>}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -397,33 +425,66 @@ export const VoiceConfessionCard = ({
           </div>
 
           {/* ── Reactions ── */}
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
             {activeReactions.map((type) => {
-              const info = REACTION_INFO[type];
-              if (!info) return null;
+              const emoji = resolveEmoji(type);
+              if (!emoji) return null;
               const count = reactionCounts?.[type] ?? 0;
               const isActive = visitorReactions?.includes(type);
               return (
-                <motion.button
+                <button
                   key={type}
-                  whileHover={{ scale: 1.15, y: -2 }}
-                  whileTap={{ scale: 0.9 }}
+                  type="button"
                   onClick={(e) => handleReactionClick(type, e)}
-                  className="flex flex-col items-center gap-0.5"
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all border ${
+                    isActive 
+                      ? "bg-black/10 border-black/20 text-black shadow-sm" 
+                      : "bg-[#faf8f5] border-transparent text-black/50 hover:bg-black/5 hover:text-black/80"
+                  }`}
                 >
-                  <span
-                    className={`text-base transition-transform ${isActive ? "scale-110 drop-shadow" : ""}`}
-                  >
-                    {info.emoji}
-                  </span>
-                  {count > 0 && (
-                    <span className="text-[7px] font-black text-black/35 tabular-nums">
-                      {count}
-                    </span>
-                  )}
-                </motion.button>
+                  <span className="text-sm">{emoji}</span>
+                  <span>{count}</span>
+                </button>
               );
             })}
+            
+            {/* Add Reaction Button */}
+            {activeReactions.length < 10 && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowEmojiPicker(!showEmojiPicker);
+                  }}
+                  className="w-7 h-7 rounded-full bg-[#faf8f5] flex items-center justify-center text-black/40 hover:bg-black/5 hover:text-black transition-colors"
+                >
+                  <span className="text-xs">+</span>
+                </button>
+                
+                {showEmojiPicker && (
+                  <>
+                     <div className="fixed inset-0 z-[90]" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(false); }} />
+                     <div 
+                       className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:left-full md:bottom-[-20px] md:translate-x-0 md:translate-y-0 md:ml-3 md:top-auto z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
+                       onClick={(e) => e.stopPropagation()}
+                       onWheel={(e) => e.stopPropagation()}
+                       onTouchMove={(e) => e.stopPropagation()}
+                     >
+                       <Picker 
+                        data={data} 
+                        theme="light"
+                        previewPosition="none"
+                        onEmojiSelect={(e: any) => {
+                           handleReactionClick(e.native);
+                           setShowEmojiPicker(false);
+                        }}
+                      />
+                     </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── Footer ── */}

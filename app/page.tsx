@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import PwaInstallButton from "@/app/components/PwaInstallButton";
+import { FaApple, FaAndroid } from "react-icons/fa";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
@@ -20,7 +22,10 @@ import {
   Volume2,
   Menu,
   X,
-
+  MapPin,
+  Briefcase,
+  Heart,
+  TrendingUp,
 } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -33,6 +38,7 @@ import {
 } from "framer-motion";
 import { useSpring, animated } from "@react-spring/web";
 import { THEMES } from "@/convex/helpers";
+import { useRouter } from "next/navigation";
 
 /* ── Animated number ── */
 function AnimNum({ value }: { value: number }) {
@@ -80,10 +86,12 @@ const MOODS = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const publicBoards = useQuery(api.boards.listPublic);
   const globalFeed = useQuery(api.confessions.globalFeed, {});
   const recentSpills = useQuery(api.spills.listAll);
   const voiceFeed = useQuery(api.confessions.voiceFeed, {});
+  const contextDistribution = useQuery(api.confessions.getGlobalContextDistribution);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [heroReady, setHeroReady] = useState(false);
@@ -167,66 +175,7 @@ export default function Home() {
               Create Board
             </Link>
           </div>
-
-          {/* Mobile Nav Toggle */}
-          <button
-            className="md:hidden p-2 text-black/60 hover:text-black tap-highlight-transparent"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, y: -10 }}
-              animate={{ height: "auto", opacity: 1, y: 0 }}
-              exit={{ height: 0, opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden bg-[#eeece7] mt-3 rounded-2xl border border-black/5 shadow-2xl"
-            >
-              <div className="flex flex-col p-4 gap-2">
-                <Link
-                  href="/explore"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
-                >
-                  Explore
-                </Link>
-                <Link
-                  href="/forum"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
-                >
-                  Community
-                </Link>
-                <Link
-                  href="/explore/voice"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors flex items-center gap-2"
-                >
-                  <Mic size={14} /> Voice
-                </Link>
-                <Link
-                  href="/confess"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-black/70 hover:text-black hover:bg-black/5 p-4 rounded-xl transition-colors"
-                >
-                  Confess
-                </Link>
-                <Link
-                  href="/create"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-[11px] font-bold uppercase tracking-widest text-center p-4 bg-black text-white rounded-xl active:scale-95 transition-all mt-2 border border-black"
-                >
-                  Create Board
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.nav>
 
       {/* ══════════════════════════════════════════
@@ -411,6 +360,42 @@ export default function Home() {
           style={{ y: heroY, scale: heroScale, opacity: heroOpacity }}
           className="relative z-10 text-center max-w-4xl mx-auto"
         >
+          {/* ── Top Trending Badge ── */}
+          {contextDistribution && (contextDistribution.cities.length > 0 || contextDistribution.professions.length > 0 || contextDistribution.contexts.length > 0) && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={heroReady ? { opacity: 1, y: 0, scale: 1 } : {}}
+              transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
+              className="flex justify-center mb-8"
+            >
+              <div className="p-[1px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm inline-block select-none">
+                <div className="bg-[#faf8f5] rounded-full px-4 py-1.5 flex items-center gap-3">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500">
+                    Trending
+                  </span>
+                  <div className="w-px h-3 bg-black/10" />
+                  <div className="flex items-center gap-3">
+                    {contextDistribution.cities.slice(0, 1).map((city) => (
+                      <Link key={city.key} href={`/explore?city=${encodeURIComponent(city.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                        <MapPin size={10} className="text-blue-500" /> {city.key}
+                      </Link>
+                    ))}
+                    {contextDistribution.professions.slice(0, 1).map((prof) => (
+                      <Link key={prof.key} href={`/explore?profession=${encodeURIComponent(prof.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                        <Briefcase size={10} className="text-amber-500" /> {prof.key}
+                      </Link>
+                    ))}
+                    {contextDistribution.contexts.slice(0, 1).map((ctx) => (
+                      <Link key={ctx.key} href={`/explore?context=${encodeURIComponent(ctx.key)}`} className="text-[10px] font-bold text-black/70 hover:text-black transition-colors flex items-center gap-1">
+                        <Heart size={10} className="text-purple-500" /> {ctx.key}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Epic Typography Setup */}
           <div className="flex flex-col items-center justify-center mb-6 leading-[0.9]">
             <motion.h1
@@ -488,30 +473,41 @@ export default function Home() {
               </Link>
             </motion.div>
           </motion.div>
+
+
         </motion.div>
       </section>
 
-      {/* ── MOOD MARQUEE ── */}
+      {/* ── MOOD MARQUEE (Enhanced with live context) ── */}
       <div className="py-6 overflow-hidden border-y border-black/[0.04] bg-white/50">
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, duration: 30, ease: "linear" }}
+          transition={{ repeat: Infinity, duration: 35, ease: "linear" }}
           className="flex gap-6 whitespace-nowrap"
         >
-          {[...MOODS, ...MOODS].map((m, i) => (
-            <div
-              key={`${m.label}-${i}`}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-black/[0.04]"
-            >
-              <span>{m.emoji}</span>
-              <span
-                className="text-[10px] font-bold uppercase tracking-widest"
-                style={{ color: m.color }}
+          {(() => {
+            const dynamicItems: Array<{label: string, emoji: string, color: string}> = [];
+            if (contextDistribution) {
+              contextDistribution.cities.slice(0, 4).forEach(c => dynamicItems.push({ label: c.key, emoji: "📍", color: "#3b82f6" }));
+              contextDistribution.professions.slice(0, 3).forEach(p => dynamicItems.push({ label: p.key, emoji: "💼", color: "#f59e0b" }));
+              contextDistribution.contexts.slice(0, 2).forEach(c => dynamicItems.push({ label: c.key, emoji: "🫂", color: "#a855f7" }));
+            }
+            const allItems = [...MOODS, ...dynamicItems];
+            return [...allItems, ...allItems].map((m, i) => (
+              <div
+                key={`${m.label}-${i}`}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-black/[0.04]"
               >
-                {m.label}
-              </span>
-            </div>
-          ))}
+                <span>{m.emoji}</span>
+                <span
+                  className="text-[10px] font-bold uppercase tracking-widest"
+                  style={{ color: m.color }}
+                >
+                  {m.label}
+                </span>
+              </div>
+            ));
+          })()}
         </motion.div>
       </div>
 
@@ -550,6 +546,157 @@ export default function Home() {
           ))}
         </div>
       </motion.section>
+
+      {/* ── WHAT'S BUZZING — Dynamic context showcase ── */}
+      {contextDistribution && (contextDistribution.cities.length > 0 || contextDistribution.professions.length > 0) && (
+        <section className="py-20 px-4 sm:px-6 relative">
+          <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-rose-50/30 to-transparent" />
+          <div className="max-w-4xl mx-auto relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-black/5 text-[9px] font-bold uppercase tracking-[0.2em] mb-5 text-black/40 shadow-sm">
+                <TrendingUp size={10} className="text-accent" />
+                Live from the community
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black serif tracking-tight mb-3">
+                What&apos;s{" "}
+                <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-violet-500 bg-clip-text text-transparent">
+                  buzzing
+                </span>
+              </h2>
+              <p className="text-xs text-black/30 max-w-md mx-auto leading-relaxed">
+                Discover confessions from real cities, professions, and vibes. Filter the global feed by what matters to you.
+              </p>
+            </motion.div>
+
+            {/* City cards */}
+            {contextDistribution.cities.length > 0 && (
+              <motion.div
+                variants={stagger}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
+                className="mb-8"
+              >
+                <div className="flex items-center gap-2 mb-4 px-1">
+                  <MapPin size={14} className="text-blue-400" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30">Trending Cities</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {contextDistribution.cities.slice(0, 8).map((city, i) => (
+                    <motion.div key={city.key} variants={fadeUp}>
+                      <Link
+                        href={`/explore?city=${encodeURIComponent(city.key)}`}
+                        className="group block bg-white/70 backdrop-blur-sm border border-black/5 rounded-2xl p-5 hover:shadow-xl hover:shadow-blue-500/[0.06] hover:border-blue-200/40 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-blue-50/60 to-transparent rounded-bl-[60px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <span className="text-xl block mb-2">📍</span>
+                        <h3 className="text-sm font-black serif tracking-tight text-black/80 group-hover:text-black transition-colors mb-1">
+                          {city.key}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-bold text-blue-400/70 uppercase tracking-wider">
+                            {city.count} {city.count === 1 ? "tea" : "teas"}
+                          </span>
+                          <ArrowRight size={12} className="text-black/10 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Profession + Context chips */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {contextDistribution.professions.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="bg-white border border-black/5 rounded-2xl p-6"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
+                      <Briefcase size={18} className="text-amber-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black serif">By Profession</h3>
+                      <p className="text-[9px] text-black/25 font-medium">Who&apos;s spilling the most tea?</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {contextDistribution.professions.slice(0, 6).map((p) => (
+                      <Link
+                        key={p.key}
+                        href={`/explore?profession=${encodeURIComponent(p.key)}`}
+                        className="group inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50/50 border border-amber-100/50 hover:border-amber-200 hover:bg-amber-50 transition-all text-[10px] font-bold uppercase tracking-wider text-amber-700/60 hover:text-amber-700"
+                      >
+                        💼 {p.key}
+                        <span className="text-[8px] text-amber-400 font-black">{p.count}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {contextDistribution.contexts.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white border border-black/5 rounded-2xl p-6"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center">
+                      <Heart size={18} className="text-purple-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black serif">The Vibe</h3>
+                      <p className="text-[9px] text-black/25 font-medium">What people are feeling right now</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {contextDistribution.contexts.slice(0, 6).map((c) => (
+                      <Link
+                        key={c.key}
+                        href={`/explore?context=${encodeURIComponent(c.key)}`}
+                        className="group inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-purple-50/50 border border-purple-100/50 hover:border-purple-200 hover:bg-purple-50 transition-all text-[10px] font-bold uppercase tracking-wider text-purple-700/60 hover:text-purple-700"
+                      >
+                        🫂 {c.key}
+                        <span className="text-[8px] text-purple-400 font-black">{c.count}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mt-10"
+            >
+              <Link
+                href="/explore"
+                className="group inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-amber-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <TrendingUp size={14} className="relative z-10" />
+                <span className="relative z-10">Explore All Filters</span>
+                <ArrowRight size={12} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════
           VOICE CONFESSIONS — immersive showcase
@@ -987,9 +1134,9 @@ export default function Home() {
                     : "Anonymous confession";
                 return (
                   <motion.div key={confession._id} variants={fadeUp}>
-                    <Link
-                      href="/explore"
-                      className="flex items-center gap-4 px-5 py-6 bg-white border border-black/5 rounded-2xl hover:shadow-lg hover:shadow-black/[0.03] transition-all group"
+                    <div
+                      onClick={() => router.push("/explore")}
+                      className="cursor-pointer flex items-center gap-4 px-5 py-6 bg-white border border-black/5 rounded-2xl hover:shadow-lg hover:shadow-black/[0.03] transition-all group"
                     >
                       <div
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm"
@@ -1003,17 +1150,43 @@ export default function Home() {
                           {previewText.slice(0, 60)}
                           {previewText.length > 60 ? "..." : ""}
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {catInfo && (
-                            <span
-                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/explore?category=${encodeURIComponent(confession.category)}`);
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
                               style={{
                                 background: `${catInfo.color}10`,
                                 color: catInfo.color,
                               }}
                             >
                               {catInfo.label}
-                            </span>
+                            </button>
+                          )}
+                          {confession.cityId && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/explore?city=${encodeURIComponent(confession.cityId)}`);
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-400 hover:bg-blue-100 transition-colors"
+                            >
+                              📍 {confession.cityId}
+                            </button>
+                          )}
+                          {confession.professionId && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/explore?profession=${encodeURIComponent(confession.professionId)}`);
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 hover:bg-amber-100 transition-colors"
+                            >
+                              💼 {confession.professionId}
+                            </button>
                           )}
                           <span className="text-[9px] text-black/15 font-medium">
                             {timeAgo(confession.createdAt)}
@@ -1023,7 +1196,7 @@ export default function Home() {
                       <span className="text-[9px] font-bold text-black/10 group-hover:text-accent uppercase tracking-widest flex-shrink-0 transition-colors">
                         Reveal →
                       </span>
-                    </Link>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -1378,6 +1551,117 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── THE APP EXPERIENCE (PWA SECTION) ── */}
+      <section className="py-24 px-4 sm:px-6 relative bg-[#faf8f5] border-t border-black/5 overflow-hidden">
+        <div className="absolute top-0 left-[20%] w-96 h-96 bg-blue-100/40 rounded-full blur-[140px] pointer-events-none" />
+        
+        <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12 md:gap-20">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="flex-1"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-blue-500 mb-3">
+              ✦ App Experience
+            </p>
+            <h2 className="text-3xl md:text-5xl font-black serif tracking-tight mb-5 leading-tight text-[#2a2a2a]">
+              Install Teaaa. <br />
+              <span className="text-black/30">No App Store required.</span>
+            </h2>
+            <p className="text-sm md:text-base text-black/50 leading-relaxed font-medium mb-8">
+              Get the full native app experience instantly. Install Teaaa directly to your home screen for full-screen mode, faster loading, and a seamless mobile experience. It takes zero storage and runs securely.
+            </p>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center flex-shrink-0 border border-slate-200 shadow-sm">
+                  <FaApple size={18} className="mb-[2px]" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-[#2a2a2a]">iOS (Safari)</h4>
+                  <p className="text-[10px] text-black/50 font-medium mt-0.5">Tap 'Share' <span className="font-serif italic mx-1">→</span> 'Add to Home Screen'</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-50/80 text-emerald-600 flex items-center justify-center flex-shrink-0 border border-emerald-100 shadow-sm">
+                  <FaAndroid size={18} />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-[#2a2a2a]">Android (Chrome)</h4>
+                  <p className="text-[10px] text-black/50 font-medium mt-0.5">Tap menu (⋮) <span className="font-serif italic mx-1">→</span> 'Install app'</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10">
+               <PwaInstallButton />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex-1 relative w-full flex justify-center perspective-[1000px]"
+          >
+             {/* Beautiful visual representation of a phone screen containing teaaa */}
+             <div className="w-[280px] h-[580px] bg-[#111] rounded-[3rem] p-2 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 border-4 border-black/80 ring-1 ring-white/10 transform-gpu rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-y-[0deg] hover:rotate-x-[0deg] transition-transform duration-700">
+               {/* Phone notch */}
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#111] rounded-b-3xl z-20" />
+               <div className="w-full h-full bg-[#faf8f5] rounded-[2.5rem] overflow-hidden relative border border-white/50">
+                 {/* App icon on home screen */}
+                 <div className="absolute inset-0 bg-[#f0ede8] px-4 py-6 flex flex-col pt-14">
+                    <div className="text-center mb-6 opacity-60">
+                      <div className="text-[10px] font-black tracking-[0.2em] font-sans uppercase">9:41 AM</div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-y-5 gap-x-2 w-full place-items-center">
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-gradient-to-tr from-rose-500 via-pink-400 to-amber-300 shadow-[0_6px_12px_rgba(244,63,94,0.3)] flex items-center justify-center text-[22px] border border-white/20 text-white">🫖</div>
+                          <span className="text-[9px] font-bold text-black/80 font-sans tracking-tight">teaaa</span>
+                       </div>
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-400 shadow-sm flex items-center justify-center text-[22px] text-white">🌤️</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Weather</span>
+                       </div>
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-white shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🖼️</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Photos</span>
+                       </div>
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#d1d5db] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📷</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Camera</span>
+                       </div>
+                       
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#fef08a] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📝</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Notes</span>
+                       </div>
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#bbf7d0] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🗺️</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Maps</span>
+                       </div>
+                       <div className="flex flex-col items-center gap-[5px] w-full">
+                          <div className="w-[46px] h-[46px] rounded-[14px] bg-purple-400 shadow-sm flex items-center justify-center text-[22px] text-white">🎙️</div>
+                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Podcasts</span>
+                       </div>
+                    </div>
+                    
+                    {/* Bottom dock indicator */}
+                    <div className="mt-auto mx-auto px-2 py-2 rounded-[22px] bg-white/40 border border-white/60 backdrop-blur-md flex items-center justify-center gap-[10px] mb-2 shadow-lg shadow-black/[0.03]">
+                       <div className="w-[46px] h-[46px] rounded-[14px] bg-green-400 shadow-sm flex items-center justify-center text-[22px]">📞</div>
+                       <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-500 shadow-sm flex items-center justify-center text-[22px]">💬</div>
+                       <div className="w-[46px] h-[46px] rounded-[14px] bg-gray-100 shadow-sm flex items-center justify-center text-[22px]">🌐</div>
+                       <div className="w-[46px] h-[46px] rounded-[14px] bg-rose-500 shadow-sm flex items-center justify-center text-[22px]">🎵</div>
+                    </div>
+                 </div>
+               </div>
+             </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── FINAL CTA ── */}
       <section className="py-28 px-4 sm:px-6 relative">
         <div className="absolute inset-0 pointer-events-none">
@@ -1576,31 +1860,39 @@ export default function Home() {
           {/* Divider */}
           <div className="w-full border-t border-black/[0.04]" />
 
-          {/* Bottom row: created by + social icons */}
-          <div className="flex items-center gap-3">
-            <span className="text-[9px] font-medium text-black/20">
-              Created by{" "}
-              <span className="font-bold text-black/30">Vishal</span>
-            </span>
-            <span className="w-[1px] h-3 bg-black/10" />
-            <a
-              href="https://www.linkedin.com/in/vishal-pandey-3835a9330/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-black/15 hover:text-[#0077B5] transition-colors"
-              aria-label="Vishal's LinkedIn"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-            </a>
-            <a
-              href="https://github.com/viishal-62"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-black/15 hover:text-black transition-colors"
-              aria-label="Vishal's GitHub"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-            </a>
+          {/* Bottom row: legal + created by + social icons */}
+          <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5 text-[9px] font-bold uppercase tracking-widest text-black/15">
+              <Link href="/terms" className="hover:text-black transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-black transition-colors">Privacy</Link>
+              <Link href="/disclaimer" className="hover:text-black transition-colors">Disclaimer</Link>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-[9px] font-medium text-black/20">
+                Created by{" "}
+                <span className="font-bold text-black/30">Vishal</span>
+              </span>
+              <span className="w-[1px] h-3 bg-black/10" />
+              <a
+                href="https://www.linkedin.com/in/vishal-pandey-3835a9330/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black/15 hover:text-[#0077B5] transition-colors"
+                aria-label="Vishal's LinkedIn"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              </a>
+              <a
+                href="https://github.com/viishal-62"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black/15 hover:text-black transition-colors"
+                aria-label="Vishal's GitHub"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              </a>
+            </div>
           </div>
         </div>
       </footer>

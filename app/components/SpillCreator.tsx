@@ -413,7 +413,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
   /* ─── Loading ─── */
   if (mode === "board" && board === undefined) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-white flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
       </div>
     );
@@ -421,7 +421,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 
   if (mode === "board" && board === null) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4 text-black/50">
+      <div className="min-h-[100dvh] bg-white flex flex-col items-center justify-center gap-4 text-black/50">
         <span className="text-4xl">😕</span>
         <p className="text-sm font-medium">Board not found</p>
         <button
@@ -438,7 +438,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
   /* ──────────────────────────── RENDER ──────────────────────────── */
 
   return (
-    <div className="min-h-screen bg-white text-[#111] selection:bg-black/10">
+    <div className="min-h-[100dvh] bg-white text-[#111] selection:bg-black/10">
       {/* Ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
         <div

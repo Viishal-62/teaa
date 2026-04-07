@@ -70,6 +70,8 @@ export default function GlobalConfessPage() {
   const [showRateLimit, setShowRateLimit] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState("");
   const [debouncedText, setDebouncedText] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
 
   // Debounce text for real-time moderation check
   useEffect(() => {
@@ -211,7 +213,7 @@ export default function GlobalConfessPage() {
   // ── Success ──
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 sm:px-5 page-enter bg-[#faf8f5]">
+      <div className="min-h-[100dvh] flex items-center justify-center px-4 sm:px-5 page-enter bg-[#faf8f5]">
         <div className="max-w-sm w-full text-center">
           <div className="bg-white rounded-2xl border border-black/5 p-8 shadow-xl shadow-black/[0.03]">
             <span className="text-5xl block mb-4">{success.emoji}</span>
@@ -256,7 +258,7 @@ export default function GlobalConfessPage() {
 
   // ── Form ──
   return (
-    <div className="min-h-screen page-enter bg-[#faf8f5] text-black">
+    <div className="min-h-[100dvh] page-enter bg-[#faf8f5] text-black">
       <header className="sticky top-0 z-50 flex items-center px-4 sm:px-5 py-3 bg-[#faf8f5]/85 backdrop-blur-xl border-b border-black/5">
         <Link
           href="/explore"
@@ -337,7 +339,7 @@ export default function GlobalConfessPage() {
                   msOverflowStyle: "none",
                 }}
               >
-                <style jsx>{`
+                <style>{`
                   ::-webkit-scrollbar {
                     display: none;
                   }
@@ -425,173 +427,236 @@ export default function GlobalConfessPage() {
 
             <div className="h-px bg-black/5" />
 
-            {/* Disappearing Tea */}
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25">
-                  Disappearing Tea
-                </p>
-                <span className="text-[8px] font-medium text-black/15 uppercase tracking-wider">
-                  Optional
-                </span>
-              </div>
-
-              {/* Main options */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                {[
-                  { key: "never", label: "Keep Forever", sub: "Default" },
-                  { key: "5m", label: "5 Minutes", sub: "Auto-delete" },
-                  { key: "24h", label: "24 Hours", sub: "Auto-delete" },
-                  { key: "7d", label: "7 Days", sub: "Auto-delete" },
-                  { key: "views25", label: "25 Views", sub: "Then vanish" },
-                ].map((opt) => {
-                  const active = disappearMode === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() =>
-                        setDisappearMode(opt.key as typeof disappearMode)
-                      }
-                      className={`rounded-xl border p-3 text-left transition-all ${
-                        active
-                          ? "bg-black text-white border-black shadow-md shadow-black/10"
-                          : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                      }`}
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-wider">
-                        {opt.label}
-                      </p>
-                      <p
-                        className={`text-[9px] mt-0.5 ${active ? "text-white/65" : "text-black/25"}`}
-                      >
-                        {opt.sub}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Custom options */}
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setDisappearMode("custom-time")}
-                  className={`w-full rounded-xl border p-3 text-left transition-all ${
-                    disappearMode === "custom-time"
-                      ? "bg-black text-white border-black shadow-md shadow-black/10"
-                      : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                  }`}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wider">
-                    Custom Time
-                  </p>
-                  <p
-                    className={`text-[9px] mt-0.5 ${disappearMode === "custom-time" ? "text-white/65" : "text-black/25"}`}
-                  >
-                    Pick exact date
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDisappearMode("custom-views")}
-                  className={`w-full rounded-xl border p-3 text-left transition-all ${
-                    disappearMode === "custom-views"
-                      ? "bg-black text-white border-black shadow-md shadow-black/10"
-                      : "bg-[#faf8f5] border-black/5 hover:border-black/15"
-                  }`}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-wider">
-                    Custom Views
-                  </p>
-                  <p
-                    className={`text-[9px] mt-0.5 ${disappearMode === "custom-views" ? "text-white/65" : "text-black/25"}`}
-                  >
-                    Set own limit
-                  </p>
-                </button>
-              </div>
-
-              {disappearMode === "custom-time" && (
-                <div className="mt-3">
-                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
-                    Vanish At (Local Time)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={customExpireAt}
-                    onChange={(e) => setCustomExpireAt(e.target.value)}
-                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
-                      isCustomTimeInvalid
-                        ? "border-red-300 focus:ring-2 focus:ring-red-100"
-                        : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                    }`}
-                  />
-                  {isCustomTimeInvalid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
-                      Pick a future time. Past times are not allowed.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {disappearMode === "custom-views" && (
-                <div className="mt-3">
-                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
-                    Vanish After Views
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={10000}
-                    value={customViews}
-                    onChange={(e) => setCustomViews(e.target.value)}
-                    placeholder="e.g. 73"
-                    className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
-                      isCustomViewsInvalid
-                        ? "border-red-300 focus:ring-2 focus:ring-red-100"
-                        : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
-                    }`}
-                  />
-                  {isCustomViewsInvalid && (
-                    <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
-                      Use a number between 1 and 10000 views.
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Category picker */}
+          {/* Category picker */}
             <div className="p-5">
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
                 What does it feel like?
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map((cat: string) => {
-                  const catInfo = CATEGORY_INFO[cat];
-                  const isSelected = category === cat;
-                  return (
+              {isAddingCustom ? (
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    autoFocus
+                    maxLength={15}
+                    placeholder="Type feeling..."
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="flex-1 bg-[#faf8f5] border border-black/10 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-black/30"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setIsAddingCustom(false)}
+                    className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-4 py-2.5 rounded-xl transition-all"
+                  >
+                    Use
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {CATEGORIES.map((cat: string) => {
+                    const catInfo = CATEGORY_INFO[cat];
+                    const isSelected = category === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCategory(category === cat ? "" : cat)}
+                        className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${
+                          isSelected
+                            ? "text-white shadow-sm"
+                            : "bg-black/[0.02] text-black/40 border border-black/5 hover:border-black/10 hover:text-black/60"
+                        }`}
+                        style={
+                          isSelected
+                            ? { background: catInfo?.color ?? "#333" }
+                            : undefined
+                        }
+                      >
+                        {catInfo?.label ?? cat}
+                      </button>
+                    );
+                  })}
+                  {category && !CATEGORIES.includes(category) && (
                     <button
-                      key={cat}
                       type="button"
-                      onClick={() => setCategory(cat)}
-                      className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 ${
-                        isSelected
-                          ? "text-white shadow-sm"
-                          : "bg-black/[0.02] text-black/40 border border-black/5 hover:border-black/10 hover:text-black/60"
-                      }`}
-                      style={
-                        isSelected
-                          ? { background: catInfo?.color ?? "#333" }
-                          : undefined
-                      }
+                      onClick={() => setCategory("")}
+                      className="px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 bg-black text-white shadow-sm flex items-center gap-1.5"
                     >
-                      {catInfo?.label ?? cat}
+                      {category} <span className="opacity-60 text-[8px]">✕</span>
                     </button>
-                  );
-                })}
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { setIsAddingCustom(true); setCategory(""); }}
+                    className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 bg-black/[0.02] text-black/40 border-dashed border border-black/15 hover:border-black/30 hover:text-black/60`}
+                  >
+                    + Other
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="h-px bg-black/5" />
+
+            {/* Advanced Settings Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full p-5 flex items-center justify-between text-left transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">Advanced Options</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {disappearMode !== "never" && (
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-black bg-black/5 px-2 py-0.5 rounded-full">
+                    Auto-delete set
+                  </span>
+                )}
+                <ChevronDown
+                  size={12}
+                  className={`text-black/30 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                />
+              </div>
+            </button>
+
+            {/* Disappearing Tea (Moved inside Advanced Settings) */}
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? "max-h-[800px] opacity-100 border-t border-black/5" : "max-h-0 opacity-0"}`}>
+              <div className="p-5 bg-[#faf8f5]">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25">
+                    Disappearing Tea
+                  </p>
+                  <span className="text-[8px] font-medium text-black/15 uppercase tracking-wider">
+                    Optional
+                  </span>
+                </div>
+
+                {/* Main options */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                  {[
+                    { key: "never", label: "Keep Forever", sub: "Default" },
+                    { key: "5m", label: "5 Minutes", sub: "Auto-delete" },
+                    { key: "24h", label: "24 Hours", sub: "Auto-delete" },
+                    { key: "7d", label: "7 Days", sub: "Auto-delete" },
+                    { key: "views25", label: "25 Views", sub: "Then vanish" },
+                  ].map((opt) => {
+                    const active = disappearMode === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() =>
+                          setDisappearMode(opt.key as typeof disappearMode)
+                        }
+                        className={`rounded-xl border p-3 text-left transition-all ${
+                          active
+                            ? "bg-black text-white border-black shadow-md shadow-black/10"
+                            : "bg-white border-black/5 hover:border-black/15"
+                        }`}
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-wider">
+                          {opt.label}
+                        </p>
+                        <p
+                          className={`text-[9px] mt-0.5 ${active ? "text-white/65" : "text-black/25"}`}
+                        >
+                          {opt.sub}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom options */}
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setDisappearMode("custom-time")}
+                    className={`w-full rounded-xl border p-3 text-left transition-all ${
+                      disappearMode === "custom-time"
+                        ? "bg-black text-white border-black shadow-md shadow-black/10"
+                        : "bg-white border-black/5 hover:border-black/15"
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider">
+                      Custom Time
+                    </p>
+                    <p
+                      className={`text-[9px] mt-0.5 ${disappearMode === "custom-time" ? "text-white/65" : "text-black/25"}`}
+                    >
+                      Pick exact date
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDisappearMode("custom-views")}
+                    className={`w-full rounded-xl border p-3 text-left transition-all ${
+                      disappearMode === "custom-views"
+                        ? "bg-black text-white border-black shadow-md shadow-black/10"
+                        : "bg-white border-black/5 hover:border-black/15"
+                    }`}
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider">
+                      Custom Views
+                    </p>
+                    <p
+                      className={`text-[9px] mt-0.5 ${disappearMode === "custom-views" ? "text-white/65" : "text-black/25"}`}
+                    >
+                      Set own limit
+                    </p>
+                  </button>
+                </div>
+
+                {disappearMode === "custom-time" && (
+                  <div className="mt-3">
+                    <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
+                      Vanish At (Local Time)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={customExpireAt}
+                      onChange={(e) => setCustomExpireAt(e.target.value)}
+                      className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                        isCustomTimeInvalid
+                          ? "border-red-300 focus:ring-2 focus:ring-red-100"
+                          : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                      }`}
+                    />
+                    {isCustomTimeInvalid && (
+                      <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
+                        Pick a future time. Past times are not allowed.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {disappearMode === "custom-views" && (
+                  <div className="mt-3">
+                    <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-1.5 block">
+                      Vanish After Views
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10000}
+                      value={customViews}
+                      onChange={(e) => setCustomViews(e.target.value)}
+                      placeholder="e.g. 73"
+                      className={`w-full text-sm font-medium bg-[#faf8f5] border rounded-xl px-4 py-3 outline-none transition-all ${
+                        isCustomViewsInvalid
+                          ? "border-red-300 focus:ring-2 focus:ring-red-100"
+                          : "border-black/5 focus:border-black/15 focus:ring-2 focus:ring-black/5"
+                      }`}
+                    />
+                    {isCustomViewsInvalid && (
+                      <p className="text-[10px] text-red-500 font-bold mt-1.5 ml-1">
+                        Use a number between 1 and 10000 views.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

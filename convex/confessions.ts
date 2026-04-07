@@ -55,6 +55,10 @@ export const create = mutation({
     expiresAt: v.optional(v.number()),
     maxViews: v.optional(v.number()),
     visitorId: v.string(), // Required for rate limiting
+    contentType: v.optional(v.string()), // "confession" | "question"
+    cityId: v.optional(v.string()),
+    professionId: v.optional(v.string()),
+    contextId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Default type to "text" for backwards compatibility
@@ -189,6 +193,10 @@ export const create = mutation({
       isFlagged: false,
       flagReason: "",
       visitorId: args.visitorId,
+      contentType: args.contentType,
+      cityId: args.cityId,
+      professionId: args.professionId,
+      contextId: args.contextId,
       createdAt: Date.now(),
     });
 
@@ -297,7 +305,11 @@ export const listInboxByBoard = query({
   },
   handler: async (ctx, args) => {
     const board = await ctx.db.get(args.boardId);
-    if (!board || board.creatorToken !== args.creatorToken) {
+    if (!board) {
+      throw new Error("Not found");
+    }
+    const isOwner = board.creatorToken === args.creatorToken;
+    if (!isOwner && board.visibility === "private") {
       throw new Error("Unauthorized");
     }
 
@@ -352,6 +364,9 @@ export const inboxUnreadCount = query({
 export const globalFeed = query({
   args: {
     category: v.optional(v.string()),
+    cityId: v.optional(v.string()),
+    professionId: v.optional(v.string()),
+    contextId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
@@ -367,6 +382,9 @@ export const globalFeed = query({
       if (args.category && args.category !== "all") {
         if (confession.category !== args.category) continue;
       }
+      if (args.cityId && confession.cityId !== args.cityId) continue;
+      if (args.professionId && confession.professionId !== args.professionId) continue;
+      if (args.contextId && confession.contextId !== args.contextId) continue;
 
       const ADMIRER_CATEGORIES = [
         "crush",
@@ -683,5 +701,48 @@ export const getGlobalMoodDistribution = query({
     }
 
     return { total, distribution, dominant, recentActivity };
+  },
+});
+
+// ——— Global context distribution (cities, professions, contexts) ———
+export const getGlobalContextDistribution = query({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const ADMIRER_CATS = [
+      "crush", "compliment", "attraction", "gratitude",
+      "admiration", "confession", "secret-admirer",
+    ];
+
+    const confessions = await ctx.db
+      .query("confessions")
+      .withIndex("by_createdAt")
+      .order("desc")
+      .take(300);
+
+    const cities: Record<string, number> = {};
+    const professions: Record<string, number> = {};
+    const contexts: Record<string, number> = {};
+
+    for (const c of confessions) {
+      if (isExpired(c.expiresAt, now) || c.isFlagged) continue;
+      if (ADMIRER_CATS.includes(c.category)) continue;
+
+      if (c.cityId) cities[c.cityId] = (cities[c.cityId] || 0) + 1;
+      if (c.professionId) professions[c.professionId] = (professions[c.professionId] || 0) + 1;
+      if (c.contextId) contexts[c.contextId] = (contexts[c.contextId] || 0) + 1;
+    }
+
+    const toSorted = (obj: Record<string, number>) =>
+      Object.entries(obj)
+        .map(([key, count]) => ({ key, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 15);
+
+    return {
+      cities: toSorted(cities),
+      professions: toSorted(professions),
+      contexts: toSorted(contexts),
+    };
   },
 });

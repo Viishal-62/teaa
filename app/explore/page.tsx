@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+
 import {
   Home,
   ArrowRight,
@@ -14,6 +17,11 @@ import {
   X,
   Plus,
   BookOpen,
+  SlidersHorizontal,
+  MapPin,
+  Briefcase,
+  Heart,
+  Search,
 } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
@@ -38,11 +46,38 @@ const CATEGORIES = [
   { key: "deep-dark", label: "Deep Dark" },
 ];
 
-export default function ExplorePage() {
+function ExplorePageContent() {
+  const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [activeIndex, setActiveIndex] = useState(0);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAllFilters, setShowAllFilters] = useState(false);
+  const [showContextFilters, setShowContextFilters] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
+  const [selectedContext, setSelectedContext] = useState<string | null>(null);
+  const [contextSearch, setContextSearch] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  // Auto-apply filters from URL search params
+  const hasInitRef = useRef(false);
+  useEffect(() => {
+    setMounted(true);
+    if (hasInitRef.current) return;
+    hasInitRef.current = true;
+    const cat = searchParams.get("category");
+    const city = searchParams.get("city");
+    const profession = searchParams.get("profession");
+    const context = searchParams.get("context");
+    
+    if (cat) setSelectedCategory(cat);
+    if (city) setSelectedCity(city);
+    if (profession) setSelectedProfession(profession);
+    if (context) setSelectedContext(context);
+    if (city || profession || context) setShowContextFilters(true);
+  }, [searchParams]);
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
@@ -52,7 +87,12 @@ export default function ExplorePage() {
 
   const rawGlobalFeed = useQuery(api.confessions.globalFeed, {
     category: selectedCategory === "all" ? undefined : selectedCategory,
+    cityId: selectedCity ?? undefined,
+    professionId: selectedProfession ?? undefined,
+    contextId: selectedContext ?? undefined,
   });
+
+  const contextDistribution = useQuery(api.confessions.getGlobalContextDistribution);
 
   const summarize = useAction(api.ai.summarizeGlobal);
 
@@ -62,11 +102,30 @@ export default function ExplorePage() {
     [rawGlobalFeed],
   );
 
+  const globalMood = useQuery(api.confessions.getGlobalMoodDistribution);
+
+  const activeCategories = useMemo(() => {
+    const defaultCats = CATEGORIES.map(c => ({ ...c, isCustom: false }));
+    const dynamicCats = [...defaultCats];
+
+    if (globalMood?.distribution) {
+      Object.keys(globalMood.distribution).forEach(key => {
+        if (!defaultCats.find(c => c.key === key)) {
+          dynamicCats.push({ 
+            key, 
+            label: key, 
+            isCustom: true 
+          });
+        }
+      });
+    }
+    return dynamicCats;
+  }, [globalMood]);
+
   const publicBoards = useQuery(api.boards.listPublicWithCounts);
   const allSpills = useQuery(api.spills.listAll);
   const teaaOfDay = useQuery(api.confessions.confessionOfTheDay);
   const spillOfDay = useQuery(api.spills.spillOfTheDay);
-  const globalMood = useQuery(api.confessions.getGlobalMoodDistribution);
 
   useEffect(() => {
     if (globalFeed) {
@@ -118,6 +177,26 @@ export default function ExplorePage() {
     [globalFeed],
   );
 
+  // Touch swipe handling for mobile
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    if (diff > 40) {
+      scrollToCard(activeIndex + 1);
+    } else if (diff < -40) {
+      scrollToCard(activeIndex - 1);
+    }
+    touchStartX.current = null;
+  };
+
   const shuffleTea = useCallback(() => {
     if (!globalFeed || globalFeed.length < 2) return;
     let next = activeIndex;
@@ -157,30 +236,33 @@ export default function ExplorePage() {
     return () => window.removeEventListener("keydown", handler);
   }, [activeIndex, scrollToCard]);
 
-  // Trackpad / mousewheel scroll → navigate cards
+  // Trackpad horizontal scroll → navigate cards
   useEffect(() => {
     const el = carouselRef.current;
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
+      // Only intercept if the user is scrolling horizontally more than vertically
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
 
-      // Accumulate scroll delta (handles smooth trackpad)
-      scrollAccum.current += e.deltaY;
+        // Accumulate scroll delta horizontally
+        scrollAccum.current += e.deltaX;
 
-      const THRESHOLD = 80; // pixels of scroll to trigger a card change
+        const THRESHOLD = 80;
 
-      if (
-        Math.abs(scrollAccum.current) >= THRESHOLD &&
-        !scrollCooldown.current
-      ) {
-        const direction = scrollAccum.current > 0 ? 1 : -1;
-        scrollToCard(activeIndex + direction);
-        scrollAccum.current = 0;
-        scrollCooldown.current = true;
-        setTimeout(() => {
-          scrollCooldown.current = false;
-        }, 500);
+        if (
+          Math.abs(scrollAccum.current) >= THRESHOLD &&
+          !scrollCooldown.current
+        ) {
+          const direction = scrollAccum.current > 0 ? 1 : -1;
+          scrollToCard(activeIndex + direction);
+          scrollAccum.current = 0;
+          scrollCooldown.current = true;
+          setTimeout(() => {
+            scrollCooldown.current = false;
+          }, 500);
+        }
       }
     };
 
@@ -194,7 +276,7 @@ export default function ExplorePage() {
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 sm:px-5 py-3 bg-white/85 backdrop-blur-xl border-b border-black/5">
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-black/35 hover:text-black transition-colors"
+          className="flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-black/35 hover:text-black transition-colors"
         >
           <Home size={16} />
         </Link>
@@ -204,21 +286,21 @@ export default function ExplorePage() {
         <div className="flex items-center gap-3">
           <Link
             href="/confess"
-            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            className="hidden md:flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
             <Plus size={14} />
             <span className="hidden sm:inline">Add confession</span>
           </Link>
           <Link
             href="/explore/voice"
-            className="flex items-center gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
+            className="hidden md:flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-black/40 hover:text-black font-medium transition-colors"
           >
             <Mic size={14} />
             <span className="hidden sm:inline">Voice</span>
           </Link>
           <Link
             href="/spill/create"
-            className="flex items-center gap-1.5 text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
+            className="hidden md:flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-rose-600/60 hover:text-rose-600 font-medium transition-colors"
           >
             <BookOpen size={14} />
             <span className="hidden sm:inline">Write a spill</span>
@@ -228,7 +310,7 @@ export default function ExplorePage() {
             <button
               onClick={handleSummarize}
               disabled={isGenerating}
-              className="group relative inline-flex h-9 px-3 sm:min-w-[140px] sm:px-6 items-center justify-center overflow-hidden rounded-full p-[1.5px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 disabled:opacity-60 transition-all font-bold ml-1"
+              className="group relative inline-flex h-11 min-w-[44px] sm:h-9 px-3 sm:min-w-[140px] sm:px-6 items-center justify-center overflow-hidden rounded-full p-[1.5px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 disabled:opacity-60 transition-all font-bold ml-1"
             >
               {/* Rotating Gradient Border */}
               <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)]" />
@@ -253,7 +335,7 @@ export default function ExplorePage() {
       </header>
 
       {/* Shimmer animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmerSweep {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -325,8 +407,10 @@ export default function ExplorePage() {
               {/* Coverflow carousel */}
               <div
                 ref={carouselRef}
-                className="relative flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing"
-                style={{ height: "420px", perspective: "1200px" }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className="relative flex items-center justify-center -mx-5 overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
+                style={{ height: "500px", perspective: "1200px" }}
               >
                 {globalFeed.map((confession: any, i: any) => {
                   const offset = i - activeIndex;
@@ -390,7 +474,7 @@ export default function ExplorePage() {
 
               {/* Hint */}
               <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
-                Scroll · ← → keys · tap to flip
+                Swipe · ← → keys · tap to flip
               </p>
 
               {globalFeed.length > 1 && (
@@ -435,11 +519,31 @@ export default function ExplorePage() {
         </div>
 
         {/* Category Filters */}
-        <div className="mb-6 overflow-x-auto pb-3 px-4 no-scrollbar">
-          <div className="flex gap-1.5 min-w-max justify-center">
-            {CATEGORIES.map((cat) => {
+        <div className="mb-6 overflow-x-auto pb-3 px-4 no-scrollbar flex justify-center">
+          <div className="flex gap-1.5 flex-wrap justify-center max-w-4xl">
+            {activeCategories.slice(0, showAllFilters ? activeCategories.length : 8).map((cat) => {
               const isActive = selectedCategory === cat.key;
               const catInfo = CATEGORY_INFO[cat.key];
+
+              if (cat.isCustom) {
+                return (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(cat.key);
+                      setActiveIndex(0);
+                    }}
+                    className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                  >
+                    <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)] opacity-70 group-hover:opacity-100" />
+                    <span className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}>
+                      {cat.label}
+                    </span>
+                  </button>
+                );
+              }
+
               return (
                 <button
                   key={cat.key}
@@ -448,7 +552,7 @@ export default function ExplorePage() {
                     setSelectedCategory(cat.key);
                     setActiveIndex(0);
                   }}
-                  className="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95"
+                  className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 flex items-center justify-center"
                   style={{
                     background: isActive
                       ? (catInfo?.color ?? "#000")
@@ -461,8 +565,231 @@ export default function ExplorePage() {
                 </button>
               );
             })}
+            {!showAllFilters && activeCategories.length > 8 && (
+               <button
+                  type="button"
+                  onClick={() => setShowAllFilters(true)}
+                  className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 border border-transparent bg-[#faf8f5] text-black/40 hover:text-black hover:bg-black/5 flex items-center justify-center flex-shrink-0"
+               >
+                 +{activeCategories.length - 8} More
+               </button>
+            )}
           </div>
         </div>
+
+        {/* Context Filters (City, Profession, About) */}
+        {contextDistribution && (contextDistribution.cities.length > 0 || contextDistribution.professions.length > 0 || contextDistribution.contexts.length > 0) && (
+          <div className="mb-6 px-4">
+            <div className="max-w-4xl mx-auto">
+              {/* Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setShowContextFilters(!showContextFilters)}
+                className="flex items-center justify-center gap-2 mx-auto mb-3 px-4 py-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 border border-black/8 hover:border-black/15 text-black/40 hover:text-black bg-white/50 backdrop-blur-sm"
+              >
+                <SlidersHorizontal size={12} />
+                Filter by Context
+                {(selectedCity || selectedProfession || selectedContext) && (
+                  <span className="ml-1 w-5 h-5 rounded-full bg-black text-white text-[9px] flex items-center justify-center font-black">
+                    {[selectedCity, selectedProfession, selectedContext].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+
+              {(() => {
+                const q = contextSearch.toLowerCase().trim();
+                const filterItems = (items: Array<{key: string, count: number}>) =>
+                  q ? items.filter(i => i.key.toLowerCase().includes(q)) : items;
+
+                const filteredCities = filterItems(contextDistribution.cities);
+                const filteredProfessions = filterItems(contextDistribution.professions);
+                const filteredContexts = filterItems(contextDistribution.contexts);
+                const totalResults = filteredCities.length + filteredProfessions.length + filteredContexts.length;
+
+                const SHOW_LIMIT = 5;
+
+                const renderPillSection = (
+                  items: Array<{key: string, count: number}>,
+                  icon: React.ReactNode,
+                  label: string,
+                  emoji: string,
+                  selectedValue: string | null,
+                  onSelect: (val: string | null) => void,
+                  gradient: string,
+                ) => {
+                  if (items.length === 0) return null;
+                  const showAll = q.length > 0 || expandedSections[label]; // show all when searching or expanded
+                  const visible = showAll ? items : items.slice(0, SHOW_LIMIT);
+                  const hiddenCount = items.length - SHOW_LIMIT;
+
+                  return (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2">
+                        {icon}
+                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-black/25">{label}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {visible.map((item) => {
+                          const isActive = selectedValue === item.key;
+                          return (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => { onSelect(isActive ? null : item.key); setActiveIndex(0); }}
+                              className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                            >
+                              <span className={`absolute inset-[-1000%] animate-[spin_3s_linear_infinite] ${gradient} ${isActive ? "opacity-100" : "opacity-50 group-hover:opacity-80"}`} />
+                              <span className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 gap-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}>
+                                {emoji} {item.key}
+                                <span className={`text-[8px] ${isActive ? "text-white/70" : "text-black/25"}`}>{item.count}</span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {!showAll && hiddenCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedSections(prev => ({ ...prev, [label]: true }))}
+                            className="px-3 min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 sm:h-7 rounded-full text-[10px] font-bold text-black/30 hover:text-black bg-black/[0.03] hover:bg-black/[0.06] transition-all active:scale-95 flex items-center justify-center"
+                          >
+                            +{hiddenCount} more
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                };
+
+                const ContextFilterUI = (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 w-full">
+                      <div className="flex-1 relative min-w-0">
+                        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20" />
+                        <input
+                          type="text"
+                          value={contextSearch}
+                          onChange={(e) => setContextSearch(e.target.value)}
+                          placeholder="Search city, profession, context..."
+                          className="w-full pl-8 pr-3 py-2 rounded-xl border border-black/8 bg-white text-[11px] text-black placeholder:text-black/25 outline-none focus:border-black/20 transition-colors"
+                        />
+                      </div>
+                      {(selectedCity || selectedProfession || selectedContext) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCity(null);
+                            setSelectedProfession(null);
+                            setSelectedContext(null);
+                            setContextSearch("");
+                            setActiveIndex(0);
+                          }}
+                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all active:scale-95 whitespace-nowrap"
+                        >
+                          <X size={10} />
+                          Clear
+                        </button>
+                      )}
+                    </div>
+
+                    {q && totalResults === 0 ? (
+                      <div className="text-center py-6">
+                        <span className="text-3xl block mb-2">🫖</span>
+                        <p className="text-sm font-bold serif text-black/60 mb-1">
+                          No teas from &ldquo;{contextSearch}&rdquo; yet
+                        </p>
+                        <p className="text-[11px] text-black/30 mb-4">
+                          Be the first to spill from your city, profession, or vibe!
+                        </p>
+                        <Link
+                          href="/confess"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                        >
+                          <Plus size={12} />
+                          Drop a Confession
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        {renderPillSection(
+                          filteredCities, <MapPin size={12} className="text-black/25" />, "Cities", "📍",
+                          selectedCity, setSelectedCity,
+                          "bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#06b6d4_50%,#3b82f6_100%)]"
+                        )}
+                        {renderPillSection(
+                          filteredProfessions, <Briefcase size={12} className="text-black/25" />, "Professions", "💼",
+                          selectedProfession, setSelectedProfession,
+                          "bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)]"
+                        )}
+                        {renderPillSection(
+                          filteredContexts, <Heart size={12} className="text-black/25" />, "About / Feeling", "🫂",
+                          selectedContext, setSelectedContext,
+                          "bg-[conic-gradient(from_90deg_at_50%_50%,#a855f7_0%,#ec4899_50%,#a855f7_100%)]"
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+
+                return (
+                  <>
+                    {/* Desktop Inline Filters */}
+                    <div className="hidden md:block">
+                      <AnimatePresence>
+                        {showContextFilters && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeInOut" }}
+                            className="bg-white/60 backdrop-blur-xl border border-black/5 rounded-2xl p-4 overflow-hidden"
+                          >
+                            {ContextFilterUI}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Mobile Bottom Sheet Filters */}
+                    {mounted && typeof document !== "undefined" && createPortal(
+                      <div className="md:hidden block">
+                        <AnimatePresence>
+                          {showContextFilters && (
+                            <>
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 bg-black/40 z-[9998] backdrop-blur-sm"
+                                onClick={() => setShowContextFilters(false)}
+                                style={{ touchAction: 'none' }}
+                              />
+                              <motion.div
+                                initial={{ y: "100%" }}
+                                animate={{ y: 0 }}
+                                exit={{ y: "100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                className="fixed bottom-0 left-0 right-0 z-[9999] rounded-t-[2rem] bg-white text-left px-4 pt-1 shadow-2xl max-h-[85dvh] overflow-y-auto w-full overscroll-contain overflow-x-hidden"
+                                style={{ paddingBottom: "env(safe-area-inset-bottom, 32px)" }}
+                              >
+                                <div className="sticky top-0 bg-white z-10 pt-4 pb-2 border-b border-black/5 flex justify-center cursor-ns-resize" onClick={() => setShowContextFilters(false)}>
+                                  <div className="w-12 h-1.5 bg-black/10 rounded-full" />
+                                </div>
+                                <div className="py-4 pb-12 w-full">
+                                  {ContextFilterUI}
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>,
+                      document.body
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* ── Daily Highlights ── */}
         {(teaaOfDay || spillOfDay) && (
@@ -779,5 +1106,17 @@ export default function ExplorePage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-black/5 border-t-black/40 rounded-full animate-spin" />
+      </div>
+    }>
+      <ExplorePageContent />
+    </Suspense>
   );
 }

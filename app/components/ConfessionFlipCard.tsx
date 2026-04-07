@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, REACTION_INFO, getVisitorId } from "@/app/lib/utils";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import Link from "next/link";
 import { Eye, Flag, AlertCircle, CheckCircle2 } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -22,6 +24,10 @@ interface ConfessionFlipCardProps {
     views?: number;
     boardSlug?: string;
     boardName?: string;
+    contentType?: string;
+    cityId?: string;
+    professionId?: string;
+    contextId?: string;
   };
   boardSlug?: string;
   boardReactions?: string[];
@@ -44,20 +50,52 @@ export default function ConfessionFlipCard({
   const [reportSuccess, setReportSuccess] = useState(false);
   const [showRateLimit, setShowRateLimit] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState("");
-  const reactionCounts = useQuery(api.reactions.getCounts, {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const lastTapRef = useRef<number>(0);
+
+  const visitorId = getVisitorId();
+
+  const handleDoubleTap = useCallback(() => {
+    if (!visitorId) return;
+    setShowDoubleTapHeart(true);
+    if (navigator.vibrate) navigator.vibrate(40);
+    toggleReaction({
+      confessionId: confession._id,
+      type: "❤️" as any,
+      visitorId,
+    }).catch(console.error);
+    setTimeout(() => setShowDoubleTapHeart(false), 900);
+  }, [visitorId, confession._id, toggleReaction]);
+
+  const handleBackFaceTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 350) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleDoubleTap();
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [handleDoubleTap]);
+
+  const reactionCountsArray = useQuery(api.reactions.getCounts, {
     confessionId: confession._id,
   });
+  const reactionCounts = reactionCountsArray 
+    ? Object.fromEntries(reactionCountsArray.map(r => [r.type, r.count])) 
+    : undefined;
   const totalReactions = useQuery(api.reactions.getTotalCount, {
     confessionId: confession._id,
   });
-  const visitorId = getVisitorId();
   const visitorReactions = useQuery(
     api.reactions.getVisitorReactions,
     visitorId ? { confessionId: confession._id, visitorId } : "skip",
   );
 
-  const handleReactionClick = async (type: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleReactionClick = async (type: string, e?: React.MouseEvent | any) => {
+    if (e?.stopPropagation) e.stopPropagation();
     if (!visitorId) return;
     try {
       await toggleReaction({
@@ -78,6 +116,7 @@ export default function ConfessionFlipCard({
           setShowRateLimit(true);
         }
       }
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
       console.error("Reaction failed:", error);
     }
   };
@@ -87,6 +126,7 @@ export default function ConfessionFlipCard({
       incrementView({ confessionId: confession._id }).catch(console.error);
       setHasViewed(true);
     }
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
     setIsFlipped(!isFlipped);
   };
 
@@ -111,16 +151,20 @@ export default function ConfessionFlipCard({
     }
   };
 
-  const activeReactions =
-    boardReactions && boardReactions.length > 0
-      ? boardReactions
-      : ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+  const resolveEmoji = (type: string) => {
+    return REACTION_INFO[type]?.emoji || type;
+  };
+
+  const activeReactions = Array.from(new Set([
+    ...(boardReactions && boardReactions.length > 0 ? boardReactions : ["❤️", "🔥", "😂"]),
+    ...(reactionCounts ? Object.keys(reactionCounts) : [])
+  ])).slice(0, 10);
 
   return (
     <div className="perspective-1000 flip-card-container">
       <div
         className={`relative w-full preserve-3d transition-transform duration-700 ease-out ${isFlipped ? "rotate-y-180" : ""}`}
-        style={{ minHeight: "340px" }}
+        style={{ minHeight: "400px" }}
       >
         {/* ── FRONT FACE ── Hidden card */}
         <div
@@ -139,11 +183,33 @@ export default function ConfessionFlipCard({
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20 rounded-full" />
           </div>
 
-          {/* Category badge top-left */}
-          <div className="absolute top-4 left-4 z-10">
-            <span className="text-[9px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-white/15 text-white/80 backdrop-blur-sm">
-              {catInfo?.label ?? confession.category}
-            </span>
+          {/* Context Badges top-left */}
+          <div className="absolute top-4 left-4 right-4 z-10 flex flex-col items-start gap-1.5 pointer-events-none">
+            <div className="flex flex-wrap flex-col items-start justify-start gap-1.5">
+              <span className="text-[9px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-white/15 text-white/80 backdrop-blur-sm shadow-sm flex items-center gap-1">
+                {confession.contentType === "question" ? "❓ Q & A • " : ""}{catInfo?.label ?? confession.category}
+              </span>
+            </div>
+            
+            {(confession.cityId || confession.professionId || confession.contextId) && (
+              <div className="flex flex-wrap gap-1 mt-0.5">
+                {confession.cityId && (
+                  <span className="text-[8.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/20 text-white/90 backdrop-blur-md shadow-sm border border-white/10">
+                    📍 {confession.cityId}
+                  </span>
+                )}
+                {confession.professionId && (
+                  <span className="text-[8.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/20 text-white/90 backdrop-blur-md shadow-sm border border-white/10">
+                    💼 {confession.professionId}
+                  </span>
+                )}
+                {confession.contextId && (
+                  <span className="text-[8.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/20 text-white/90 backdrop-blur-md shadow-sm border border-white/10 break-words max-w-[120px] truncate">
+                    🫂 {confession.contextId}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Centered icon */}
@@ -160,23 +226,39 @@ export default function ConfessionFlipCard({
 
         {/* ── BACK FACE ── Revealed confession */}
         <div
-          className={`absolute inset-0 backface-hidden rotate-y-180 rounded-2xl overflow-hidden back-card-face antialiased transform-gpu ${!isFlipped ? "pointer-events-none" : ""}`}
+          className={`absolute inset-0 backface-hidden rotate-y-180 rounded-2xl back-card-face antialiased transform-gpu ${!isFlipped ? "pointer-events-none" : ""}`}
           style={{ WebkitFontSmoothing: "antialiased" }}
         >
           {/* Decorative border frame */}
-          <div className="absolute inset-0 bg-[#faf7f2] transform-gpu" />
+          <div className="absolute inset-0 bg-[#faf7f2] transform-gpu rounded-2xl overflow-hidden" />
           <div className="absolute inset-[6px] border border-dashed border-black/10 rounded-xl pointer-events-none" />
 
-          <div className="relative h-full flex flex-col p-5">
-            {/* Top: icon + category */}
-            <div className="flex flex-col items-center mb-3">
-              <span className="text-xl mb-1">🫖</span>
+          <div className="relative h-full flex flex-col p-5" onClick={handleBackFaceTap}>
+            {/* Double-tap heart animation */}
+            <AnimatePresence>
+              {showDoubleTapHeart && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 1.5, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+                >
+                  <span className="text-7xl drop-shadow-[0_4px_20px_rgba(239,68,68,0.5)] select-none">❤️</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {/* Top: category + context in one compact row */}
+            <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
               <span
-                className="text-[8px] font-bold uppercase tracking-[0.15em]"
-                style={{ color: catInfo?.color ?? "#666" }}
+                className="text-[8px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-md"
+                style={{ color: catInfo?.color ?? "#666", background: `${catInfo?.color ?? '#666'}12` }}
               >
-                {catInfo?.label ?? confession.category}
+                {confession.contentType === "question" ? "❓ Q & A • " : ""}{catInfo?.label ?? confession.category}
               </span>
+              {confession.cityId && <span className="text-[7.5px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/[0.04] text-black/50">📍 {confession.cityId}</span>}
+              {confession.professionId && <span className="text-[7.5px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/[0.04] text-black/50">💼 {confession.professionId}</span>}
+              {confession.contextId && <span className="text-[7.5px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/[0.04] text-black/50">🫂 {confession.contextId}</span>}
             </div>
 
             {/* Confession text */}
@@ -206,10 +288,10 @@ export default function ConfessionFlipCard({
             </div>
 
             {/* Reactions row */}
-            <div className="flex items-center justify-center gap-3 mb-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
               {activeReactions.map((type) => {
-                const info = REACTION_INFO[type];
-                if (!info) return null;
+                const emoji = resolveEmoji(type);
+                if (!emoji) return null;
                 const count = reactionCounts?.[type] ?? 0;
                 const isActive = visitorReactions?.includes(type);
                 return (
@@ -217,22 +299,55 @@ export default function ConfessionFlipCard({
                     key={type}
                     type="button"
                     onClick={(e) => handleReactionClick(type, e)}
-                    className={`flex flex-col items-center gap-0.5 group/rxn transition-all ${isActive ? "scale-110" : ""}`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all border ${
+                      isActive 
+                        ? "bg-black/10 border-black/20 text-black shadow-sm" 
+                        : "bg-[#faf8f5] border-transparent text-black/50 hover:bg-black/5 hover:text-black/80"
+                    }`}
                   >
-                    <span className="text-[10px] font-bold text-black/50">
-                      {count}
-                    </span>
-                    <span
-                      className={`text-lg transition-transform group-hover/rxn:scale-125 ${isActive ? "drop-shadow-md" : ""}`}
-                    >
-                      {info.emoji}
-                    </span>
-                    <span className="text-[7px] font-semibold uppercase tracking-wider text-black/35 max-w-[50px] text-center leading-tight">
-                      {info.label}
-                    </span>
+                    <span className="text-sm">{emoji}</span>
+                    <span>{count}</span>
                   </button>
                 );
               })}
+              
+              {/* Add Reaction Button */}
+              {activeReactions.length < 10 && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEmojiPicker(!showEmojiPicker);
+                    }}
+                    className="w-7 h-7 rounded-full bg-[#faf8f5] flex items-center justify-center text-black/40 hover:bg-black/5 hover:text-black transition-colors"
+                  >
+                    <span className="text-xs">+</span>
+                  </button>
+                  
+                  {showEmojiPicker && (
+                    <>
+                       <div className="fixed inset-0 z-[90]" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(false); }} />
+                       <div 
+                         className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:left-full md:bottom-[-20px] md:translate-x-0 md:translate-y-0 md:ml-3 md:top-auto z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
+                         onClick={(e) => e.stopPropagation()}
+                         onWheel={(e) => e.stopPropagation()}
+                         onTouchMove={(e) => e.stopPropagation()}
+                       >
+                         <Picker 
+                          data={data} 
+                          theme="light"
+                          previewPosition="none"
+                          onEmojiSelect={(e: any) => {
+                             handleReactionClick(e.native);
+                             setShowEmojiPicker(false);
+                          }}
+                        />
+                       </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Card actions: download, copy link, share */}

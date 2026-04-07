@@ -46,7 +46,7 @@ export const getCounts = query({
       counts[r.type] = (counts[r.type] || 0) + 1;
     }
 
-    return counts;
+    return Object.entries(counts).map(([type, count]) => ({ type, count }));
   },
 });
 

@@ -19,7 +19,7 @@ export default function SpillLibraryPage() {
 
   if (board === undefined || spills === undefined) {
     return (
-      <div className="min-h-screen bg-[#f2ebe2] flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#f2ebe2] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
       </div>
     );
@@ -27,7 +27,7 @@ export default function SpillLibraryPage() {
 
   if (board === null) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#f2ebe2]">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center bg-[#f2ebe2]">
         <span className="text-5xl mb-4">😕</span>
         <h1 className="text-2xl font-bold mb-2 serif">Board not found</h1>
         <Link
@@ -41,7 +41,7 @@ export default function SpillLibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,#f8f2e9_0%,#efe3d5_45%,#e7d8c8_100%)] text-[#1f1a16]">
+    <div className="min-h-[100dvh] bg-[radial-gradient(circle_at_20%_10%,#f8f2e9_0%,#efe3d5_45%,#e7d8c8_100%)] text-[#1f1a16]">
       <header className="sticky top-0 z-30 border-b border-[#4c3b2b]/10 bg-[#f3e9dd]/85 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link
