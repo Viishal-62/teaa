@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useMemo } from "react";
+
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -10,12 +12,27 @@ import { ArrowLeft, BookOpen, Plus } from "lucide-react";
 export default function SpillLibraryPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const isGlobal = slug === "global";
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const spills = useQuery(
-    api.spills.listByBoard,
-    board ? { boardId: board._id } : "skip",
+    isGlobal ? api.spills.listAllPublic : api.spills.listByBoard,
+    isGlobal ? {} : (board ? { boardId: board._id } : "skip"),
   );
+
+  const categories = useMemo(() => {
+    if (!spills) return ["All"];
+    const unique = new Set(spills.map((s: any) => s.category).filter(Boolean));
+    return ["All", ...Array.from(unique)];
+  }, [spills]);
+
+  const filteredSpills = useMemo(() => {
+    if (!spills) return [];
+    if (selectedCategory === "All") return spills;
+    return spills.filter((s: any) => s.category === selectedCategory);
+  }, [spills, selectedCategory]);
 
   if (board === undefined || spills === undefined) {
     return (
@@ -79,7 +96,33 @@ export default function SpillLibraryPage() {
           </p>
         </div>
 
-        {spills.length === 0 ? (
+        {/* Categories Filter */}
+        {spills && spills.length > 0 && categories.length > 1 && (
+          <div className="flex overflow-x-auto pb-4 mb-6 gap-2 hide-scrollbar w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style jsx>{`
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+            <div className="flex gap-2 mx-auto sm:mx-0 px-2 sm:px-0">
+              {categories.map((cat: any) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-colors ${
+                    selectedCategory === cat 
+                      ? 'bg-[#2b221b] text-[#fff7ef]' 
+                      : 'bg-[#4c3b2b]/10 text-[#5f4a38] hover:bg-[#4c3b2b]/15'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {filteredSpills.length === 0 ? (
           <div className="max-w-md mx-auto text-center rounded-3xl border border-[#4c3b2b]/12 bg-[#fff9f1]/85 p-8 shadow-[0_16px_40px_rgba(57,37,17,0.08)]">
             <span className="text-4xl block mb-3">📚</span>
             <h2 className="serif text-2xl font-black text-[#2f241a]">
@@ -97,7 +140,7 @@ export default function SpillLibraryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {spills.map((spill: any) => {
+            {filteredSpills.map((spill: any) => {
               const theme =
                 THEMES.find((entry) => entry.key === spill.coverTheme) ||
                 THEMES[0];
@@ -158,8 +201,9 @@ export default function SpillLibraryPage() {
                     </div>
 
                     <div className="mt-4 px-1">
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#6a5543]/65">
-                        Anonymous Author
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#6a5543]/65 flex justify-between">
+                        <span>Anonymous Author</span>
+                        {spill.category && <span className="text-[#846b54] bg-[#ebdccf] px-1.5 py-0.5 rounded-sm">{spill.category}</span>}
                       </p>
                       <p className="text-xs text-[#5f4a38]/80 mt-1">
                         {(spill.views ?? 0).toLocaleString()} reads

@@ -95,6 +95,8 @@ export default defineSchema({
     aiImageUrl: v.optional(v.string()), // OpenRouter generated cover
     generationsUsed: v.number(), // Limit strictly to 10
     displayName: v.string(), // Authored pseudo name
+    category: v.optional(v.string()), // Category or tags (max 15 chars)
+    about: v.optional(v.string()), // Short description (max 15 chars)
     views: v.optional(v.number()),
     createdAt: v.number(),
   })

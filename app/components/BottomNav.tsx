@@ -60,7 +60,7 @@ export default function BottomNav() {
     { name: "Explore", href: "/explore", icon: Compass },
     { name: "Create", href: "/", icon: Plus, isFab: true },
     { name: "Voice", href: "/explore/voice", icon: Mic },
-    { name: "Forum", href: "/forum", icon: MessageSquare },
+    { name: "Spills", href: "/b/global/spill", icon: BookOpen },
   ];
 
   return (

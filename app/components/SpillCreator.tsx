@@ -102,6 +102,8 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 
   // Cover
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [about, setAbout] = useState("");
   const [theme, setTheme] = useState<ThemeKey>(THEMES[0].key);
   const [emoji, setEmoji] = useState("\u{1F525}");
   const [aiImageUrl, setAiImageUrl] = useState("");
@@ -363,6 +365,8 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
         title: title.trim(),
         coverTheme: theme,
         coverEmoji: emoji,
+        category: category.trim() || undefined,
+        about: about.trim() || undefined,
       });
 
       if (aiImageUrl) {
@@ -501,6 +505,10 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
               <StepCover
                 title={title}
                 setTitle={setTitle}
+                category={category}
+                setCategory={setCategory}
+                about={about}
+                setAbout={setAbout}
                 theme={theme}
                 setTheme={setTheme}
                 emoji={emoji}
@@ -677,6 +685,10 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 function StepCover({
   title,
   setTitle,
+  category,
+  setCategory,
+  about,
+  setAbout,
   theme,
   setTheme,
   emoji,
@@ -697,6 +709,10 @@ function StepCover({
 }: {
   title: string;
   setTitle: (v: string) => void;
+  category: string;
+  setCategory: (v: string) => void;
+  about: string;
+  setAbout: (v: string) => void;
   theme: ThemeKey;
   setTheme: (v: ThemeKey) => void;
   emoji: string;
@@ -787,6 +803,38 @@ function StepCover({
           className="w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 text-lg font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all"
           maxLength={100}
         />
+      </div>
+
+      {/* Category & About Inputs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">
+            <span>Category / Tag</span>
+            <span className={category.length >= 15 ? "text-red-500" : ""}>{category.length}/15</span>
+          </label>
+          <input
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="e.g. Romance"
+            className="w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 text-sm font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all"
+            maxLength={15}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">
+            <span>Short About</span>
+            <span className={about.length >= 15 ? "text-red-500" : ""}>{about.length}/15</span>
+          </label>
+          <input
+            type="text"
+            value={about}
+            onChange={(e) => setAbout(e.target.value)}
+            placeholder="e.g. Crazy!"
+            className="w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 text-sm font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all"
+            maxLength={15}
+          />
+        </div>
       </div>
 
       {/* Theme Picker */}

@@ -10,6 +10,8 @@ export const create = mutation({
     title: v.string(),
     coverTheme: v.string(),
     coverEmoji: v.string(),
+    category: v.optional(v.string()),
+    about: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     if (!args.title.trim()) throw new Error("Title is required");
@@ -35,6 +37,8 @@ export const create = mutation({
       title: args.title.trim(),
       coverTheme: args.coverTheme,
       coverEmoji: args.coverEmoji,
+      category: args.category?.slice(0, 15).trim(),
+      about: args.about?.slice(0, 15).trim(),
       generationsUsed: 0,
       displayName,
       views: 0,
@@ -113,6 +117,38 @@ export const listAll = query({
         };
       }),
     );
+    return enriched;
+  },
+});
+
+// ─── List All Public Spills (for explore/global board) ───
+export const listAllPublic = query({
+  args: {},
+  handler: async (ctx) => {
+    // Fetch a larger pool since we will filter out private ones
+    const spills = await ctx.db.query("spills").order("desc").take(50);
+    
+    // Attach board slug + reactions + filter out private boards
+    const enriched = (await Promise.all(
+      spills.map(async (spill) => {
+        const board = await ctx.db.get(spill.boardId);
+        if (!board || board.visibility === "private") {
+          return null; // Exclude private board spills
+        }
+        
+        const reactions = await ctx.db
+          .query("spillReactions")
+          .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
+          .collect();
+          
+        return {
+          ...spill,
+          boardSlug: board.slug,
+          totalReactions: reactions.length,
+        };
+      }),
+    )).filter((s): s is NonNullable<typeof s> => s !== null);
+    
     return enriched;
   },
 });

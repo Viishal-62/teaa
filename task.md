@@ -1,8 +1,7 @@
+ # while making spill there is no catogry , about etc kind of stuff add also there input field they can werite and max character limit should be category like tags , about like make it 10-15 ch 
 
-# in the direct confess make a advance setting button and move all dissappear tea etc in that like you did for standerd board 
+ # https://www.teaadrop.xyz/b/global/spill - in this only getting the spill that is in global board but it should have all spill in single place evne if it's from different board and but if board is private then no 
 
-# also anyone can see inbox if the room is public no matter of creator id etc okay add scroll things in the inbox so if msg is more then 4 so they can sccroll and also add a indicator so peole will understnad okay but make sure for updating setting only board creator can do that 
+ # in bottom nav for mobile at last there is for forum remove that and instead of forum reditet to this https://www.teaadrop.xyz/b/global/spill and also replace the icon okay 
 
-# give them a + button who is going for how they feel we have default 11 but they can add from their side also okay but limit charactre max to 10-15 okay 
-
-# also show filterization according to how feels like by default we have 11 for standerd board so make sure board should have extra filters according to the feel okay and for explore also 
+ # and while we are adding catogyr tags in the spills so make sure there should be filter in the spill dashbaod where all spills wil be there okay 
