@@ -22,10 +22,12 @@ import {
   Briefcase,
   Heart,
   Search,
+  Library,
 } from "lucide-react";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
 import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
+import DeepSpillCard from "@/app/components/DeepSpillCard";
 import MoodRing from "@/app/components/MoodRing";
 import { THEMES } from "@/convex/helpers";
 import { motion, AnimatePresence } from "framer-motion";
@@ -297,6 +299,13 @@ function ExplorePageContent() {
           >
             <Mic size={14} />
             <span className="hidden sm:inline">Voice</span>
+          </Link>
+          <Link
+            href="/b/global/spill"
+            className="hidden md:flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 gap-1.5 text-[10px] text-amber-700/80 hover:text-amber-800 font-black tracking-widest uppercase transition-colors"
+          >
+            <Library size={13} />
+            <span className="hidden sm:inline">Spill Library</span>
           </Link>
           <Link
             href="/spill/create"
@@ -914,111 +923,14 @@ function ExplorePageContent() {
                     return scoreB - scoreA;
                   })
                   .map((spill, idx) => {
-                    const spillTheme =
-                      THEMES.find((t) => t.key === spill.coverTheme) ||
-                      THEMES[0];
-                    const isTop3 = idx < 3;
-                    const rankColors = [
-                      "from-amber-400 to-amber-600 shadow-amber-500/20", // 1st: Gold
-                      "from-slate-300 to-slate-500 shadow-slate-400/20", // 2nd: Silver
-                      "from-orange-400 to-orange-700 shadow-orange-600/20", // 3rd: Bronze
-                    ];
-
                     return (
-                      <Link
+                      <DeepSpillCard
                         key={spill._id}
-                        href={`/b/${spill.boardSlug}/s/${spill._id}`}
-                        className="group block relative"
-                      >
-                        {/* Rank Badge */}
-                        <div
-                          className={`
-                          absolute -top-2 -left-2 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg border-[3px] border-white z-20 transition-transform group-hover:scale-110 group-hover:rotate-6
-                          ${isTop3 ? `bg-gradient-to-br ${rankColors[idx]}` : "bg-slate-800"}
-                        `}
-                        >
-                          {idx === 0
-                            ? "🥇"
-                            : idx === 1
-                              ? "🥈"
-                              : idx === 2
-                                ? "🥉"
-                                : `${idx + 1}`}
-                        </div>
-
-                        <article className="rounded-3xl border border-white/50 bg-white/60 p-4 transition-all hover:shadow-xl hover:bg-white/80 backdrop-blur-md group-hover:-translate-y-1">
-                          <div
-                            className="relative mx-auto aspect-[4/5] w-full rounded-2xl overflow-hidden shadow-sm"
-                            style={{
-                              background: spill.aiImageUrl
-                                ? `url(${spill.aiImageUrl}) center/cover`
-                                : spillTheme.bg,
-                            }}
-                          >
-                            <div
-                              className={`absolute inset-0 flex flex-col justify-between p-4 text-center ${
-                                spill.aiImageUrl ? "bg-black/35" : ""
-                              }`}
-                            >
-                              <span
-                                className="text-[8px] font-black uppercase tracking-[0.3em]"
-                                style={{
-                                  color: spill.aiImageUrl
-                                    ? "#fff"
-                                    : spillTheme.accent,
-                                }}
-                              >
-                                Deep Spill
-                              </span>
-                              <div>
-                                {!spill.aiImageUrl && (
-                                  <div className="text-3xl mb-2">
-                                    {spill.coverEmoji}
-                                  </div>
-                                )}
-                                <h3
-                                  className="serif text-lg font-black leading-tight"
-                                  style={{
-                                    color: spill.aiImageUrl
-                                      ? "#fff"
-                                      : spillTheme.text,
-                                  }}
-                                >
-                                  {spill.title}
-                                </h3>
-                              </div>
-                              <span
-                                className="text-[8px] uppercase tracking-[0.15em] font-medium opacity-50"
-                                style={{
-                                  color: spill.aiImageUrl
-                                    ? "#fff"
-                                    : spillTheme.text,
-                                }}
-                              >
-                                Read Now
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-3 px-1 flex items-center justify-between">
-                            <div>
-                              <p className="text-[10px] font-bold text-black/25 uppercase tracking-wider">
-                                {spill.displayName}
-                              </p>
-                              <p className="text-[10px] text-black/15 mt-0.5">
-                                {(spill.views ?? 0).toLocaleString()} reads
-                              </p>
-                            </div>
-                            {spill.totalReactions > 0 && (
-                              <div className="flex items-center gap-1 bg-orange-500/5 px-2 py-1 rounded-lg">
-                                <span className="text-[10px] font-black text-orange-600/60 tabular-nums">
-                                  {spill.totalReactions}
-                                </span>
-                                <span className="text-[10px]">🔥</span>
-                              </div>
-                            )}
-                          </div>
-                        </article>
-                      </Link>
+                        spill={spill}
+                        slug={(spill as any).boardSlug || "global"}
+                        index={idx}
+                        rank={idx}
+                      />
                     );
                   })}
               </div>

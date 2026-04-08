@@ -102,7 +102,8 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 
   // Cover
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [about, setAbout] = useState("");
   const [theme, setTheme] = useState<ThemeKey>(THEMES[0].key);
   const [emoji, setEmoji] = useState("\u{1F525}");
@@ -365,7 +366,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
         title: title.trim(),
         coverTheme: theme,
         coverEmoji: emoji,
-        category: category.trim() || undefined,
+        tags: tags.length > 0 ? tags : undefined,
         about: about.trim() || undefined,
       });
 
@@ -505,8 +506,10 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
               <StepCover
                 title={title}
                 setTitle={setTitle}
-                category={category}
-                setCategory={setCategory}
+                tagInput={tagInput}
+                setTagInput={setTagInput}
+                tags={tags}
+                setTags={setTags}
                 about={about}
                 setAbout={setAbout}
                 theme={theme}
@@ -685,8 +688,10 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 function StepCover({
   title,
   setTitle,
-  category,
-  setCategory,
+  tagInput,
+  setTagInput,
+  tags,
+  setTags,
   about,
   setAbout,
   theme,
@@ -709,8 +714,10 @@ function StepCover({
 }: {
   title: string;
   setTitle: (v: string) => void;
-  category: string;
-  setCategory: (v: string) => void;
+  tagInput: string;
+  setTagInput: (v: string) => void;
+  tags: string[];
+  setTags: (v: string[]) => void;
   about: string;
   setAbout: (v: string) => void;
   theme: ThemeKey;
@@ -809,17 +816,82 @@ function StepCover({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">
-            <span>Category / Tag</span>
-            <span className={category.length >= 15 ? "text-red-500" : ""}>{category.length}/15</span>
+            <span>Tags ({tags.length}/3)</span>
+            <span className={tagInput.length >= 15 ? "text-red-500" : ""}>{tagInput.length}/15</span>
           </label>
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="e.g. Romance"
-            className="w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 text-sm font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all"
-            maxLength={15}
-          />
+          <div className="flex flex-col gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (tagInput.trim() && tags.length < 3) {
+                      setTags([...tags, tagInput.trim().slice(0, 15)]);
+                      setTagInput("");
+                    }
+                  }
+                }}
+                disabled={tags.length >= 3}
+                placeholder={tags.length >= 3 ? "Max tags reached" : "e.g. Romance"}
+                className={`w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 pr-12 text-sm font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all ${tags.length >= 3 ? "opacity-50" : ""}`}
+                maxLength={15}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (tagInput.trim() && tags.length < 3) {
+                    setTags([...tags, tagInput.trim().slice(0, 15)]);
+                    setTagInput("");
+                  }
+                }}
+                disabled={!tagInput.trim() || tags.length >= 3}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-xl bg-black text-white disabled:opacity-30 transition-transform active:scale-90"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+            
+            {/* Short helper text */}
+            {tags.length === 0 && (
+              <p className="text-[9px] text-black/40 italic px-1">
+                Add up to 3 tags so others can find your relatable story.
+              </p>
+            )}
+
+            {/* Tags display */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                <AnimatePresence>
+                  {tags.map((tag, idx) => (
+                    <motion.div
+                      key={`${tag}-${idx}`}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8, filter: "blur(4px)" }}
+                      className="group relative inline-flex items-center justify-center overflow-hidden rounded-full p-[1.5px]"
+                    >
+                      {/* Animated spinning gradient border */}
+                      <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)]" />
+                      
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[10px] uppercase font-black tracking-wider text-[#111] backdrop-blur-3xl">
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => setTags(tags.filter((_, i) => i !== idx))}
+                          className="flex items-center justify-center w-4 h-4 rounded-full bg-black/5 hover:bg-black/10 text-black/40 hover:text-black transition-colors"
+                        >
+                          <X size={10} />
+                        </button>
+                      </span>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
         <div>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">

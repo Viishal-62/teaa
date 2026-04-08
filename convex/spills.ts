@@ -10,7 +10,8 @@ export const create = mutation({
     title: v.string(),
     coverTheme: v.string(),
     coverEmoji: v.string(),
-    category: v.optional(v.string()),
+    category: v.optional(v.string()), // Kept for schema backwards compat
+    tags: v.optional(v.array(v.string())),
     about: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -38,6 +39,7 @@ export const create = mutation({
       coverTheme: args.coverTheme,
       coverEmoji: args.coverEmoji,
       category: args.category?.slice(0, 15).trim(),
+      tags: args.tags?.map((t) => t.slice(0, 15).trim()).slice(0, 3) || [],
       about: args.about?.slice(0, 15).trim(),
       generationsUsed: 0,
       displayName,

@@ -96,6 +96,7 @@ export default defineSchema({
     generationsUsed: v.number(), // Limit strictly to 10
     displayName: v.string(), // Authored pseudo name
     category: v.optional(v.string()), // Category or tags (max 15 chars)
+    tags: v.optional(v.array(v.string())), // Up to 3 custom tags
     about: v.optional(v.string()), // Short description (max 15 chars)
     views: v.optional(v.number()),
     createdAt: v.number(),

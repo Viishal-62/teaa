@@ -842,9 +842,9 @@ export default function BoardViewPage() {
                   {/* Coverflow carousel */}
                   <div
                     ref={carouselRef}
-                    className="relative flex items-center justify-center -mx-5 overflow-hidden"
+                    className="relative flex items-center justify-center -mx-5 py-4"
                     style={{
-                      height: "500px",
+                      minHeight: "650px",
                       perspective: "1200px",
                     }}
                   >

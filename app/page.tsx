@@ -27,6 +27,8 @@ import {
   Heart,
   TrendingUp,
 } from "lucide-react";
+import { Plus as PlusIcon, Check, Play, BookOpen } from "lucide-react";
+import DeepSpillCard from "@/app/components/DeepSpillCard";
 import { useEffect, useState, useRef } from "react";
 import {
   motion,
@@ -1255,83 +1257,14 @@ export default function Home() {
               viewport={{ once: true }}
               className="grid grid-cols-1 sm:grid-cols-3 gap-4"
             >
-              {recentSpills.slice(0, 3).map((spill) => {
-                const spillTheme =
-                  THEMES.find((t) => t.key === spill.coverTheme) || THEMES[0];
-                return (
-                  <motion.div
-                    key={spill._id}
-                    variants={fadeUp}
-                    whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                  >
-                    <Link
-                      href={`/b/${spill.boardSlug}/s/${spill._id}`}
-                      className="group block"
-                    >
-                      <div className="bg-white border border-black/5 rounded-2xl p-4 hover:shadow-lg hover:shadow-black/5 transition-all">
-                        <div
-                          className="relative mx-auto aspect-[3/4] rounded-xl overflow-hidden transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-[-1deg]"
-                          style={{
-                            background: spill.aiImageUrl
-                              ? `url(${spill.aiImageUrl}) center/cover`
-                              : spillTheme.bg,
-                          }}
-                        >
-                          <div
-                            className={`absolute inset-0 flex flex-col justify-between p-5 text-center ${spill.aiImageUrl ? "bg-black/35" : ""}`}
-                          >
-                            <span
-                              className="text-[8px] font-black uppercase tracking-[0.3em]"
-                              style={{
-                                color: spill.aiImageUrl
-                                  ? "#fff"
-                                  : spillTheme.accent,
-                              }}
-                            >
-                              Deep Spill
-                            </span>
-                            <div>
-                              {!spill.aiImageUrl && (
-                                <div className="text-3xl mb-2">
-                                  {spill.coverEmoji}
-                                </div>
-                              )}
-                              <h3
-                                className="serif text-lg font-black leading-tight"
-                                style={{
-                                  color: spill.aiImageUrl
-                                    ? "#fff"
-                                    : spillTheme.text,
-                                }}
-                              >
-                                {spill.title}
-                              </h3>
-                            </div>
-                            <span
-                              className="text-[8px] uppercase tracking-[0.15em] font-medium opacity-50"
-                              style={{
-                                color: spill.aiImageUrl
-                                  ? "#fff"
-                                  : spillTheme.text,
-                              }}
-                            >
-                              {spill.displayName}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between px-1">
-                          <p className="text-[9px] font-bold text-black/20 uppercase tracking-wider">
-                            {(spill.views ?? 0).toLocaleString()} reads
-                          </p>
-                          <span className="text-[9px] font-bold text-black/15 group-hover:text-accent uppercase tracking-widest transition-colors">
-                            Read →
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
+              {recentSpills.slice(0, 3).map((spill, i) => (
+                <DeepSpillCard 
+                  key={spill._id} 
+                  spill={spill} 
+                  slug={(spill as any).boardSlug || "global"} 
+                  index={i} 
+                />
+              ))}
             </motion.div>
           </div>
         </section>

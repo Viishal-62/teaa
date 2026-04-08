@@ -335,6 +335,9 @@ function CoverSlide({
     coverEmoji: string;
     aiImageUrl?: string;
     displayName: string;
+    about?: string;
+    category?: string;
+    tags?: string[];
   };
   theme: (typeof THEMES)[number];
 }) {
@@ -415,11 +418,47 @@ function CoverSlide({
           By {spill.displayName}
         </motion.p>
 
+        {/* About (flashy shimmer) */}
+        {spill.about && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="text-[11px] font-medium leading-relaxed text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-purple-400 max-w-xs"
+            style={{ backgroundSize: '200% auto', animation: 'shimmerSweep 3s linear infinite' }}
+          >
+            {spill.about}
+          </motion.p>
+        )}
+
+        {/* Tags with gradient borders */}
+        {(() => {
+          const coverTags: string[] = [];
+          if (spill.tags && spill.tags.length > 0) coverTags.push(...spill.tags);
+          else if (spill.category) coverTags.push(spill.category);
+          if (coverTags.length === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="flex flex-wrap gap-1.5 justify-center"
+            >
+              {coverTags.map((t, i) => (
+                <span key={i} className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]">
+                  <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)] opacity-60" />
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider backdrop-blur-sm ${spill.aiImageUrl ? 'bg-black/30 text-white/80' : 'bg-white/80 text-black/50'}`}>{t}</span>
+                </span>
+              ))}
+            </motion.div>
+          );
+        })()}
+
         {/* Tap hint */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
           className="text-[10px] font-medium tracking-wide mt-8"
           style={{
             color: spill.aiImageUrl
@@ -533,6 +572,9 @@ function EndSlide({
     title: string;
     displayName: string;
     views?: number;
+    about?: string;
+    category?: string;
+    tags?: string[];
   };
   theme: (typeof THEMES)[number];
   slug: string;
@@ -624,6 +666,30 @@ function EndSlide({
               👁 {spill.views} views
             </p>
           )}
+          {/* About (flashy shimmer) */}
+          {spill.about && (
+            <p className="text-[10px] font-medium leading-relaxed text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-rose-500 to-purple-500 mt-2"
+               style={{ backgroundSize: '200% auto', animation: 'shimmerSweep 3s linear infinite' }}>
+              {spill.about}
+            </p>
+          )}
+          {/* Tags */}
+          {(() => {
+            const endTags: string[] = [];
+            if (spill.tags && spill.tags.length > 0) endTags.push(...spill.tags);
+            else if (spill.category) endTags.push(spill.category);
+            if (endTags.length === 0) return null;
+            return (
+              <div className="flex flex-wrap gap-1 justify-center mt-2">
+                {endTags.map((t, i) => (
+                  <span key={i} className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]">
+                    <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)] opacity-40" />
+                    <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[7px] font-bold uppercase tracking-wider text-black/50">{t}</span>
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
         </motion.div>
 
         {/* ─── Reaction Row ─── */}

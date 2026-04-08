@@ -97,6 +97,11 @@ body {
   animation: fadeSlideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+@keyframes shimmerSweep {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 @keyframes float {
   0%,
   100% {
