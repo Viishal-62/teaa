@@ -7,7 +7,7 @@
 
 // ─── Base Banned Words ───
 // These are always blocked across the entire platform
-const BASE_BANNED_WORDS = [
+const STRICT_BANNED_WORDS = [
   // ─── Severe Slurs & Hate Speech ───
   "nigger",
   "nigga",
@@ -52,7 +52,9 @@ const BASE_BANNED_WORDS = [
   "child porn",
   "cp",
   "exploitation",
+];
 
+const COMMON_PROFANITY_WORDS = [
   // ─── Common Profanity (Broad Filter) ───
   "fuck",
   "fucking",
@@ -142,14 +144,21 @@ export type ModerationResult = {
 export function moderateText(
   text: string,
   customBannedWords: string[] = [],
+  options: { disableCommonProfanityFilter?: boolean } = {}
 ): ModerationResult {
   if (!text || text.trim().length === 0) {
     return { isClean: true, flaggedWords: [], message: "" };
   }
 
   const lowerText = text.toLowerCase();
+  
+  let baseWords = [...STRICT_BANNED_WORDS];
+  if (!options.disableCommonProfanityFilter) {
+    baseWords = [...baseWords, ...COMMON_PROFANITY_WORDS];
+  }
+
   const allBanned = [
-    ...BASE_BANNED_WORDS,
+    ...baseWords,
     ...customBannedWords.map((w) => w.toLowerCase()),
   ];
 
@@ -161,23 +170,17 @@ export function moderateText(
   const flaggedWords: FlaggedWord[] = [];
 
   for (const bannedWord of uniqueBanned) {
-    const lowerBanned = bannedWord.toLowerCase();
-    let searchFrom = 0;
+    const escaped = bannedWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // escape regex
+    const regex = new RegExp(`\\b${escaped}\\b`, "gi");
 
-    while (searchFrom < lowerText.length) {
-      const idx = lowerText.indexOf(lowerBanned, searchFrom);
-      if (idx === -1) break;
+    let match;
 
-      // Get the actual matched text (preserving original casing)
-      const matchedText = text.substring(idx, idx + bannedWord.length);
-
+    while ((match = regex.exec(text)) !== null) {
       flaggedWords.push({
-        word: matchedText,
-        start: idx,
-        end: idx + bannedWord.length,
+        word: match[0],
+        start: match.index,
+        end: match.index + match[0].length,
       });
-
-      searchFrom = idx + bannedWord.length;
     }
   }
 

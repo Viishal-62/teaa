@@ -16,7 +16,7 @@ export const create = mutation({
 
     // ─── Content Moderation ───
     const board = await ctx.db.get(args.boardId);
-    const titleMod = moderateText(args.title, board?.bannedWords ?? []);
+    const titleMod = moderateText(args.title, board?.bannedWords ?? [], { disableCommonProfanityFilter: true });
     if (!titleMod.isClean) {
       throw new Error(
         JSON.stringify({

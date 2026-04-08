@@ -127,6 +127,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
   );
   const [showBoardPicker, setShowBoardPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [publishError, setPublishError] = useState("");
 
   /* Derived */
   const selectedTheme = THEMES.find((t) => t.key === theme) || THEMES[0];
@@ -315,6 +316,7 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 
   /* Publish */
   const publishSpill = async () => {
+    setPublishError("");
     if (isSubmitting || !title.trim()) return;
 
     // Edge case: empty pages
@@ -395,13 +397,13 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
           const words = errData.flaggedWords
             ?.map((f: any) => f.word)
             .join(", ");
-          alert(`🛡️ ${errData.message}\n\nFlagged words: ${words}`);
+          setPublishError(`🛡️ ${errData.message} Flagged words: ${words}`);
           return;
         }
       } catch {
         // Not a moderation error
       }
-      alert("Failed to publish. Please try again.");
+      setPublishError("Failed to publish. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -620,9 +622,16 @@ export default function SpillCreator({ mode, slug }: SpillCreatorProps) {
 
           {step === 3 && (
             <>
-              <span className="text-[10px] font-bold text-black/35 uppercase tracking-wider">
-                {pages.length} pages · {totalWords} words
-              </span>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-black/35 uppercase tracking-wider">
+                  {pages.length} pages · {totalWords} words
+                </span>
+                {publishError && (
+                  <span className="text-[10px] font-bold text-red-500 mt-1 max-w-[200px] sm:max-w-xs break-words leading-tight">
+                    {publishError}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={publishSpill}

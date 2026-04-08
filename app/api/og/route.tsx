@@ -12,8 +12,17 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get("id");
 
   try {
+    if (type === "spill" && id) {
+      return await renderSpillOG(id);
+    }
     if (type === "confession" && id) {
       return await renderConfessionOG(id);
+    }
+    if (type === "admirers" && slug) {
+      return await renderAdmirersOG(slug);
+    }
+    if (type === "create-spill" && slug) {
+      return await renderCreateSpillOG(slug);
     }
     if (type === "board" && slug) {
       return await renderBoardOG(slug);
@@ -302,6 +311,345 @@ async function renderBoardOG(slug: string) {
       </div>
     </div>,
     { width: 1200, height: 630 },
+  );
+}
+
+// ─── Spill OG Image ───
+async function renderSpillOG(spillId: string) {
+  const spill = await fetchQuery(api.spills.getById, {
+    spillId: spillId as any,
+  });
+
+  if (!spill) return renderDefaultOG();
+
+  return new ImageResponse(
+    <div
+      style={{
+        width: "1200px",
+        height: "630px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #1A1A1A 0%, #0D0D0D 100%)",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      {/* Background glow effects */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-150px",
+          left: "-150px",
+          width: "600px",
+          height: "600px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-150px",
+          right: "-150px",
+          width: "600px",
+          height: "600px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+
+      {/* Book Cover Container */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "800px",
+          height: "500px",
+          background: "rgba(255, 255, 255, 0.03)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "16px",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+          padding: "40px",
+        }}
+      >
+        {/* Emoji Cover */}
+        <div style={{ fontSize: "100px", marginBottom: "20px", display: "flex", filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.3))" }}>
+          {spill.coverEmoji || "📔"}
+        </div>
+
+        {/* Title */}
+        <div
+          style={{
+            fontSize: "64px",
+            fontWeight: 800,
+            color: "#ffffff",
+            textAlign: "center",
+            lineHeight: 1.1,
+            letterSpacing: "-0.03em",
+            marginBottom: "30px",
+            display: "flex",
+            textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+          }}
+        >
+          {spill.title.length > 50 ? `${spill.title.slice(0, 50)}...` : spill.title}
+        </div>
+
+        {/* Author Line */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            background: "rgba(255,255,255,0.06)",
+            padding: "12px 24px",
+            borderRadius: "100px",
+            border: "1px solid rgba(255,255,255,0.05)",
+          }}
+        >
+          <div style={{ fontSize: "20px", display: "flex" }}>✍️</div>
+          <div
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              color: "rgba(255,255,255,0.8)",
+              letterSpacing: "0.05em",
+              textTransform: "uppercase",
+              display: "flex",
+            }}
+          >
+            By {spill.displayName}
+          </div>
+        </div>
+      </div>
+
+      {/* Brand Watermark */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "30px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+        }}
+      >
+        <div style={{ fontSize: "24px", display: "flex" }}>🫖</div>
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: 700,
+            color: "rgba(255,255,255,0.3)",
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            display: "flex",
+          }}
+        >
+          Teaaa Deep Spills
+        </div>
+      </div>
+    </div>,
+    { width: 1200, height: 630 }
+  );
+}
+
+// ─── Admirers OG Image ───
+async function renderAdmirersOG(slug: string) {
+  const board = await fetchQuery(api.boards.getBySlug, { slug });
+  if (!board) return renderDefaultOG();
+
+  return new ImageResponse(
+    <div
+      style={{
+        width: "1200",
+        height: "630",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #2a0845 0%, #6441A5 100%)",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-150",
+          left: "-150",
+          width: "500",
+          height: "500",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(233, 30, 99, 0.4) 0%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-150",
+          right: "-150",
+          width: "500",
+          height: "500",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(156, 39, 176, 0.4) 0%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(255, 255, 255, 0.1)",
+          padding: "60px 80px",
+          borderRadius: "32px",
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+        }}
+      >
+        <div style={{ fontSize: "72px", marginBottom: "24px", display: "flex" }}>
+          💌
+        </div>
+        <div
+          style={{
+            fontSize: "64px",
+            fontWeight: 900,
+            color: "#ffffff",
+            letterSpacing: "-0.02em",
+            marginBottom: "16px",
+            display: "flex",
+            textAlign: "center",
+            textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          Secret Admirers
+        </div>
+        <div
+          style={{
+            fontSize: "32px",
+            color: "rgba(255,255,255,0.8)",
+            fontStyle: "italic",
+            marginBottom: "32px",
+            display: "flex",
+            textAlign: "center",
+          }}
+        >
+          of {board.name}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            background: "rgba(0,0,0,0.4)",
+            padding: "16px 32px",
+            borderRadius: "100px",
+            fontSize: "20px",
+            fontWeight: 700,
+            color: "rgba(255,255,255,0.9)",
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          Drop a hidden whisper
+        </div>
+      </div>
+    </div>,
+    { width: 1200, height: 630 }
+  );
+}
+
+// ─── Create Spill OG Image ───
+async function renderCreateSpillOG(slug: string) {
+  const board = await fetchQuery(api.boards.getBySlug, { slug });
+  if (!board) return renderDefaultOG();
+
+  return new ImageResponse(
+    <div
+      style={{
+        width: "1200",
+        height: "630",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #111111 0%, #000000 100%)",
+        fontFamily: "system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: "-50",
+          right: "-50",
+          width: "400",
+          height: "400",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+      
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          border: "2px solid rgba(255, 255, 255, 0.1)",
+          padding: "60px 80px",
+          borderRadius: "24px",
+          background: "rgba(255, 255, 255, 0.02)",
+        }}
+      >
+        <div style={{ fontSize: "72px", marginBottom: "20px", display: "flex", filter: "grayscale(100%)" }}>
+          ✒️
+        </div>
+        <div
+          style={{
+            fontSize: "64px",
+            fontWeight: 900,
+            color: "#ffffff",
+            letterSpacing: "-0.05em",
+            marginBottom: "16px",
+            display: "flex",
+            textTransform: "uppercase",
+            borderBottom: "4px solid #9333EA",
+            paddingBottom: "8px",
+          }}
+        >
+          Write a Spill
+        </div>
+        <div
+          style={{
+            fontSize: "28px",
+            color: "rgba(255,255,255,0.5)",
+            marginTop: "16px",
+            display: "flex",
+            letterSpacing: "0.1em",
+          }}
+        >
+          ON THE {board.name.toUpperCase()} BOARD
+        </div>
+      </div>
+      
+      <div
+        style={{
+          position: "absolute",
+          bottom: "30",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          color: "rgba(255, 255, 255, 0.3)",
+          fontSize: "18px",
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+        }}
+      >
+        Teaaa Deep Gossip
+      </div>
+    </div>,
+    { width: 1200, height: 630 }
   );
 }
 
