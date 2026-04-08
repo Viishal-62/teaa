@@ -106,7 +106,7 @@ export default function DeepSpillReader() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " ") goToSlide(1);
       if (e.key === "ArrowLeft") goToSlide(-1);
-      if (e.key === "Escape") router.push(`/b/${slug}`);
+      if (e.key === "Escape") router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -146,7 +146,7 @@ export default function DeepSpillReader() {
         <p className="text-sm font-medium">This spill doesn&apos;t exist.</p>
         <button
           type="button"
-          onClick={() => router.push(`/b/${slug}`)}
+          onClick={() => router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`)}
           className="px-5 py-2.5 rounded-full bg-black/5 text-xs font-bold uppercase tracking-wider hover:bg-black/10 transition-colors"
         >
           Go Back
@@ -213,7 +213,7 @@ export default function DeepSpillReader() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/b/${slug}`);
+              router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`);
             }}
             className="w-8 h-8 rounded-full bg-black/5 backdrop-blur-md flex items-center justify-center hover:bg-black/10 transition-colors"
           >
@@ -692,7 +692,7 @@ function EndSlide({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/b/${slug}`);
+              router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`);
             }}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-orange-500/80 to-rose-500/80 text-white text-[10px] font-black uppercase tracking-[0.15em] hover:scale-[1.03] transition-all shadow-lg shadow-orange-500/10"
           >

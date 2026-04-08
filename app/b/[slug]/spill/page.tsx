@@ -16,7 +16,7 @@ export default function SpillLibraryPage() {
   
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
-  const board = useQuery(api.boards.getBySlug, { slug });
+  const board = useQuery(api.boards.getBySlug, isGlobal ? "skip" : { slug });
   const spills = useQuery(
     isGlobal ? api.spills.listAllPublic : api.spills.listByBoard,
     isGlobal ? {} : (board ? { boardId: board._id } : "skip"),
@@ -34,7 +34,7 @@ export default function SpillLibraryPage() {
     return spills.filter((s: any) => s.category === selectedCategory);
   }, [spills, selectedCategory]);
 
-  if (board === undefined || spills === undefined) {
+  if ((!isGlobal && board === undefined) || spills === undefined) {
     return (
       <div className="min-h-[100dvh] bg-[#f2ebe2] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
@@ -42,7 +42,7 @@ export default function SpillLibraryPage() {
     );
   }
 
-  if (board === null) {
+  if (!isGlobal && board === null) {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center bg-[#f2ebe2]">
         <span className="text-5xl mb-4">😕</span>
@@ -62,33 +62,35 @@ export default function SpillLibraryPage() {
       <header className="sticky top-0 z-30 border-b border-[#4c3b2b]/10 bg-[#f3e9dd]/85 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link
-            href={`/b/${slug}`}
+            href={isGlobal ? "/" : `/b/${slug}`}
             className="inline-flex items-center gap-2 text-[#5b4736]/70 hover:text-[#2b221b] transition-colors"
           >
             <ArrowLeft size={17} />
             <span className="text-[11px] font-bold uppercase tracking-[0.2em]">
-              Back to Board
+              {isGlobal ? "Home" : "Back to Board"}
             </span>
           </Link>
           <span className="hidden sm:inline text-[10px] font-black uppercase tracking-[0.3em] text-[#5b4736]/60">
-            Long Gossip Library
+            {isGlobal ? "Global Library" : "Long Gossip Library"}
           </span>
-          <Link
-            href={`/b/${slug}/spill/create`}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#2b221b] text-[#fff7ef] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-colors"
-          >
-            <Plus size={12} /> New Book
-          </Link>
+          {!isGlobal && (
+            <Link
+              href={`/b/${slug}/spill/create`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#2b221b] text-[#fff7ef] text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-colors"
+            >
+              <Plus size={12} /> New Book
+            </Link>
+          )}
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 pb-24">
         <div className="text-center mb-10">
           <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#5f4a38]/60">
-            {board.name}
+            {isGlobal ? "All Boards" : board?.name}
           </p>
           <h1 className="serif text-4xl sm:text-5xl font-black tracking-tight mt-2 text-[#2e2218]">
-            Long Gossip Shelf
+            {isGlobal ? "Global Gossip Shelf" : "Long Gossip Shelf"}
           </h1>
           <p className="text-sm text-[#5f4a38]/80 max-w-xl mx-auto mt-3">
             Explore full-length anonymous stories with chapters and cover art.
@@ -129,14 +131,16 @@ export default function SpillLibraryPage() {
               No books yet
             </h2>
             <p className="text-sm text-[#6a5543]/80 mt-2 mb-6">
-              Be the first to write a long gossip with chapters.
+              {isGlobal ? "No public gossips yet." : "Be the first to write a long gossip with chapters."}
             </p>
-            <Link
-              href={`/b/${slug}/spill/create`}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2b221b] text-[#fff7ef] text-[11px] font-black uppercase tracking-[0.18em]"
-            >
-              <BookOpen size={14} /> Create First Book
-            </Link>
+            {!isGlobal && (
+              <Link
+                href={`/b/${slug}/spill/create`}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2b221b] text-[#fff7ef] text-[11px] font-black uppercase tracking-[0.18em]"
+              >
+                <BookOpen size={14} /> Create First Book
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
