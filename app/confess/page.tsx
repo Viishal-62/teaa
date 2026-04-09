@@ -96,6 +96,13 @@ export default function GlobalConfessPage() {
     })();
   }, [getOrCreateGlobal]);
 
+  // Pre-fill text from URL params (from quick confess widget on landing page)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const prefilled = params.get("text");
+    if (prefilled) setText(prefilled);
+  }, []);
+
   const selectedBoard = publicBoards?.find((b: any) => b._id === selectedBoardId);
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;

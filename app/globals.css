@@ -400,3 +400,16 @@ em-emoji-picker {
 .admirer-light-bg {
   background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 40%, #fff1f2 100%);
 }
+
+/* Animated gradient border — continuously flowing rainbow */
+@keyframes gradientBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-border {
+  background: linear-gradient(270deg, #f43f5e, #a855f7, #3b82f6, #22c55e, #f59e0b, #f43f5e);
+  background-size: 400% 100%;
+  animation: gradientBorder 3s ease infinite;
+}

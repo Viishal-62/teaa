@@ -26,6 +26,7 @@ import {
   Briefcase,
   Heart,
   TrendingUp,
+  Send,
 } from "lucide-react";
 import { Plus as PlusIcon, Check, Play, BookOpen } from "lucide-react";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
@@ -96,6 +97,7 @@ export default function Home() {
   const contextDistribution = useQuery(api.confessions.getGlobalContextDistribution);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [quickText, setQuickText] = useState("");
   const [heroReady, setHeroReady] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setHeroReady(true), 100);
@@ -133,7 +135,7 @@ export default function Home() {
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
         className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 bg-[#faf8f5]/80 backdrop-blur-xl"
       >
         <div className="flex items-center justify-between">
@@ -177,8 +179,77 @@ export default function Home() {
               Create Board
             </Link>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-2 -mr-2 text-black/60 hover:text-black transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
       </motion.nav>
+
+      {/* ── MOBILE MENU DRAWER ── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[55] md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-[280px] bg-[#faf8f5] z-[60] md:hidden shadow-2xl shadow-black/20 flex flex-col"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-black/5">
+                <span className="text-sm font-black serif">🫖 teaaa</span>
+                <button onClick={() => setIsMobileMenuOpen(false)} className="p-1 text-black/40 hover:text-black transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <nav className="flex-1 p-5 space-y-1 overflow-y-auto">
+                {[
+                  { href: "/explore", label: "Explore", icon: "🧭" },
+                  { href: "/forum", label: "Community", icon: "💬" },
+                  { href: "/explore/voice", label: "Voice Confess", icon: "🎙️" },
+                  { href: "/confess", label: "Confess Now", icon: "✍️" },
+                  { href: "/spill/create", label: "Write a Spill", icon: "📖" },
+                  { href: "/b/global/spill", label: "Global Spills", icon: "🔥" },
+                  { href: "/about", label: "About Teaaa", icon: "🫖" },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-black/[0.03] transition-colors group"
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-sm font-bold text-black/60 group-hover:text-black transition-colors">{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+              <div className="p-5 border-t border-black/5">
+                <Link
+                  href="/create"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-[1.02] transition-all"
+                >
+                  <Plus size={14} />
+                  Create Board
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ══════════════════════════════════════════
           HERO — Ultra Premium section
@@ -425,6 +496,16 @@ export default function Home() {
             </motion.h1>
           </div>
 
+          {/* SEO Tagline */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={heroReady ? { opacity: 1 } : {}}
+            transition={{ delay: 0.45, duration: 0.6 }}
+            className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-black/15 mb-5 text-center"
+          >
+            Anonymous Message Link Generator – Send Secret Messages Online
+          </motion.p>
+
           {/* Refined Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -432,9 +513,8 @@ export default function Home() {
             transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
             className="text-[14px] sm:text-base md:text-lg text-black/50 max-w-xl mx-auto mb-10 font-medium leading-[1.6] text-balance px-4"
           >
-            Create private spaces for your community. Drop voice notes, secret
-            admirer letters, or spill the absolute truth without ever logging
-            in.
+            The anonymous platform where you write, speak, doodle, or spill
+            your deepest truth — no sign-up needed. Trusted by thousands.
           </motion.p>
 
           {/* Advanced CTAs */}
@@ -476,6 +556,48 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
+          {/* ── Quick Confess Widget ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroReady ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="mt-10 w-full max-w-md mx-auto"
+          >
+            <div className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm">💭</span>
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/30">Quick anonymous confess</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={quickText}
+                  onChange={(e) => setQuickText(e.target.value)}
+                  placeholder="What's on your mind..."
+                  className="flex-1 bg-black/[0.03] border border-black/5 rounded-xl px-4 py-3 text-sm font-medium text-black/70 placeholder:text-black/20 outline-none focus:border-black/15 transition-colors serif"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && quickText.trim()) {
+                      router.push(`/confess?text=${encodeURIComponent(quickText.trim())}`);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (quickText.trim()) {
+                      router.push(`/confess?text=${encodeURIComponent(quickText.trim())}`);
+                    }
+                  }}
+                  className="relative flex-shrink-0 group"
+                >
+                  <div className="absolute -inset-[2px] rounded-[14px] animate-gradient-border opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center gap-1.5 px-5 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl">
+                    <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    Spill It
+                  </div>
+                </button>
+              </div>
+            </div>
+          </motion.div>
 
         </motion.div>
       </section>
@@ -1061,10 +1183,11 @@ export default function Home() {
               <div className="w-14 h-14 rounded-[16px] bg-orange-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
                 <ImageDown size={26} className="text-orange-500" />
               </div>
-              <h3 className="text-xl font-black serif mb-2">Export Cards</h3>
+              <h3 className="text-xl font-black serif mb-2">Download & Share Cards</h3>
               <p className="text-[11px] text-black/40 leading-relaxed font-medium">
-                Turn your favorite confessions into aesthetic, branded polaroid
-                images ready to share on socials instantly.
+                Turn any confession into a stunning, branded polaroid card.
+                Download as an image or share directly to Instagram Stories,
+                WhatsApp, Snapchat & more — one tap.
               </p>
             </motion.div>
 
@@ -1148,7 +1271,7 @@ export default function Home() {
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm serif text-black/60 leading-relaxed blur-[5px] select-none mb-1.5">
+                        <p className="text-sm serif text-black/60 leading-relaxed select-none mb-1.5">
                           {previewText.slice(0, 60)}
                           {previewText.length > 60 ? "..." : ""}
                         </p>
@@ -1762,68 +1885,93 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="py-10 border-t border-black/5 px-4 sm:px-6">
-        <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
-          {/* Top row: brand + tagline + links */}
-          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-6">
-            <span className="text-sm font-black serif">🫖 teaaa</span>
-            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-black/10">
+      <footer className="py-12 border-t border-black/10 px-4 sm:px-6 bg-white/50">
+        <div className="max-w-3xl mx-auto flex flex-col items-center gap-8">
+          {/* Brand + Tagline */}
+          <div className="text-center">
+            <span className="text-lg font-black serif block mb-1">🫖 teaaa</span>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-black/30">
               Anonymous. Unfiltered. Always.
             </p>
-            <div className="flex gap-6 flex-wrap justify-center">
-              {[
-                { href: "/explore", label: "Explore" },
-                { href: "/forum", label: "Community" },
-                { href: "/explore/voice", label: "Voice" },
-                { href: "/confess", label: "Confess" },
-                { href: "/spill/create", label: "Write Spill" },
-                { href: "/create", label: "Create" },
-              ].map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className="text-[9px] font-bold uppercase tracking-widest text-black/15 hover:text-black transition-colors"
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </div>
+          </div>
+
+          {/* Nav Links */}
+          <div className="flex gap-5 flex-wrap justify-center">
+            {[
+              { href: "/explore", label: "Explore" },
+              { href: "/forum", label: "Community" },
+              { href: "/explore/voice", label: "Voice" },
+              { href: "/confess", label: "Confess" },
+              { href: "/spill/create", label: "Write Spill" },
+              { href: "/create", label: "Create" },
+              { href: "/about", label: "About" },
+            ].map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-[10px] font-bold uppercase tracking-widest text-black/40 hover:text-black transition-colors"
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
 
           {/* Divider */}
-          <div className="w-full border-t border-black/[0.04]" />
+          <div className="w-full border-t border-black/8" />
 
-          {/* Bottom row: legal + created by + social icons */}
-          <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5 text-[9px] font-bold uppercase tracking-widest text-black/15">
+          {/* Product Hunt Badge */}
+          <div className="flex justify-center">
+            <a
+              href="https://www.producthunt.com/products/teaadrop-say-what-you-can-t-at-work?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-teaadrop-say-what-you-can-t-at-work"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:scale-105 transition-transform inline-block"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1118631&theme=light&t=1775718006947`}
+                alt="Teaadrop — Featured on Product Hunt"
+                width={250}
+                height={54}
+                loading="lazy"
+              />
+            </a>
+          </div>
+
+          {/* Divider */}
+          <div className="w-full border-t border-black/8" />
+
+          {/* Bottom row */}
+          <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-5 text-[10px] font-bold uppercase tracking-widest text-black/35">
               <Link href="/terms" className="hover:text-black transition-colors">Terms</Link>
               <Link href="/privacy" className="hover:text-black transition-colors">Privacy</Link>
               <Link href="/disclaimer" className="hover:text-black transition-colors">Disclaimer</Link>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="text-[9px] font-medium text-black/20">
+              <span className="text-[10px] font-medium text-black/35">
                 Created by{" "}
-                <span className="font-bold text-black/30">Vishal</span>
+                <span className="font-bold text-black/50">Vishal</span>
               </span>
-              <span className="w-[1px] h-3 bg-black/10" />
+              <span className="w-[1px] h-3 bg-black/15" />
               <a
                 href="https://www.linkedin.com/in/vishal-pandey-3835a9330/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-black/15 hover:text-[#0077B5] transition-colors"
+                className="text-black/30 hover:text-[#0077B5] transition-colors"
                 aria-label="Vishal's LinkedIn"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
               </a>
               <a
                 href="https://github.com/viishal-62"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-black/15 hover:text-black transition-colors"
+                className="text-black/30 hover:text-black transition-colors"
                 aria-label="Vishal's GitHub"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
               </a>
             </div>
           </div>
