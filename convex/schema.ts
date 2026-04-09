@@ -175,4 +175,30 @@ export default defineSchema({
     .index("by_requestId", ["requestId"])
     .index("by_visitorId", ["visitorId"])
     .index("by_requestId_visitorId", ["requestId", "visitorId"]),
+
+  // ─── Polls ───
+  polls: defineTable({
+    boardId: v.id("boards"),
+    question: v.string(),
+    options: v.array(v.string()), // 2-5 text options
+    imageUrl: v.optional(v.string()), // Optional context image (Cloudinary)
+    creatorToken: v.string(), // Must match board.creatorToken
+    expiresAt: v.optional(v.number()), // Auto-close timestamp
+    isActive: v.boolean(), // false when ended/expired
+    totalVotes: v.number(), // Running total
+    createdAt: v.number(),
+  })
+    .index("by_boardId", ["boardId"])
+    .index("by_boardId_isActive", ["boardId", "isActive"])
+    .index("by_createdAt", ["createdAt"]),
+
+  // ─── Poll Votes ───
+  pollVotes: defineTable({
+    pollId: v.id("polls"),
+    optionIndex: v.number(), // 0-based index into poll.options
+    visitorId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_pollId", ["pollId"])
+    .index("by_pollId_visitorId", ["pollId", "visitorId"]),
 });

@@ -22,6 +22,7 @@ import type * as helpers from "../helpers.js";
 import type * as moderation from "../moderation.js";
 import type * as moderationAction from "../moderationAction.js";
 import type * as notifications from "../notifications.js";
+import type * as polls from "../polls.js";
 import type * as reactions from "../reactions.js";
 import type * as reports from "../reports.js";
 import type * as seed from "../seed.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   moderation: typeof moderation;
   moderationAction: typeof moderationAction;
   notifications: typeof notifications;
+  polls: typeof polls;
   reactions: typeof reactions;
   reports: typeof reports;
   seed: typeof seed;

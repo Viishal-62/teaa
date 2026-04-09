@@ -27,6 +27,11 @@ import {
   Heart,
   TrendingUp,
   Send,
+  BarChart3,
+  Download,
+  Users,
+  Timer,
+  Share2,
 } from "lucide-react";
 import { Plus as PlusIcon, Check, Play, BookOpen } from "lucide-react";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
@@ -610,7 +615,7 @@ export default function Home() {
           className="flex gap-6 whitespace-nowrap"
         >
           {(() => {
-            const dynamicItems: Array<{label: string, emoji: string, color: string}> = [];
+            const dynamicItems: Array<{ label: string, emoji: string, color: string }> = [];
             if (contextDistribution) {
               contextDistribution.cities.slice(0, 4).forEach(c => dynamicItems.push({ label: c.key, emoji: "📍", color: "#3b82f6" }));
               contextDistribution.professions.slice(0, 3).forEach(p => dynamicItems.push({ label: p.key, emoji: "💼", color: "#f59e0b" }));
@@ -1032,6 +1037,220 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══════════════════════════════════════════
+          ANONYMOUS POLLS — New Feature Showcase
+         ══════════════════════════════════════════ */}
+      <section className="py-24 px-4 sm:px-6 relative">
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-purple-50/30 to-transparent" />
+
+        <div className="max-w-4xl mx-auto relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14"
+          >
+            <motion.div
+              initial={{ width: 0 }}
+              whileInView={{ width: 60 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="h-px bg-purple-400 mx-auto mb-4"
+            />
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-purple-500 mb-3">
+              ✦ New Feature
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black serif tracking-tight mb-4">
+              Anonymous{" "}
+              <span className="bg-gradient-to-r from-purple-600 to-violet-500 bg-clip-text text-transparent">
+                Polls.
+              </span>
+            </h2>
+            <p className="text-sm text-black/35 max-w-lg mx-auto leading-relaxed">
+              Create polls on your board. Your audience votes anonymously.
+              Watch results flow in real-time. Download results with watermark.
+            </p>
+          </motion.div>
+
+          {/* Bento grid */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-10"
+          >
+            {/* Big card — Create Poll */}
+            <motion.div
+              variants={scaleIn}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="md:col-span-7 bg-white border border-black/5 rounded-[1.5rem] p-8 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-purple-100/40 to-transparent rounded-bl-[100px] pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                  <BarChart3 size={24} className="text-white" />
+                </div>
+                <h3 className="text-xl font-black serif mb-2">
+                  Create Polls
+                </h3>
+                <p className="text-xs text-black/35 leading-relaxed max-w-sm mb-6">
+                  Ask your audience anything — add 2-5 options, attach a context image,
+                  set a timer. One active poll per board.
+                </p>
+
+                {/* Mini poll preview */}
+                <div className="bg-[#faf8f5] rounded-xl border border-black/5 p-4 max-w-xs">
+                  <p className="text-xs font-bold text-black/60 mb-3 serif">&quot;Who&apos;s the real GOAT?&quot;</p>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Option A", pct: 45 },
+                      { label: "Option B", pct: 32 },
+                      { label: "Option C", pct: 23 },
+                    ].map((opt, i) => (
+                      <div key={i} className="relative h-8 bg-black/[0.02] rounded-lg overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${opt.pct}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, delay: 0.3 + i * 0.15 }}
+                          className="absolute inset-y-0 left-0 rounded-lg"
+                          style={{ background: `rgba(124, 58, 237, ${0.15 - i * 0.03})` }}
+                        />
+                        <div className="relative flex items-center justify-between px-3 h-full">
+                          <span className="text-[10px] font-semibold text-black/50">{opt.label}</span>
+                          <span className="text-[10px] font-black text-black/30">{opt.pct}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[8px] font-bold text-black/20">47 votes · anonymous</span>
+                    <span className="text-[8px] font-bold text-purple-400">🟢 Live</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right column */}
+            <div className="md:col-span-5 flex flex-col gap-3">
+              {/* Real-time */}
+              <motion.div
+                variants={scaleIn}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="bg-white border border-black/5 rounded-[1.5rem] p-6 flex-1 relative overflow-hidden"
+              >
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-50/50 to-transparent rounded-tr-[80px] pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center mb-3">
+                    <Users size={20} className="text-purple-500" />
+                  </div>
+                  <h3 className="text-base font-black serif mb-1">
+                    Anonymous Voting
+                  </h3>
+                  <p className="text-[11px] text-black/30 leading-relaxed">
+                    One vote per visitor. No sign ups. Real-time results with
+                    animated progress bars.
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Download */}
+              <motion.div
+                variants={scaleIn}
+                whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                className="bg-white border border-black/5 rounded-[1.5rem] p-6 flex-1 relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-bl from-indigo-50/50 to-transparent rounded-bl-[80px] pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center mb-3">
+                    <Download size={20} className="text-indigo-500" />
+                  </div>
+                  <h3 className="text-base font-black serif mb-1">
+                    Download Results
+                  </h3>
+                  <p className="text-[11px] text-black/30 leading-relaxed">
+                    Download poll results as PNG with teaadrop.xyz watermark.
+                    Creator-only feature.
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Bottom row — poll feature pills */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10"
+          >
+            {[
+              {
+                icon: <Timer size={16} />,
+                label: "Auto-Expiry Timer",
+                color: "#7c3aed",
+              },
+              {
+                icon: <Shield size={16} />,
+                label: "1 Vote Per Person",
+                color: "#22c55e",
+              },
+              {
+                icon: <ImageDown size={16} />,
+                label: "Context Images",
+                color: "#f59e0b",
+              },
+              {
+                icon: <Share2 size={16} />,
+                label: "Share to Vote",
+                color: "#ec4899",
+              },
+            ].map((f) => (
+              <motion.div
+                key={f.label}
+                variants={fadeUp}
+                className="bg-white/70 backdrop-blur-sm border border-black/5 rounded-xl px-4 py-3 flex items-center gap-3"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${f.color}10`, color: f.color }}
+                >
+                  {f.icon}
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-black/45">
+                  {f.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <Link
+              href="/create"
+              className="group inline-flex items-center gap-2.5 px-8 py-4 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-xl relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                boxShadow: "0 12px 30px rgba(124, 58, 237, 0.25)",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700 ease-in-out" />
+              <BarChart3 size={16} className="relative z-10" />
+              <span className="relative z-10">Create a Board & Start Polling</span>
+              <ArrowRight size={14} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ── */}
       <section className="py-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
@@ -1046,7 +1265,7 @@ export default function Home() {
               How it works
             </p>
             <h2 className="text-3xl font-black serif tracking-tight">
-              Five ways to spill
+              Six ways to spill
             </h2>
           </motion.div>
 
@@ -1062,7 +1281,7 @@ export default function Home() {
                 n: "01",
                 icon: "✍️",
                 title: "Write",
-                desc: "Type your confession. Pick a mood. Drop int anonymously into the void.",
+                desc: "Type your confession. Pick a mood. Drop it anonymously into the void.",
                 gradient: "from-blue-50 to-white",
               },
               {
@@ -1092,6 +1311,13 @@ export default function Home() {
                 title: "Admirer",
                 desc: "Read secret anonymous love letters while listening to immersive background music and deep ambient audios.",
                 gradient: "from-pink-50 to-white",
+              },
+              {
+                n: "06",
+                icon: "🗳️",
+                title: "Poll",
+                desc: "Create anonymous polls with optional images. Real-time results, auto-expiry timers, and downloadable result cards.",
+                gradient: "from-purple-50 to-white",
               },
             ].map((s) => (
               <motion.div
@@ -1207,6 +1433,34 @@ export default function Home() {
                 reading secret admirer confessions.
               </p>
             </motion.div>
+
+            {/* Anonymous Polls */}
+            <motion.div
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="md:col-span-2 border border-black/5 rounded-[1.5rem] p-8 text-left hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:border-purple-200/40 transition-all group flex flex-col items-start relative overflow-hidden"
+              style={{ background: "linear-gradient(135deg, #faf8ff, #f5f0ff, #faf8f5)" }}
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-purple-100/50 to-transparent rounded-bl-[120px] pointer-events-none" />
+              <div className="relative z-10 w-full">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="w-14 h-14 rounded-[16px] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                      <BarChart3 size={26} className="text-white" />
+                    </div>
+                    <h3 className="text-xl font-black serif mb-2">Anonymous Polls</h3>
+                    <p className="text-[11px] text-black/40 leading-relaxed font-medium max-w-sm">
+                      Create polls on any board — 2-5 options, optional image context,
+                      auto-expiry timers. One vote per visitor, real-time animated results,
+                      and downloadable result cards with teaadrop.xyz watermark.
+                    </p>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest" style={{ background: "rgba(124, 58, 237, 0.08)", color: "#7c3aed" }}>
+                    ✨ New
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -1254,7 +1508,7 @@ export default function Home() {
                 const catInfo = CATEGORY_INFO[confession.category];
                 const previewText =
                   typeof confession.text === "string" &&
-                  confession.text.trim().length > 0
+                    confession.text.trim().length > 0
                     ? confession.text
                     : "Anonymous confession";
                 return (
@@ -1381,11 +1635,11 @@ export default function Home() {
               className="grid grid-cols-1 sm:grid-cols-3 gap-4"
             >
               {recentSpills.slice(0, 3).map((spill, i) => (
-                <DeepSpillCard 
-                  key={spill._id} 
-                  spill={spill} 
-                  slug={(spill as any).boardSlug || "global"} 
-                  index={i} 
+                <DeepSpillCard
+                  key={spill._id}
+                  spill={spill}
+                  slug={(spill as any).boardSlug || "global"}
+                  index={i}
                 />
               ))}
             </motion.div>
@@ -1610,7 +1864,7 @@ export default function Home() {
       {/* ── THE APP EXPERIENCE (PWA SECTION) ── */}
       <section className="py-24 px-4 sm:px-6 relative bg-[#faf8f5] border-t border-black/5 overflow-hidden">
         <div className="absolute top-0 left-[20%] w-96 h-96 bg-blue-100/40 rounded-full blur-[140px] pointer-events-none" />
-        
+
         <div className="max-w-5xl mx-auto relative z-10 flex flex-col md:flex-row items-center gap-12 md:gap-20">
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -1651,7 +1905,7 @@ export default function Home() {
             </div>
 
             <div className="mt-10">
-               <PwaInstallButton />
+              <PwaInstallButton />
             </div>
           </motion.div>
 
@@ -1661,59 +1915,59 @@ export default function Home() {
             viewport={{ once: true }}
             className="flex-1 relative w-full flex justify-center perspective-[1000px]"
           >
-             {/* Beautiful visual representation of a phone screen containing teaaa */}
-             <div className="w-[280px] h-[580px] bg-[#111] rounded-[3rem] p-2 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 border-4 border-black/80 ring-1 ring-white/10 transform-gpu rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-y-[0deg] hover:rotate-x-[0deg] transition-transform duration-700">
-               {/* Phone notch */}
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#111] rounded-b-3xl z-20" />
-               <div className="w-full h-full bg-[#faf8f5] rounded-[2.5rem] overflow-hidden relative border border-white/50">
-                 {/* App icon on home screen */}
-                 <div className="absolute inset-0 bg-[#f0ede8] px-4 py-6 flex flex-col pt-14">
-                    <div className="text-center mb-6 opacity-60">
-                      <div className="text-[10px] font-black tracking-[0.2em] font-sans uppercase">9:41 AM</div>
+            {/* Beautiful visual representation of a phone screen containing teaaa */}
+            <div className="w-[280px] h-[580px] bg-[#111] rounded-[3rem] p-2 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] relative z-10 border-4 border-black/80 ring-1 ring-white/10 transform-gpu rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-y-[0deg] hover:rotate-x-[0deg] transition-transform duration-700">
+              {/* Phone notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#111] rounded-b-3xl z-20" />
+              <div className="w-full h-full bg-[#faf8f5] rounded-[2.5rem] overflow-hidden relative border border-white/50">
+                {/* App icon on home screen */}
+                <div className="absolute inset-0 bg-[#f0ede8] px-4 py-6 flex flex-col pt-14">
+                  <div className="text-center mb-6 opacity-60">
+                    <div className="text-[10px] font-black tracking-[0.2em] font-sans uppercase">9:41 AM</div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-y-5 gap-x-2 w-full place-items-center">
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-gradient-to-tr from-rose-500 via-pink-400 to-amber-300 shadow-[0_6px_12px_rgba(244,63,94,0.3)] flex items-center justify-center text-[22px] border border-white/20 text-white">🫖</div>
+                      <span className="text-[9px] font-bold text-black/80 font-sans tracking-tight">teaaa</span>
                     </div>
-                    
-                    <div className="grid grid-cols-4 gap-y-5 gap-x-2 w-full place-items-center">
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-gradient-to-tr from-rose-500 via-pink-400 to-amber-300 shadow-[0_6px_12px_rgba(244,63,94,0.3)] flex items-center justify-center text-[22px] border border-white/20 text-white">🫖</div>
-                          <span className="text-[9px] font-bold text-black/80 font-sans tracking-tight">teaaa</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-400 shadow-sm flex items-center justify-center text-[22px] text-white">🌤️</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Weather</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-white shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🖼️</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Photos</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#d1d5db] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📷</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Camera</span>
-                       </div>
-                       
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#fef08a] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📝</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Notes</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-[#bbf7d0] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🗺️</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Maps</span>
-                       </div>
-                       <div className="flex flex-col items-center gap-[5px] w-full">
-                          <div className="w-[46px] h-[46px] rounded-[14px] bg-purple-400 shadow-sm flex items-center justify-center text-[22px] text-white">🎙️</div>
-                          <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Podcasts</span>
-                       </div>
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-400 shadow-sm flex items-center justify-center text-[22px] text-white">🌤️</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Weather</span>
                     </div>
-                    
-                    {/* Bottom dock indicator */}
-                    <div className="mt-auto mx-auto px-2 py-2 rounded-[22px] bg-white/40 border border-white/60 backdrop-blur-md flex items-center justify-center gap-[10px] mb-2 shadow-lg shadow-black/[0.03]">
-                       <div className="w-[46px] h-[46px] rounded-[14px] bg-green-400 shadow-sm flex items-center justify-center text-[22px]">📞</div>
-                       <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-500 shadow-sm flex items-center justify-center text-[22px]">💬</div>
-                       <div className="w-[46px] h-[46px] rounded-[14px] bg-gray-100 shadow-sm flex items-center justify-center text-[22px]">🌐</div>
-                       <div className="w-[46px] h-[46px] rounded-[14px] bg-rose-500 shadow-sm flex items-center justify-center text-[22px]">🎵</div>
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-white shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🖼️</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Photos</span>
                     </div>
-                 </div>
-               </div>
-             </div>
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-[#d1d5db] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📷</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Camera</span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-[#fef08a] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">📝</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Notes</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-[#bbf7d0] shadow-sm flex items-center justify-center border border-black/5 text-[22px]">🗺️</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Maps</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-[5px] w-full">
+                      <div className="w-[46px] h-[46px] rounded-[14px] bg-purple-400 shadow-sm flex items-center justify-center text-[22px] text-white">🎙️</div>
+                      <span className="text-[9px] font-medium text-black/50 font-sans tracking-tight">Podcasts</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom dock indicator */}
+                  <div className="mt-auto mx-auto px-2 py-2 rounded-[22px] bg-white/40 border border-white/60 backdrop-blur-md flex items-center justify-center gap-[10px] mb-2 shadow-lg shadow-black/[0.03]">
+                    <div className="w-[46px] h-[46px] rounded-[14px] bg-green-400 shadow-sm flex items-center justify-center text-[22px]">📞</div>
+                    <div className="w-[46px] h-[46px] rounded-[14px] bg-blue-500 shadow-sm flex items-center justify-center text-[22px]">💬</div>
+                    <div className="w-[46px] h-[46px] rounded-[14px] bg-gray-100 shadow-sm flex items-center justify-center text-[22px]">🌐</div>
+                    <div className="w-[46px] h-[46px] rounded-[14px] bg-rose-500 shadow-sm flex items-center justify-center text-[22px]">🎵</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -1916,30 +2170,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Divider */}
-          <div className="w-full border-t border-black/8" />
 
-          {/* Product Hunt Badge */}
-          <div className="flex justify-center">
-            <a
-              href="https://www.producthunt.com/products/teaadrop-say-what-you-can-t-at-work?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-teaadrop-say-what-you-can-t-at-work"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:scale-105 transition-transform inline-block"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1118631&theme=light&t=1775718006947`}
-                alt="Teaadrop — Featured on Product Hunt"
-                width={250}
-                height={54}
-                loading="lazy"
-              />
-            </a>
-          </div>
-
-          {/* Divider */}
-          <div className="w-full border-t border-black/8" />
 
           {/* Bottom row */}
           <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between gap-5">
@@ -1962,7 +2193,7 @@ export default function Home() {
                 className="text-black/30 hover:text-[#0077B5] transition-colors"
                 aria-label="Vishal's LinkedIn"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
               </a>
               <a
                 href="https://github.com/viishal-62"
@@ -1971,7 +2202,7 @@ export default function Home() {
                 className="text-black/30 hover:text-black transition-colors"
                 aria-label="Vishal's GitHub"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
               </a>
             </div>
           </div>

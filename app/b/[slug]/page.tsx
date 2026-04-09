@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -18,6 +18,8 @@ import {
   Heart,
   Sparkles,
   X,
+  BarChart3,
+  MessageSquare,
 } from "lucide-react";
 import { CATEGORY_INFO, getCreatorToken, SHARE_PROMPTS } from "@/app/lib/utils";
 import ConfessionFlipCard from "@/app/components/ConfessionFlipCard";
@@ -26,6 +28,7 @@ import DoodleConfessionCard from "@/app/components/DoodleConfessionCard";
 import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
 import MoodRing from "@/app/components/MoodRing";
+import PollCard from "@/app/components/PollCard";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ADMIRER_CATEGORIES = [
@@ -75,6 +78,9 @@ export default function BoardViewPage() {
   const isInitialLoad = useRef(true);
   const [showConfessBackCTA, setShowConfessBackCTA] = useState(false);
   const viewedIndexes = useRef<Set<number>>(new Set());
+  const [viewMode, setViewMode] = useState<"cards" | "polls">("cards");
+  const [activePollIdx, setActivePollIdx] = useState(0);
+  const pollSwipeStart = useRef<number | null>(null);
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const summarize = useAction(api.ai.summarizeBoard);
@@ -125,6 +131,20 @@ export default function BoardViewPage() {
     api.confessions.getMoodDistribution,
     board && !isLocked ? { boardId: board._id } : "skip",
   );
+
+  const boardPolls = useQuery(
+    api.polls.listByBoard,
+    board && !isLocked ? { boardId: board._id } : "skip",
+  );
+
+  const pollCount = useQuery(
+    api.polls.getPollCount,
+    board && !isLocked ? { boardId: board._id } : "skip",
+  );
+
+  const hasAnyPolls = boardPolls && boardPolls.length > 0;
+  const activePolls = boardPolls?.filter((p) => p.isActive) ?? [];
+  const endedPolls = boardPolls?.filter((p) => !p.isActive) ?? [];
 
   const categoriesToUse = useMemo(() => {
     const base = isAdmirerMode ? ADMIRER_CATEGORIES : CATEGORIES;
@@ -270,21 +290,29 @@ export default function BoardViewPage() {
     setActiveIndex(next);
   }, [activeIndex, mixedItems]);
 
-  // Keyboard nav
+  // Keyboard nav (works for both cards and polls)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
         e.preventDefault();
-        scrollToCard(activeIndex + 1);
+        if (viewMode === "polls" && boardPolls) {
+          setActivePollIdx((prev) => Math.min(boardPolls.length - 1, prev + 1));
+        } else {
+          scrollToCard(activeIndex + 1);
+        }
       }
       if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
-        scrollToCard(activeIndex - 1);
+        if (viewMode === "polls") {
+          setActivePollIdx((prev) => Math.max(0, prev - 1));
+        } else {
+          scrollToCard(activeIndex - 1);
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [activeIndex, scrollToCard]);
+  }, [activeIndex, scrollToCard, viewMode, boardPolls]);
 
   // Trackpad scroll
   useEffect(() => {
@@ -577,6 +605,21 @@ export default function BoardViewPage() {
             <BookOpen size={14} />
             <span className="hidden sm:inline">Long gossip</span>
           </Link>
+          {isOwner && !isAdmirerMode && (
+            <Link
+              href={`/b/${slug}/poll`}
+              className="flex items-center justify-center min-h-[44px] sm:min-h-0 gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 hover:shadow-lg"
+              style={{
+                background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                color: "#fff",
+                boxShadow: "0 2px 10px rgba(124, 58, 237, 0.25)",
+              }}
+              title="Create Poll"
+            >
+              <BarChart3 size={12} />
+              <span className="hidden sm:inline">Poll</span>
+            </Link>
+          )}
           {/* Premium Shine Summarize Button */}
           {hasEnoughForSummary && (
             <button
@@ -665,8 +708,86 @@ export default function BoardViewPage() {
           )}
         </div>
 
+        {/* Cards / Polls Toggle */}
+        {(boardPolls !== undefined) && (
+          <div className="flex justify-center pb-4 pt-1">
+            <div
+              className="relative inline-flex items-center rounded-full p-1"
+              style={{
+                background: "rgba(0,0,0,0.04)",
+                border: "1px solid rgba(0,0,0,0.06)",
+              }}
+            >
+              {/* Animated sliding indicator */}
+              <motion.div
+                className="absolute top-1 bottom-1 rounded-full"
+                initial={false}
+                animate={{
+                  left: viewMode === "cards" ? "4px" : "50%",
+                  right: viewMode === "polls" ? "4px" : "50%",
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                style={{
+                  background: "#fff",
+                  boxShadow: "0 1px 6px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setViewMode("cards")}
+                className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest transition-colors min-h-[40px]"
+                style={{
+                  color: viewMode === "cards" ? "#000" : "rgba(0,0,0,0.3)",
+                }}
+              >
+                <MessageSquare size={13} />
+                Cards
+                {confessions && confessions.length > 0 && (
+                  <span
+                    className="ml-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] font-black"
+                    style={{
+                      background: viewMode === "cards" ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.04)",
+                      color: viewMode === "cards" ? "#000" : "rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {confessions.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("polls")}
+                className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest transition-colors min-h-[40px]"
+                style={{
+                  color: viewMode === "polls" ? "#000" : "rgba(0,0,0,0.3)",
+                }}
+              >
+                <BarChart3 size={13} />
+                Polls
+                {activePolls.length > 0 && (
+                  <span
+                    className="ml-0.5 w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: "#10b981" }}
+                  />
+                )}
+                {boardPolls && boardPolls.length > 0 && (
+                  <span
+                    className="ml-0.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] font-black"
+                    style={{
+                      background: viewMode === "polls" ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.04)",
+                      color: viewMode === "polls" ? "#000" : "rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    {boardPolls.length}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Mood Ring */}
-        {moodData && moodData.total >= 3 && (
+        {viewMode === "cards" && moodData && moodData.total >= 3 && (
           <div className="flex justify-center py-4 mb-2">
             <MoodRing moodData={moodData} />
           </div>
@@ -686,8 +807,218 @@ export default function BoardViewPage() {
           )}
         </AnimatePresence>
 
-        {/* Carousel */}
-        <div className="relative px-4 pb-4">
+        {/* ── POLLS VIEW ── */}
+        <AnimatePresence mode="wait">
+          {viewMode === "polls" && (
+            <motion.div
+              key="polls-view"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}
+              className="px-4 mb-6"
+            >
+              <div className="max-w-lg mx-auto">
+                {boardPolls && boardPolls.length > 0 ? (
+                  <>
+                    {/* Poll Carousel — one at a time */}
+                    <div className="relative overflow-hidden rounded-2xl pb-2">
+                      {/* Status badge above poll */}
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-2">
+                          {boardPolls[activePollIdx]?.isActive ? (
+                            <>
+                              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-600">Live</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[10px]">🏁</span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-black/25">Ended</span>
+                            </>
+                          )}
+                        </div>
+                        <span className="text-[10px] font-mono text-black/20">
+                          {activePollIdx + 1} / {boardPolls.length}
+                        </span>
+                      </div>
+
+                      {/* Animated poll card with gesture drag support */}
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={boardPolls[activePollIdx]?._id}
+                          initial={{ opacity: 0, x: 80 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -80 }}
+                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                          drag={boardPolls.length > 1 ? "x" : false}
+                          dragConstraints={{ left: 0, right: 0 }}
+                          dragElastic={0.7}
+                          onDragEnd={(e, { offset, velocity }) => {
+                            const swipe = offset.x;
+                            if (swipe < -50 && activePollIdx < boardPolls.length - 1) {
+                              setActivePollIdx(activePollIdx + 1);
+                            } else if (swipe > 50 && activePollIdx > 0) {
+                              setActivePollIdx(activePollIdx - 1);
+                            }
+                          }}
+                          className="cursor-grab active:cursor-grabbing touch-pan-y"
+                        >
+                          <PollCard
+                            poll={boardPolls[activePollIdx]}
+                            boardSlug={slug}
+                            isOwner={isOwner}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Navigation: arrows + dots */}
+                      {boardPolls.length > 1 && (
+                        <div className="flex items-center justify-center gap-4 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => setActivePollIdx(Math.max(0, activePollIdx - 1))}
+                            disabled={activePollIdx === 0}
+                            className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-15 disabled:cursor-not-allowed active:scale-90"
+                          >
+                            ←
+                          </button>
+
+                          {/* Dot indicators */}
+                          <div className="flex items-center gap-2">
+                            {boardPolls.map((poll, idx) => (
+                              <button
+                                key={poll._id}
+                                type="button"
+                                onClick={() => setActivePollIdx(idx)}
+                                className="transition-all p-1 active:scale-90"
+                                title={poll.isActive ? "Live poll" : "Ended poll"}
+                              >
+                                <div
+                                  className={`rounded-full transition-all duration-300 ${
+                                    idx === activePollIdx ? "w-6 h-2" : "w-2 h-2"
+                                  }`}
+                                  style={{
+                                    background: idx === activePollIdx
+                                      ? (poll.isActive ? "#10b981" : "#000")
+                                      : (poll.isActive ? "rgba(16,185,129,0.25)" : "rgba(0,0,0,0.1)"),
+                                  }}
+                                />
+                              </button>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setActivePollIdx(Math.min(boardPolls.length - 1, activePollIdx + 1))}
+                            disabled={activePollIdx === boardPolls.length - 1}
+                            className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center text-black/30 hover:text-black hover:border-black/30 transition-all disabled:opacity-15 disabled:cursor-not-allowed active:scale-90"
+                          >
+                            →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Swipe hint (mobile) */}
+                      <div className="text-center mt-3 flex flex-col gap-1 items-center justify-center">
+                        {boardPolls.length > 1 && (
+                          <div className="inline-flex rounded-full px-3 py-1 bg-black/[0.03] text-[9px] font-bold uppercase tracking-widest text-black/30">
+                            👈 Swipe mentally 👇
+                          </div>
+                        )}
+                        <p className="text-[10px] text-black/20 font-medium">
+                          {boardPolls.length > 1 ? "Drag the card to swipe · or use arrows" : ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Create Poll CTA for owners */}
+                    {isOwner && !isAdmirerMode && pollCount?.canCreate && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-5"
+                      >
+                        <Link
+                          href={`/b/${slug}/poll`}
+                          className="group relative block w-full overflow-hidden rounded-2xl border border-purple-200/40 transition-all hover:shadow-lg active:scale-[0.99]"
+                          style={{
+                            background: "linear-gradient(135deg, #f5f0ff 0%, #ede5ff 50%, #f0e8ff 100%)",
+                          }}
+                        >
+                          <div className="absolute inset-0 opacity-40" style={{
+                            background: "linear-gradient(105deg, transparent 40%, rgba(124,58,237,0.08) 50%, transparent 60%)",
+                            backgroundSize: "200% 100%",
+                            animation: "shimmerSweep 3s ease-in-out infinite",
+                          }} />
+                          <div className="relative flex items-center justify-between px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7c3aed, #6d28d9)" }}>
+                                <BarChart3 size={18} className="text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-black text-purple-900">Create Another Poll</p>
+                                <p className="text-[10px] font-medium text-purple-600/50">
+                                  {pollCount?.active ?? 0}/{pollCount?.maxPolls ?? 2} active · anonymous votes
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-purple-400 group-hover:translate-x-1 transition-transform">
+                              <Plus size={18} />
+                            </div>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    )}
+
+                    {/* Max active polls reached */}
+                    {isOwner && !isAdmirerMode && pollCount && !pollCount.canCreate && (
+                      <div className="text-center py-3 mt-2">
+                        <p className="text-[10px] font-bold text-black/20 uppercase tracking-widest">
+                          {pollCount.maxPolls}/{pollCount.maxPolls} active polls · end or delete one to create a new one
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : boardPolls && boardPolls.length === 0 ? (
+                  /* No polls — empty state */
+                  <div
+                    className="text-center py-16 rounded-2xl border border-black/[0.05]"
+                    style={{ background: "linear-gradient(135deg, #faf8f5, #fff, #f8f5f0)" }}
+                  >
+                    <span className="text-4xl block mb-4">🗳️</span>
+                    <p className="text-lg font-bold serif mb-1">No polls yet</p>
+                    <p className="text-xs text-black/35 mb-6">
+                      {isOwner ? "Create a poll to ask your audience anything!" : "No polls here yet. Check back later!"}
+                    </p>
+                    {isOwner && !isAdmirerMode && (
+                      <Link
+                        href={`/b/${slug}/poll`}
+                        className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                        style={{
+                          background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                          boxShadow: "0 8px 24px rgba(124, 58, 237, 0.25)",
+                        }}
+                      >
+                        <BarChart3 size={14} />
+                        Create a Poll
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  /* Loading */
+                  <div className="flex items-center justify-center py-16">
+                    <div className="w-8 h-8 border-2 border-black/10 border-t-black/40 rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Carousel — only visible in cards mode */}
+        <div className="relative px-4 pb-4" style={{ display: viewMode === "cards" ? "block" : "none" }}>
           {/* Carousel View */}
           {!mixedItems ? (
             <div className="flex-1 flex items-center justify-center">
@@ -745,6 +1076,19 @@ export default function BoardViewPage() {
                   <BookOpen size={14} />
                   Open Long Gossip
                 </Link>
+                {isOwner && !isAdmirerMode && (
+                  <Link
+                    href={`/b/${slug}/poll`}
+                    className="inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, #7c3aed, #6d28d9)",
+                      boxShadow: "0 8px 24px rgba(124, 58, 237, 0.25)",
+                    }}
+                  >
+                    <BarChart3 size={14} />
+                    Create Poll
+                  </Link>
+                )}
               </div>
             </div>
           ) : (
@@ -972,7 +1316,7 @@ export default function BoardViewPage() {
           )}
         </div>
 
-        <div className="mb-8 px-4 font-sans border-b border-black/5 pb-4">
+        <div className="mb-8 px-4 font-sans border-b border-black/5 pb-4" style={{ display: viewMode === "cards" ? "block" : "none" }}>
           <div className="flex flex-wrap gap-2 justify-center">
             {categoriesToUse
               .slice(0, showAllFilters ? categoriesToUse.length : 8)

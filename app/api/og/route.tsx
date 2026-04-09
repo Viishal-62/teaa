@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     if (type === "create-spill" && slug) {
       return await renderCreateSpillOG(slug);
     }
+    if (type === "poll" && slug) {
+      return await renderPollOG(slug);
+    }
     if (type === "board" && slug) {
       return await renderBoardOG(slug);
     }
@@ -650,6 +653,289 @@ async function renderCreateSpillOG(slug: string) {
       </div>
     </div>,
     { width: 1200, height: 630 }
+  );
+}
+
+// ─── Poll OG Image ───
+async function renderPollOG(slug: string) {
+  const board = await fetchQuery(api.boards.getBySlug, { slug });
+  if (!board) return renderDefaultOG();
+
+  // Get active poll for this board
+  const poll = await fetchQuery(api.polls.getActivePoll, {
+    boardId: board._id,
+  });
+  if (!poll) {
+    // No active poll, fall back to board OG
+    return renderBoardOG(slug);
+  }
+
+  // Get results
+  let optionCounts: number[] = [];
+  let totalVotes = poll.totalVotes || 0;
+  try {
+    const results = await fetchQuery(api.polls.getResults, {
+      pollId: poll._id,
+    });
+    if (results) {
+      optionCounts = results.optionCounts;
+      totalVotes = results.totalVotes;
+    }
+  } catch {}
+
+  const maxCount = Math.max(...optionCounts, 1);
+  const truncatedQ =
+    poll.question.length > 80
+      ? `${poll.question.slice(0, 80)}...`
+      : poll.question;
+
+  const COLORS = ["#111111", "#374151", "#6B7280", "#9CA3AF", "#D1D5DB"];
+
+  return new ImageResponse(
+    <div
+      style={{
+        width: "1200",
+        height: "630",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #faf7f2 0%, #f0ebe3 100%)",
+        fontFamily: "system-ui, sans-serif",
+        position: "relative",
+      }}
+    >
+      {/* Decorative circles */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-120",
+          right: "-120",
+          width: "400",
+          height: "400",
+          borderRadius: "50%",
+          background: "rgba(107, 33, 168, 0.06)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "-80",
+          left: "-80",
+          width: "300",
+          height: "300",
+          borderRadius: "50%",
+          background: "rgba(107, 33, 168, 0.04)",
+        }}
+      />
+
+      {/* Card */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          width: "900",
+          background: "white",
+          borderRadius: "24px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.06)",
+          border: "1px solid rgba(0,0,0,0.05)",
+          padding: "48px 56px",
+        }}
+      >
+        {/* Top row: badge + status */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "14px",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              color: "rgba(0,0,0,0.3)",
+              background: "rgba(0,0,0,0.04)",
+              padding: "8px 20px",
+              borderRadius: "100px",
+            }}
+          >
+            🗳️ Poll
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "14px",
+              fontWeight: 700,
+              color: poll.isActive ? "#10b981" : "rgba(0,0,0,0.3)",
+              background: poll.isActive
+                ? "rgba(16,185,129,0.1)"
+                : "rgba(0,0,0,0.04)",
+              padding: "8px 20px",
+              borderRadius: "100px",
+            }}
+          >
+            {poll.isActive ? "🟢 Live" : "🏁 Ended"}
+          </div>
+        </div>
+
+        {/* Question */}
+        <div
+          style={{
+            fontSize: "36px",
+            fontWeight: 900,
+            color: "#111",
+            lineHeight: 1.3,
+            marginBottom: "32px",
+            display: "flex",
+          }}
+        >
+          &ldquo;{truncatedQ}&rdquo;
+        </div>
+
+        {/* Options with bars */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+          }}
+        >
+          {poll.options.slice(0, 4).map((option: string, i: number) => {
+            const count = optionCounts[i] ?? 0;
+            const pct =
+              totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+            const barW =
+              totalVotes > 0 ? Math.max(40, (700 * count) / maxCount) : 40;
+
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  position: "relative",
+                  height: "48px",
+                }}
+              >
+                {/* Bar background */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: "100%",
+                    height: "100%",
+                    background: "rgba(0,0,0,0.02)",
+                    borderRadius: "12px",
+                    display: "flex",
+                  }}
+                />
+                {/* Bar fill */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    width: `${barW}px`,
+                    height: "100%",
+                    background: `${COLORS[i % COLORS.length]}10`,
+                    borderRadius: "12px",
+                    display: "flex",
+                  }}
+                />
+                {/* Option text */}
+                <div
+                  style={{
+                    position: "relative",
+                    flex: 1,
+                    paddingLeft: "16px",
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    color: "#333",
+                    display: "flex",
+                  }}
+                >
+                  {option.length > 30 ? `${option.slice(0, 30)}...` : option}
+                </div>
+                {/* Percentage */}
+                <div
+                  style={{
+                    position: "relative",
+                    fontSize: "18px",
+                    fontWeight: 800,
+                    color: "rgba(0,0,0,0.35)",
+                    paddingRight: "16px",
+                    display: "flex",
+                  }}
+                >
+                  {pct}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Vote count */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginTop: "24px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "rgba(0,0,0,0.25)",
+              display: "flex",
+            }}
+          >
+            {totalVotes} anonymous vote{totalVotes !== 1 ? "s" : ""}
+          </div>
+          <div
+            style={{
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "rgba(0,0,0,0.2)",
+              display: "flex",
+            }}
+          >
+            Vote at teaadrop.xyz
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom brand */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "24px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontSize: "16px",
+          fontWeight: 700,
+          color: "rgba(0,0,0,0.15)",
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+        }}
+      >
+        🫖 Teaaa — Anonymous Polls & Confessions
+      </div>
+    </div>,
+    { width: 1200, height: 630 },
   );
 }
 
