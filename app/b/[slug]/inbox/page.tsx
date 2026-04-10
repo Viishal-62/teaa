@@ -6,7 +6,18 @@ import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, getCreatorToken, timeAgo } from "@/app/lib/utils";
-import { ArrowLeft, MailOpen, Sparkles, SlidersHorizontal, X, MapPin, Briefcase, Heart, Search, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  MailOpen,
+  Sparkles,
+  SlidersHorizontal,
+  X,
+  MapPin,
+  Briefcase,
+  Heart,
+  Search,
+  Plus,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function BoardInboxPage() {
@@ -29,7 +40,9 @@ export default function BoardInboxPage() {
 
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(
+    null,
+  );
   const [selectedContext, setSelectedContext] = useState<string | null>(null);
   const [showContextFilters, setShowContextFilters] = useState(false);
   const [inboxContextSearch, setInboxContextSearch] = useState("");
@@ -48,26 +61,49 @@ export default function BoardInboxPage() {
     const ctxMap: Record<string, number> = {};
     for (const r of inbox.rows) {
       if (r.cityId) cityMap[r.cityId] = (cityMap[r.cityId] || 0) + 1;
-      if (r.professionId) profMap[r.professionId] = (profMap[r.professionId] || 0) + 1;
+      if (r.professionId)
+        profMap[r.professionId] = (profMap[r.professionId] || 0) + 1;
       if (r.contextId) ctxMap[r.contextId] = (ctxMap[r.contextId] || 0) + 1;
     }
     const toSorted = (obj: Record<string, number>) =>
-      Object.entries(obj).map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count);
-    return { cities: toSorted(cityMap), professions: toSorted(profMap), contexts: toSorted(ctxMap) };
+      Object.entries(obj)
+        .map(([key, count]) => ({ key, count }))
+        .sort((a, b) => b.count - a.count);
+    return {
+      cities: toSorted(cityMap),
+      professions: toSorted(profMap),
+      contexts: toSorted(ctxMap),
+    };
   }, [inbox?.rows]);
 
-  const hasContextData = inboxContextData.cities.length > 0 || inboxContextData.professions.length > 0 || inboxContextData.contexts.length > 0;
-  const activeContextFilterCount = [selectedCity, selectedProfession, selectedContext].filter(Boolean).length;
+  const hasContextData =
+    inboxContextData.cities.length > 0 ||
+    inboxContextData.professions.length > 0 ||
+    inboxContextData.contexts.length > 0;
+  const activeContextFilterCount = [
+    selectedCity,
+    selectedProfession,
+    selectedContext,
+  ].filter(Boolean).length;
 
   const filteredInbox = useMemo(() => {
     if (!inbox?.rows) return [];
     let rows = inbox.rows;
-    if (categoryFilter !== "all") rows = rows.filter((r: any) => r.category === categoryFilter);
+    if (categoryFilter !== "all")
+      rows = rows.filter((r: any) => r.category === categoryFilter);
     if (selectedCity) rows = rows.filter((r: any) => r.cityId === selectedCity);
-    if (selectedProfession) rows = rows.filter((r: any) => r.professionId === selectedProfession);
-    if (selectedContext) rows = rows.filter((r: any) => r.contextId === selectedContext);
+    if (selectedProfession)
+      rows = rows.filter((r: any) => r.professionId === selectedProfession);
+    if (selectedContext)
+      rows = rows.filter((r: any) => r.contextId === selectedContext);
     return rows;
-  }, [inbox?.rows, categoryFilter, selectedCity, selectedProfession, selectedContext]);
+  }, [
+    inbox?.rows,
+    categoryFilter,
+    selectedCity,
+    selectedProfession,
+    selectedContext,
+  ]);
 
   useEffect(() => {
     if (!board || !isOwner || hasMarked.current) return;
@@ -146,25 +182,29 @@ export default function BoardInboxPage() {
             </button>
           )}
           {inbox && inbox.rows.length > 0 && (
-             <div className="relative p-[1.5px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm max-w-[130px] sm:max-w-xs shrink-0">
-               <select
-                 value={categoryFilter}
-                 onChange={(e) => setCategoryFilter(e.target.value)}
-                 className="bg-[#faf8f5] text-[9px] font-bold uppercase tracking-widest pl-3 pr-6 py-1.5 rounded-full outline-none appearance-none cursor-pointer text-black/70 hover:text-black transition-colors w-full truncate"
-                 style={{
-                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300000044%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 8px top 50%",
-                    backgroundSize: "6px auto",
-                 }}
-               >
-                 <option value="all">All Teas</option>
-                 {existingCategories.map((cat: any) => {
-                   const info = CATEGORY_INFO[cat];
-                   return <option key={cat} value={cat}>{info ? info.label : cat}</option>;
-                 })}
-               </select>
-             </div>
+            <div className="relative p-[1.5px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm max-w-[130px] sm:max-w-xs shrink-0">
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-[#faf8f5] text-[9px] font-bold uppercase tracking-widest pl-3 pr-6 py-1.5 rounded-full outline-none appearance-none cursor-pointer text-black/70 hover:text-black transition-colors w-full truncate"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300000044%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 8px top 50%",
+                  backgroundSize: "6px auto",
+                }}
+              >
+                <option value="all">All Teas</option>
+                {existingCategories.map((cat: any) => {
+                  const info = CATEGORY_INFO[cat];
+                  return (
+                    <option key={cat} value={cat}>
+                      {info ? info.label : cat}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           )}
           <span className="text-[10px] font-bold text-black/20">
             {filteredInbox.length}
@@ -186,7 +226,10 @@ export default function BoardInboxPage() {
               {/* Search + Clear */}
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
-                  <Search size={11} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20" />
+                  <Search
+                    size={11}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20"
+                  />
                   <input
                     type="text"
                     value={inboxContextSearch}
@@ -198,7 +241,12 @@ export default function BoardInboxPage() {
                 {activeContextFilterCount > 0 && (
                   <button
                     type="button"
-                    onClick={() => { setSelectedCity(null); setSelectedProfession(null); setSelectedContext(null); setInboxContextSearch(""); }}
+                    onClick={() => {
+                      setSelectedCity(null);
+                      setSelectedProfession(null);
+                      setSelectedContext(null);
+                      setInboxContextSearch("");
+                    }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-wider text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all active:scale-95 whitespace-nowrap"
                   >
                     <X size={10} /> Clear
@@ -208,8 +256,12 @@ export default function BoardInboxPage() {
 
               {(() => {
                 const q = inboxContextSearch.toLowerCase().trim();
-                const filterItems = (items: Array<{key: string, count: number}>) =>
-                  q ? items.filter(i => i.key.toLowerCase().includes(q)) : items;
+                const filterItems = (
+                  items: Array<{ key: string; count: number }>,
+                ) =>
+                  q
+                    ? items.filter((i) => i.key.toLowerCase().includes(q))
+                    : items;
 
                 const fc = filterItems(inboxContextData.cities);
                 const fp = filterItems(inboxContextData.professions);
@@ -219,8 +271,12 @@ export default function BoardInboxPage() {
                   return (
                     <div className="text-center py-4">
                       <span className="text-2xl block mb-1">🫖</span>
-                      <p className="text-[11px] font-bold text-black/50 mb-1">No teas from “{inboxContextSearch}” yet</p>
-                      <p className="text-[10px] text-black/25 mb-3">Be the first to spill!</p>
+                      <p className="text-[11px] font-bold text-black/50 mb-1">
+                        No teas from “{inboxContextSearch}” yet
+                      </p>
+                      <p className="text-[10px] text-black/25 mb-3">
+                        Be the first to spill!
+                      </p>
                       <Link
                         href={`/b/${slug}/confess`}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-white rounded-lg text-[9px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
@@ -235,7 +291,7 @@ export default function BoardInboxPage() {
                 const showAll = q.length > 0;
 
                 const renderSection = (
-                  items: Array<{key: string, count: number}>,
+                  items: Array<{ key: string; count: number }>,
                   icon: React.ReactNode,
                   label: string,
                   emoji: string,
@@ -250,21 +306,33 @@ export default function BoardInboxPage() {
                     <div>
                       <div className="flex items-center gap-1.5 mb-1.5">
                         {icon}
-                        <span className="text-[8px] font-black uppercase tracking-[0.15em] text-black/25">{label}</span>
+                        <span className="text-[8px] font-black uppercase tracking-[0.15em] text-black/25">
+                          {label}
+                        </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {visible.map((item) => {
                           const isActive = value === item.key;
                           return (
-                            <button key={item.key} type="button" onClick={() => setter(isActive ? null : item.key)}
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => setter(isActive ? null : item.key)}
                               className={`px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all active:scale-95 border ${isActive ? `${activeColor} text-white border-transparent` : "bg-white border-black/8 text-black/50 hover:border-black/20"}`}
                             >
-                              {emoji} {item.key} <span className={`text-[8px] ${isActive ? "text-white/70" : "text-black/20"}`}>{item.count}</span>
+                              {emoji} {item.key}{" "}
+                              <span
+                                className={`text-[8px] ${isActive ? "text-white/70" : "text-black/20"}`}
+                              >
+                                {item.count}
+                              </span>
                             </button>
                           );
                         })}
                         {!showAll && hidden > 0 && (
-                          <button type="button" onClick={() => setInboxContextSearch(" ")}
+                          <button
+                            type="button"
+                            onClick={() => setInboxContextSearch(" ")}
                             className="px-2.5 py-1 rounded-full text-[9px] font-bold text-black/30 bg-black/[0.03] hover:bg-black/[0.06] transition-all active:scale-95"
                           >
                             +{hidden} more
@@ -277,9 +345,33 @@ export default function BoardInboxPage() {
 
                 return (
                   <>
-                    {renderSection(fc, <MapPin size={10} className="text-black/25" />, "City", "📍", selectedCity, setSelectedCity, "bg-blue-500")}
-                    {renderSection(fp, <Briefcase size={10} className="text-black/25" />, "Profession", "💼", selectedProfession, setSelectedProfession, "bg-amber-500")}
-                    {renderSection(fx, <Heart size={10} className="text-black/25" />, "About", "🫂", selectedContext, setSelectedContext, "bg-purple-500")}
+                    {renderSection(
+                      fc,
+                      <MapPin size={10} className="text-black/25" />,
+                      "City",
+                      "📍",
+                      selectedCity,
+                      setSelectedCity,
+                      "bg-blue-500",
+                    )}
+                    {renderSection(
+                      fp,
+                      <Briefcase size={10} className="text-black/25" />,
+                      "Profession",
+                      "💼",
+                      selectedProfession,
+                      setSelectedProfession,
+                      "bg-amber-500",
+                    )}
+                    {renderSection(
+                      fx,
+                      <Heart size={10} className="text-black/25" />,
+                      "About",
+                      "🫂",
+                      selectedContext,
+                      setSelectedContext,
+                      "bg-purple-500",
+                    )}
                   </>
                 );
               })()}
@@ -295,18 +387,26 @@ export default function BoardInboxPage() {
           </p>
           <h2 className="text-3xl font-black serif tracking-tight">Inbox</h2>
           <p className="text-xs text-black/35 mt-1">
-            {isOwner ? "Fresh confessions, marked unread until you open this page." : "Public feed of dropping teas."}
+            {isOwner
+              ? "Fresh confessions, marked unread until you open this page."
+              : "Public feed of dropping teas."}
           </p>
         </div>
 
         {inbox && inbox.rows.length > 0 ? (
           <div className="relative">
-            <div className={`space-y-3 ${filteredInbox.length > 4 ? "max-h-[500px] overflow-y-auto pr-2 pb-10 scrollbar-hide" : ""}`}
-                 style={filteredInbox.length > 4 ? {
-                   WebkitOverflowScrolling: "touch",
-                   scrollbarWidth: "none",
-                   msOverflowStyle: "none",
-                 } : {}}>
+            <div
+              className={`space-y-3 ${filteredInbox.length > 4 ? "max-h-[500px] overflow-y-auto pr-2 pb-10 scrollbar-hide" : ""}`}
+              style={
+                filteredInbox.length > 4
+                  ? {
+                      WebkitOverflowScrolling: "touch",
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
+                    }
+                  : {}
+              }
+            >
               <style>{`
                 ::-webkit-scrollbar {
                   display: none;
@@ -318,68 +418,68 @@ export default function BoardInboxPage() {
                 </div>
               ) : (
                 filteredInbox.map((confession: any) => {
-              const catInfo = CATEGORY_INFO[confession.category];
-              return (
-                <Link
-                  key={confession._id}
-                  href={`/b/${slug}/c/${confession._id}`}
-                  className={`block rounded-2xl border p-4 transition-all ${
-                    confession.isUnread
-                      ? "bg-white border-black/15 shadow-lg shadow-black/[0.03]"
-                      : "bg-white/80 border-black/6 hover:border-black/12"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {catInfo && (
-                        <span
-                          className="text-[8px] font-bold uppercase tracking-wider px-2 py-1 rounded-full whitespace-nowrap"
-                          style={{
-                            background: `${catInfo.color}14`,
-                            color: catInfo.color,
-                          }}
-                        >
-                          {catInfo.label}
+                  const catInfo = CATEGORY_INFO[confession.category];
+                  return (
+                    <Link
+                      key={confession._id}
+                      href={`/b/${slug}/c/${confession._id}`}
+                      className={`block rounded-2xl border p-4 transition-all ${
+                        confession.isUnread
+                          ? "bg-white border-black/15 shadow-lg shadow-black/[0.03]"
+                          : "bg-white/80 border-black/6 hover:border-black/12"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {catInfo && (
+                            <span
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-1 rounded-full whitespace-nowrap"
+                              style={{
+                                background: `${catInfo.color}14`,
+                                color: catInfo.color,
+                              }}
+                            >
+                              {catInfo.label}
+                            </span>
+                          )}
+                          {confession.cityId && (
+                            <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap">
+                              📍 {confession.cityId}
+                            </span>
+                          )}
+                          {confession.professionId && (
+                            <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap">
+                              💼 {confession.professionId}
+                            </span>
+                          )}
+                          {confession.contextId && (
+                            <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap max-w-[120px] truncate">
+                              🫂 {confession.contextId}
+                            </span>
+                          )}
+                          {isOwner && confession.isUnread && (
+                            <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-accent whitespace-nowrap bg-accent/10 px-2 py-1 rounded-full">
+                              <Sparkles size={10} />
+                              Unread
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-black/25 font-medium whitespace-nowrap shrink-0">
+                          {timeAgo(confession.createdAt)}
                         </span>
-                      )}
-                      {confession.cityId && (
-                        <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap">
-                          📍 {confession.cityId}
-                        </span>
-                      )}
-                      {confession.professionId && (
-                        <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap">
-                          💼 {confession.professionId}
-                        </span>
-                      )}
-                      {confession.contextId && (
-                        <span className="text-[8px] px-2 py-1 rounded-full font-bold uppercase tracking-wider bg-black/5 text-black/50 whitespace-nowrap max-w-[120px] truncate">
-                          🫂 {confession.contextId}
-                        </span>
-                      )}
-                      {isOwner && confession.isUnread && (
-                        <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-accent whitespace-nowrap bg-accent/10 px-2 py-1 rounded-full">
-                          <Sparkles size={10} />
-                          Unread
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-black/25 font-medium whitespace-nowrap shrink-0">
-                      {timeAgo(confession.createdAt)}
-                    </span>
-                  </div>
+                      </div>
 
-                  <p className="serif text-sm text-black/70 leading-relaxed line-clamp-3">
-                    {confession.text}
-                  </p>
+                      <p className="serif text-sm text-black/70 leading-relaxed line-clamp-3">
+                        {confession.text}
+                      </p>
 
-                  <div className="mt-3 text-[10px] text-black/20 font-semibold uppercase tracking-wider">
-                    by {confession.displayName}
-                  </div>
-                </Link>
-              );
-            })
-            )}
+                      <div className="mt-3 text-[10px] text-black/20 font-semibold uppercase tracking-wider">
+                        by {confession.displayName}
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
             </div>
             {filteredInbox.length > 4 && (
               <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#faf8f5] to-transparent pointer-events-none flex items-end justify-center pb-2 text-black/20 text-[10px] font-bold uppercase tracking-widest">

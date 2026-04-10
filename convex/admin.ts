@@ -152,7 +152,13 @@ export const adminListConfessions = query({
 
         return {
           _id: c._id,
-          text: c.text?.slice(0, 120) || (c.type === "voice" ? "🎤 Voice Note" : c.type === "canvas" ? "🎨 Doodle" : "—"),
+          text:
+            c.text?.slice(0, 120) ||
+            (c.type === "voice"
+              ? "🎤 Voice Note"
+              : c.type === "canvas"
+                ? "🎨 Doodle"
+                : "—"),
           fullText: c.text || "",
           type: c.type || "text",
           category: c.category,

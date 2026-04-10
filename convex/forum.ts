@@ -40,7 +40,8 @@ export const listFeatureRequests = query({
   handler: async (ctx, args) => {
     let allRequests;
     if (args.status) {
-      allRequests = await ctx.db.query("featureRequests")
+      allRequests = await ctx.db
+        .query("featureRequests")
         .withIndex("by_status", (q) => q.eq("status", args.status as string))
         .collect();
     } else {

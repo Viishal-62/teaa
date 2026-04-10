@@ -51,7 +51,7 @@ export const create = mutation({
 
     // Filter out logically expired polls from the active count
     const actuallyActive = activePolls.filter(
-      (p) => !p.expiresAt || p.expiresAt > Date.now()
+      (p) => !p.expiresAt || p.expiresAt > Date.now(),
     );
 
     if (actuallyActive.length >= MAX_POLLS_PER_BOARD) {
@@ -61,11 +61,9 @@ export const create = mutation({
     }
 
     // Content moderation on question
-    const modResult = moderateText(
-      args.question,
-      board.bannedWords ?? [],
-      { disableCommonProfanityFilter: true },
-    );
+    const modResult = moderateText(args.question, board.bannedWords ?? [], {
+      disableCommonProfanityFilter: true,
+    });
     if (!modResult.isClean) {
       throw new Error(
         JSON.stringify({

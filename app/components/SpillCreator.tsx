@@ -817,7 +817,9 @@ function StepCover({
         <div>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">
             <span>Tags ({tags.length}/3)</span>
-            <span className={tagInput.length >= 15 ? "text-red-500" : ""}>{tagInput.length}/15</span>
+            <span className={tagInput.length >= 15 ? "text-red-500" : ""}>
+              {tagInput.length}/15
+            </span>
           </label>
           <div className="flex flex-col gap-2">
             <div className="relative">
@@ -835,7 +837,9 @@ function StepCover({
                   }
                 }}
                 disabled={tags.length >= 3}
-                placeholder={tags.length >= 3 ? "Max tags reached" : "e.g. Romance"}
+                placeholder={
+                  tags.length >= 3 ? "Max tags reached" : "e.g. Romance"
+                }
                 className={`w-full rounded-2xl border border-black/8 bg-black/[0.02] px-5 py-4 pr-12 text-sm font-semibold outline-none focus:border-black/10 focus:bg-black/[0.03] placeholder:text-black/15 transition-all ${tags.length >= 3 ? "opacity-50" : ""}`}
                 maxLength={15}
               />
@@ -853,7 +857,7 @@ function StepCover({
                 <Plus size={14} />
               </button>
             </div>
-            
+
             {/* Short helper text */}
             {tags.length === 0 && (
               <p className="text-[9px] text-black/40 italic px-1">
@@ -875,12 +879,14 @@ function StepCover({
                     >
                       {/* Animated spinning gradient border */}
                       <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)]" />
-                      
+
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-[10px] uppercase font-black tracking-wider text-[#111] backdrop-blur-3xl">
                         {tag}
                         <button
                           type="button"
-                          onClick={() => setTags(tags.filter((_, i) => i !== idx))}
+                          onClick={() =>
+                            setTags(tags.filter((_, i) => i !== idx))
+                          }
                           className="flex items-center justify-center w-4 h-4 rounded-full bg-black/5 hover:bg-black/10 text-black/40 hover:text-black transition-colors"
                         >
                           <X size={10} />
@@ -896,7 +902,9 @@ function StepCover({
         <div>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2 flex justify-between">
             <span>Short About</span>
-            <span className={about.length >= 15 ? "text-red-500" : ""}>{about.length}/15</span>
+            <span className={about.length >= 15 ? "text-red-500" : ""}>
+              {about.length}/15
+            </span>
           </label>
           <input
             type="text"

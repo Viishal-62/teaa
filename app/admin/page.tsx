@@ -85,7 +85,10 @@ function timeAgo(ts: number): string {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(ts).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  return new Date(ts).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function formatDate(ts: number): string {
@@ -99,10 +102,19 @@ function formatDate(ts: number): string {
 }
 
 // ─── Animated Counter ───
-function AnimatedNumber({ value, className }: { value: number; className?: string }) {
+function AnimatedNumber({
+  value,
+  className,
+}: {
+  value: number;
+  className?: string;
+}) {
   const [display, setDisplay] = useState(0);
   useEffect(() => {
-    if (value === 0) { setDisplay(0); return; }
+    if (value === 0) {
+      setDisplay(0);
+      return;
+    }
     const duration = 800;
     const start = performance.now();
     const animate = (now: number) => {
@@ -223,7 +235,14 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
         }}
         transition={{ duration: 0.5 }}
       >
-        <GlassPanel style={{ padding: "48px 40px", maxWidth: 420, width: "100%", textAlign: "center" }}>
+        <GlassPanel
+          style={{
+            padding: "48px 40px",
+            maxWidth: 420,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
           <div
             style={{
               width: 64,
@@ -238,10 +257,23 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
           >
             <Lock size={28} color="#fff" />
           </div>
-          <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>
+          <h1
+            style={{
+              color: "#fff",
+              fontSize: 24,
+              fontWeight: 700,
+              margin: "0 0 8px",
+            }}
+          >
             Admin Dashboard
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, margin: "0 0 32px" }}>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.4)",
+              fontSize: 14,
+              margin: "0 0 32px",
+            }}
+          >
             Enter the admin password to continue
           </p>
           <form onSubmit={handleSubmit}>
@@ -249,7 +281,10 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
               <input
                 type={showPw ? "text" : "password"}
                 value={pw}
-                onChange={(e) => { setPw(e.target.value); setError(false); }}
+                onChange={(e) => {
+                  setPw(e.target.value);
+                  setError(false);
+                }}
                 placeholder="Password"
                 autoFocus
                 style={{
@@ -283,15 +318,26 @@ function PasswordGate({ onUnlock }: { onUnlock: () => void }) {
                   justifyContent: "center",
                   transition: "color 0.2s",
                 }}
-                onMouseOver={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
-                onMouseOut={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}
+                onMouseOver={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.7)")
+                }
+                onMouseOut={(e) =>
+                  (e.currentTarget.style.color = "rgba(255,255,255,0.35)")
+                }
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
                 {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             {error && (
-              <p style={{ color: "#ef4444", fontSize: 13, margin: "12px 0 0", textAlign: "left" }}>
+              <p
+                style={{
+                  color: "#ef4444",
+                  fontSize: 13,
+                  margin: "12px 0 0",
+                  textAlign: "left",
+                }}
+              >
                 Wrong password. Try again.
               </p>
             )}
@@ -334,7 +380,14 @@ interface StatCardProps {
   delay: number;
 }
 
-function StatCard({ label, total, today, icon, gradient, delay }: StatCardProps) {
+function StatCard({
+  label,
+  total,
+  today,
+  icon,
+  gradient,
+  delay,
+}: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -359,9 +412,24 @@ function StatCard({ label, total, today, icon, gradient, delay }: StatCardProps)
             background: gradient,
           }}
         />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
           <div>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 500, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.4)",
+                fontSize: 13,
+                fontWeight: 500,
+                margin: "0 0 8px",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
               {label}
             </p>
             <AnimatedNumber value={total} className="" />
@@ -388,7 +456,14 @@ function StatCard({ label, total, today, icon, gradient, delay }: StatCardProps)
           </div>
         </div>
         {today > 0 && (
-          <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
             <NewBadge />
             <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
               {today} today
@@ -505,8 +580,16 @@ export default function AdminDashboard() {
             <Shield size={20} color="#fff" />
           </div>
           <div>
-            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Teaa Admin</h1>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+              Teaa Admin
+            </h1>
+            <p
+              style={{
+                fontSize: 12,
+                color: "rgba(255,255,255,0.35)",
+                margin: 0,
+              }}
+            >
               Platform Dashboard
             </p>
           </div>
@@ -562,7 +645,10 @@ export default function AdminDashboard() {
               <button
                 key={t.id}
                 className={`admin-tab ${activeTab === t.id ? "active" : ""}`}
-                onClick={() => { setActiveTab(t.id); setSearchQuery(""); }}
+                onClick={() => {
+                  setActiveTab(t.id);
+                  setSearchQuery("");
+                }}
               >
                 <t.icon size={15} />
                 {t.label}
@@ -571,7 +657,13 @@ export default function AdminDashboard() {
           </div>
 
           {/* Search */}
-          <div style={{ position: "relative", marginBottom: 20, display: "inline-block" }}>
+          <div
+            style={{
+              position: "relative",
+              marginBottom: 20,
+              display: "inline-block",
+            }}
+          >
             <Search
               size={15}
               style={{
@@ -620,8 +712,12 @@ export default function AdminDashboard() {
               )}
               {activeTab === "spills" && <SpillsTable search={searchQuery} />}
               {activeTab === "reports" && <ReportsTable search={searchQuery} />}
-              {activeTab === "features" && <FeaturesTable search={searchQuery} />}
-              {activeTab === "comments" && <CommentsTable search={searchQuery} />}
+              {activeTab === "features" && (
+                <FeaturesTable search={searchQuery} />
+              )}
+              {activeTab === "comments" && (
+                <CommentsTable search={searchQuery} />
+              )}
             </div>
           </GlassPanel>
         </div>
@@ -638,12 +734,33 @@ function DashboardStats() {
 
   if (!stats) {
     return (
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: 20,
+        }}
+      >
         {Array.from({ length: 7 }).map((_, i) => (
           <GlassPanel key={i} style={{ height: 120, opacity: 0.5 }}>
             <div style={{ padding: 24 }}>
-              <div style={{ width: 60, height: 14, background: "rgba(255,255,255,0.05)", borderRadius: 4 }} />
-              <div style={{ width: 40, height: 28, background: "rgba(255,255,255,0.05)", borderRadius: 4, marginTop: 12 }} />
+              <div
+                style={{
+                  width: 60,
+                  height: 14,
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: 4,
+                }}
+              />
+              <div
+                style={{
+                  width: 40,
+                  height: 28,
+                  background: "rgba(255,255,255,0.05)",
+                  borderRadius: 4,
+                  marginTop: 12,
+                }}
+              />
             </div>
           </GlassPanel>
         ))}
@@ -652,17 +769,72 @@ function DashboardStats() {
   }
 
   const cards: StatCardProps[] = [
-    { label: "Boards", total: stats.boards.total, today: stats.boards.newToday, icon: <LayoutDashboard size={22} color="#fff" />, gradient: "linear-gradient(135deg, #3b82f6, #6366f1)", delay: 0 },
-    { label: "Confessions", total: stats.confessions.total, today: stats.confessions.newToday, icon: <MessageSquare size={22} color="#fff" />, gradient: "linear-gradient(135deg, #f59e0b, #f97316)", delay: 0.05 },
-    { label: "Spills", total: stats.spills.total, today: stats.spills.newToday, icon: <BookOpen size={22} color="#fff" />, gradient: "linear-gradient(135deg, #8b5cf6, #a855f7)", delay: 0.1 },
-    { label: "Comments", total: stats.comments.total, today: stats.comments.newToday, icon: <MessageCircle size={22} color="#fff" />, gradient: "linear-gradient(135deg, #14b8a6, #10b981)", delay: 0.15 },
-    { label: "Reactions", total: stats.reactions.total, today: stats.reactions.newToday, icon: <TrendingUp size={22} color="#fff" />, gradient: "linear-gradient(135deg, #ec4899, #f43f5e)", delay: 0.2 },
-    { label: "Reports", total: stats.reports.total, today: stats.reports.newToday, icon: <Flag size={22} color="#fff" />, gradient: "linear-gradient(135deg, #ef4444, #dc2626)", delay: 0.25 },
-    { label: "Feature Requests", total: stats.featureRequests.total, today: stats.featureRequests.newToday, icon: <Lightbulb size={22} color="#fff" />, gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)", delay: 0.3 },
+    {
+      label: "Boards",
+      total: stats.boards.total,
+      today: stats.boards.newToday,
+      icon: <LayoutDashboard size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #3b82f6, #6366f1)",
+      delay: 0,
+    },
+    {
+      label: "Confessions",
+      total: stats.confessions.total,
+      today: stats.confessions.newToday,
+      icon: <MessageSquare size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #f59e0b, #f97316)",
+      delay: 0.05,
+    },
+    {
+      label: "Spills",
+      total: stats.spills.total,
+      today: stats.spills.newToday,
+      icon: <BookOpen size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #8b5cf6, #a855f7)",
+      delay: 0.1,
+    },
+    {
+      label: "Comments",
+      total: stats.comments.total,
+      today: stats.comments.newToday,
+      icon: <MessageCircle size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #14b8a6, #10b981)",
+      delay: 0.15,
+    },
+    {
+      label: "Reactions",
+      total: stats.reactions.total,
+      today: stats.reactions.newToday,
+      icon: <TrendingUp size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #ec4899, #f43f5e)",
+      delay: 0.2,
+    },
+    {
+      label: "Reports",
+      total: stats.reports.total,
+      today: stats.reports.newToday,
+      icon: <Flag size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #ef4444, #dc2626)",
+      delay: 0.25,
+    },
+    {
+      label: "Feature Requests",
+      total: stats.featureRequests.total,
+      today: stats.featureRequests.newToday,
+      icon: <Lightbulb size={22} color="#fff" />,
+      gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+      delay: 0.3,
+    },
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+        gap: 20,
+      }}
+    >
       {cards.map((c) => (
         <StatCard key={c.label} {...c} />
       ))}
@@ -677,17 +849,42 @@ function ActivityTimeline() {
   const timeline = useQuery(api.admin.adminActivityTimeline);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-      <GlassPanel style={{ padding: "24px", maxHeight: 420, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <GlassPanel
+        style={{
+          padding: "24px",
+          maxHeight: 420,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+          }}
+        >
           <Activity size={18} color="#f59e0b" />
-          <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Activity Feed</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
+            Activity Feed
+          </h3>
         </div>
         <div style={{ flex: 1, overflowY: "auto", paddingRight: 8 }}>
           {!timeline ? (
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading...</p>
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+              Loading...
+            </p>
           ) : timeline.length === 0 ? (
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No activity yet.</p>
+            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+              No activity yet.
+            </p>
           ) : (
             timeline.slice(0, 25).map((item, i) => (
               <div
@@ -696,7 +893,10 @@ function ActivityTimeline() {
                   display: "flex",
                   gap: 12,
                   padding: "10px 0",
-                  borderBottom: i < timeline.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                  borderBottom:
+                    i < timeline.length - 1
+                      ? "1px solid rgba(255,255,255,0.04)"
+                      : "none",
                 }}
               >
                 <div
@@ -710,8 +910,16 @@ function ActivityTimeline() {
                   }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: TIMELINE_COLORS[item.type] || "#888" }}>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: TIMELINE_COLORS[item.type] || "#888",
+                      }}
+                    >
                       {item.label}
                     </span>
                     {item.isNew && <NewBadge />}
@@ -729,7 +937,14 @@ function ActivityTimeline() {
                     {item.detail}
                   </p>
                 </div>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.25)",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
                   {timeAgo(item.createdAt)}
                 </span>
               </div>
@@ -757,20 +972,55 @@ function CategoryChart() {
   const maxVal = data.length > 0 ? Math.max(...data.map(([, v]) => v)) : 1;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-      <GlassPanel style={{ padding: "24px", height: 420, display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.35 }}
+    >
+      <GlassPanel
+        style={{
+          padding: "24px",
+          height: 420,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+          }}
+        >
           <BarChart3 size={18} color="#a78bfa" />
-          <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Top Categories</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>
+            Top Categories
+          </h3>
         </div>
         {!stats ? (
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading...</p>
+          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            Loading...
+          </p>
         ) : data.length === 0 ? (
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No data yet.</p>
+          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            No data yet.
+          </p>
         ) : (
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10, justifyContent: "center" }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              justifyContent: "center",
+            }}
+          >
             {data.map(([cat, count]) => (
-              <div key={cat} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div
+                key={cat}
+                style={{ display: "flex", alignItems: "center", gap: 12 }}
+              >
                 <span
                   style={{
                     width: 90,
@@ -783,7 +1033,15 @@ function CategoryChart() {
                 >
                   {cat.replace("-", " ")}
                 </span>
-                <div style={{ flex: 1, height: 24, background: "rgba(255,255,255,0.04)", borderRadius: 6, overflow: "hidden" }}>
+                <div
+                  style={{
+                    flex: 1,
+                    height: 24,
+                    background: "rgba(255,255,255,0.04)",
+                    borderRadius: 6,
+                    overflow: "hidden",
+                  }}
+                >
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(count / maxVal) * 100}%` }}
@@ -798,7 +1056,11 @@ function CategoryChart() {
                       paddingRight: 8,
                     }}
                   >
-                    <span style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}>{count}</span>
+                    <span
+                      style={{ fontSize: 11, fontWeight: 600, color: "#fff" }}
+                    >
+                      {count}
+                    </span>
                   </motion.div>
                 </div>
               </div>
@@ -817,12 +1079,24 @@ function CategoryChart() {
                 }}
               >
                 {Object.entries(stats.typeDistribution).map(([t, count]) => (
-                  <div key={t} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div
+                    key={t}
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  >
                     <span style={{ fontSize: 14 }}>
                       {t === "voice" ? "🎤" : t === "canvas" ? "🎨" : "💬"}
                     </span>
-                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textTransform: "capitalize" }}>
-                      {t}: <span style={{ color: "#fff", fontWeight: 600 }}>{count}</span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "rgba(255,255,255,0.4)",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {t}:{" "}
+                      <span style={{ color: "#fff", fontWeight: 600 }}>
+                        {count}
+                      </span>
                     </span>
                   </div>
                 ))}
@@ -899,7 +1173,10 @@ function BoardsTable({ search }: { search: string }) {
                     borderRadius: 6,
                     fontSize: 11,
                     fontWeight: 600,
-                    background: b.visibility === "private" ? "rgba(239,68,68,0.12)" : "rgba(52,211,153,0.12)",
+                    background:
+                      b.visibility === "private"
+                        ? "rgba(239,68,68,0.12)"
+                        : "rgba(52,211,153,0.12)",
                     color: b.visibility === "private" ? "#f87171" : "#34d399",
                   }}
                 >
@@ -909,7 +1186,9 @@ function BoardsTable({ search }: { search: string }) {
               <td>{b.confessionCount}</td>
               <td>{b.spillCount}</td>
               <td>{b.totalViews.toLocaleString()}</td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{timeAgo(b.createdAt)}</td>
+              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                {timeAgo(b.createdAt)}
+              </td>
               <td>
                 {confirmId === b._id ? (
                   <div style={{ display: "flex", gap: 4 }}>
@@ -919,16 +1198,29 @@ function BoardsTable({ search }: { search: string }) {
                         await deleteBoard({ boardId: b._id as Id<"boards"> });
                         setConfirmId(null);
                       }}
-                      style={{ background: "rgba(239,68,68,0.3)", color: "#fff" }}
+                      style={{
+                        background: "rgba(239,68,68,0.3)",
+                        color: "#fff",
+                      }}
                     >
                       Confirm
                     </button>
-                    <button className="delete-btn" onClick={() => setConfirmId(null)} style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" }}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => setConfirmId(null)}
+                      style={{
+                        color: "rgba(255,255,255,0.5)",
+                        borderColor: "rgba(255,255,255,0.1)",
+                      }}
+                    >
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <button className="delete-btn" onClick={() => setConfirmId(b._id)}>
+                  <button
+                    className="delete-btn"
+                    onClick={() => setConfirmId(b._id)}
+                  >
                     <Trash2 size={12} />
                   </button>
                 )}
@@ -974,7 +1266,9 @@ function ConfessionsTable({
           <th>Board</th>
           <th>Category</th>
           <th>Type</th>
-          <th><Eye size={13} /></th>
+          <th>
+            <Eye size={13} />
+          </th>
           <th>Reactions</th>
           <th>Comments</th>
           <th>Flagged</th>
@@ -987,9 +1281,19 @@ function ConfessionsTable({
           <EmptyRow colSpan={11} />
         ) : (
           filtered.map((c) => (
-            <tr key={c._id} style={c.isFlagged ? { background: "rgba(239,68,68,0.04)" } : {}}>
+            <tr
+              key={c._id}
+              style={c.isFlagged ? { background: "rgba(239,68,68,0.04)" } : {}}
+            >
               <td>{c.isNew && <NewBadge />}</td>
-              <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <td
+                style={{
+                  maxWidth: 220,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {c.text}
               </td>
               <td style={{ whiteSpace: "nowrap" }}>{c.boardName}</td>
@@ -1010,7 +1314,11 @@ function ConfessionsTable({
               </td>
               <td>
                 <span style={{ fontSize: 14 }}>
-                  {c.type === "voice" ? "🎤" : c.type === "canvas" ? "🎨" : "💬"}
+                  {c.type === "voice"
+                    ? "🎤"
+                    : c.type === "canvas"
+                      ? "🎨"
+                      : "💬"}
                 </span>
               </td>
               <td>{c.views.toLocaleString()}</td>
@@ -1018,31 +1326,62 @@ function ConfessionsTable({
               <td>{c.commentCount}</td>
               <td>
                 {c.isFlagged ? (
-                  <span style={{ color: "#f87171", fontSize: 12, fontWeight: 600 }}>⚠️ {c.flagReason || "Yes"}</span>
+                  <span
+                    style={{ color: "#f87171", fontSize: 12, fontWeight: 600 }}
+                  >
+                    ⚠️ {c.flagReason || "Yes"}
+                  </span>
                 ) : (
-                  <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>—</span>
+                  <span
+                    style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}
+                  >
+                    —
+                  </span>
                 )}
               </td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{timeAgo(c.createdAt)}</td>
+              <td
+                style={{
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.35)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {timeAgo(c.createdAt)}
+              </td>
               <td>
                 {confirmDelete === c._id ? (
                   <div style={{ display: "flex", gap: 4 }}>
                     <button
                       className="delete-btn"
                       onClick={async () => {
-                        await deleteConfession({ confessionId: c._id as Id<"confessions"> });
+                        await deleteConfession({
+                          confessionId: c._id as Id<"confessions">,
+                        });
                         setConfirmDelete(null);
                       }}
-                      style={{ background: "rgba(239,68,68,0.3)", color: "#fff" }}
+                      style={{
+                        background: "rgba(239,68,68,0.3)",
+                        color: "#fff",
+                      }}
                     >
                       Confirm
                     </button>
-                    <button className="delete-btn" onClick={() => setConfirmDelete(null)} style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" }}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => setConfirmDelete(null)}
+                      style={{
+                        color: "rgba(255,255,255,0.5)",
+                        borderColor: "rgba(255,255,255,0.1)",
+                      }}
+                    >
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <button className="delete-btn" onClick={() => setConfirmDelete(c._id)}>
+                  <button
+                    className="delete-btn"
+                    onClick={() => setConfirmDelete(c._id)}
+                  >
                     <Trash2 size={12} />
                   </button>
                 )}
@@ -1078,7 +1417,9 @@ function SpillsTable({ search }: { search: string }) {
           <th>Board</th>
           <th>Author</th>
           <th>Chapters</th>
-          <th><Eye size={13} /></th>
+          <th>
+            <Eye size={13} />
+          </th>
           <th>Reactions</th>
           <th>Created</th>
         </tr>
@@ -1094,11 +1435,15 @@ function SpillsTable({ search }: { search: string }) {
                 {s.coverEmoji} {s.title}
               </td>
               <td>{s.boardName}</td>
-              <td style={{ color: "rgba(255,255,255,0.4)" }}>{s.displayName}</td>
+              <td style={{ color: "rgba(255,255,255,0.4)" }}>
+                {s.displayName}
+              </td>
               <td>{s.chapterCount}</td>
               <td>{s.views.toLocaleString()}</td>
               <td>{s.reactionCount}</td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{timeAgo(s.createdAt)}</td>
+              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                {timeAgo(s.createdAt)}
+              </td>
             </tr>
           ))
         )}
@@ -1142,31 +1487,55 @@ function ReportsTable({ search }: { search: string }) {
           filtered.map((r) => (
             <tr key={r._id} style={{ background: "rgba(239,68,68,0.03)" }}>
               <td>{r.isNew && <NewBadge />}</td>
-              <td style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <td
+                style={{
+                  maxWidth: 200,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {r.confessionText}
               </td>
               <td>{r.boardName}</td>
               <td style={{ color: "#f87171", fontWeight: 500 }}>{r.reason}</td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{timeAgo(r.createdAt)}</td>
+              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                {timeAgo(r.createdAt)}
+              </td>
               <td>
                 {confirmId === r._id ? (
                   <div style={{ display: "flex", gap: 4 }}>
                     <button
                       className="delete-btn"
                       onClick={async () => {
-                        await deleteConfession({ confessionId: r.confessionId as Id<"confessions"> });
+                        await deleteConfession({
+                          confessionId: r.confessionId as Id<"confessions">,
+                        });
                         setConfirmId(null);
                       }}
-                      style={{ background: "rgba(239,68,68,0.3)", color: "#fff" }}
+                      style={{
+                        background: "rgba(239,68,68,0.3)",
+                        color: "#fff",
+                      }}
                     >
                       Delete Confession
                     </button>
-                    <button className="delete-btn" onClick={() => setConfirmId(null)} style={{ color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.1)" }}>
+                    <button
+                      className="delete-btn"
+                      onClick={() => setConfirmId(null)}
+                      style={{
+                        color: "rgba(255,255,255,0.5)",
+                        borderColor: "rgba(255,255,255,0.1)",
+                      }}
+                    >
                       Cancel
                     </button>
                   </div>
                 ) : (
-                  <button className="delete-btn" onClick={() => setConfirmId(r._id)}>
+                  <button
+                    className="delete-btn"
+                    onClick={() => setConfirmId(r._id)}
+                  >
                     <Trash2 size={12} /> Remove
                   </button>
                 )}
@@ -1213,8 +1582,18 @@ function FeaturesTable({ search }: { search: string }) {
           filtered.map((f) => (
             <tr key={f._id}>
               <td>{f.isNew && <NewBadge />}</td>
-              <td style={{ fontWeight: 500, color: "#fff", maxWidth: 200 }}>{f.title}</td>
-              <td style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "rgba(255,255,255,0.5)" }}>
+              <td style={{ fontWeight: 500, color: "#fff", maxWidth: 200 }}>
+                {f.title}
+              </td>
+              <td
+                style={{
+                  maxWidth: 260,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  color: "rgba(255,255,255,0.5)",
+                }}
+              >
                 {f.description}
               </td>
               <td>
@@ -1228,9 +1607,11 @@ function FeaturesTable({ search }: { search: string }) {
                     });
                   }}
                   style={{
-                    background: STATUS_COLORS[f.status]?.bg || "rgba(255,255,255,0.05)",
+                    background:
+                      STATUS_COLORS[f.status]?.bg || "rgba(255,255,255,0.05)",
                     color: STATUS_COLORS[f.status]?.text || "#fff",
-                    borderColor: STATUS_COLORS[f.status]?.text || "rgba(255,255,255,0.1)",
+                    borderColor:
+                      STATUS_COLORS[f.status]?.text || "rgba(255,255,255,0.1)",
                   }}
                 >
                   <option value="under-review">Under Review</option>
@@ -1241,7 +1622,9 @@ function FeaturesTable({ search }: { search: string }) {
               <td>
                 <span style={{ fontWeight: 600 }}>▲ {f.upvotes}</span>
               </td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{timeAgo(f.createdAt)}</td>
+              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                {timeAgo(f.createdAt)}
+              </td>
             </tr>
           ))
         )}
@@ -1284,16 +1667,35 @@ function CommentsTable({ search }: { search: string }) {
           filtered.map((c) => (
             <tr key={c._id}>
               <td>{c.isNew && <NewBadge />}</td>
-              <td style={{ maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <td
+                style={{
+                  maxWidth: 240,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {c.text}
               </td>
-              <td style={{ color: "rgba(255,255,255,0.4)" }}>{c.displayName}</td>
-              <td style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "rgba(255,255,255,0.4)" }}>
+              <td style={{ color: "rgba(255,255,255,0.4)" }}>
+                {c.displayName}
+              </td>
+              <td
+                style={{
+                  maxWidth: 150,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  color: "rgba(255,255,255,0.4)",
+                }}
+              >
                 {c.confessionPreview}
               </td>
               <td>{c.boardName}</td>
               <td>{c.gifUrl ? "🖼️" : "—"}</td>
-              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>{timeAgo(c.createdAt)}</td>
+              <td style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+                {timeAgo(c.createdAt)}
+              </td>
             </tr>
           ))
         )}
@@ -1318,7 +1720,9 @@ function TableLoading() {
         }}
       />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>Loading data...</p>
+      <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+        Loading data...
+      </p>
     </div>
   );
 }
@@ -1326,7 +1730,14 @@ function TableLoading() {
 function EmptyRow({ colSpan }: { colSpan: number }) {
   return (
     <tr>
-      <td colSpan={colSpan} style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.25)" }}>
+      <td
+        colSpan={colSpan}
+        style={{
+          textAlign: "center",
+          padding: 40,
+          color: "rgba(255,255,255,0.25)",
+        }}
+      >
         No results found
       </td>
     </tr>

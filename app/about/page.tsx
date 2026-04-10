@@ -110,10 +110,10 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-[15px] text-black/50 leading-relaxed font-medium">
                 <p>
-                  In a world where every thought is tied to a profile, a follower
-                  count, and a permanent digital record — we built Teaaa to be
-                  different. A place where you can say what you actually feel,
-                  without the anxiety of being yourself.
+                  In a world where every thought is tied to a profile, a
+                  follower count, and a permanent digital record — we built
+                  Teaaa to be different. A place where you can say what you
+                  actually feel, without the anxiety of being yourself.
                 </p>
                 <p>
                   Whether it&apos;s a confession you&apos;ve been holding in for
@@ -257,8 +257,8 @@ export default function AboutPage() {
             {/* Creator & Community Features */}
             <motion.div variants={fadeUp} className="pt-8">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-black/25 mb-4 flex items-center gap-2">
-                <Users size={12} className="text-accent" /> Creator &
-                Community Tools
+                <Users size={12} className="text-accent" /> Creator & Community
+                Tools
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {[
@@ -281,9 +281,7 @@ export default function AboutPage() {
                     desc: "One-click AI summaries of your entire board. Get the dominant mood, key themes, and TLDR of hundreds of confessions instantly. Perfect for large communities with high volume.",
                   },
                   {
-                    icon: (
-                      <ImageDown size={22} className="text-orange-500" />
-                    ),
+                    icon: <ImageDown size={22} className="text-orange-500" />,
                     bg: "bg-orange-50",
                     title: "Downloadable & Shareable Cards",
                     desc: "Turn any confession into a beautifully designed, branded polaroid card. Download as a high-quality image or share directly to Instagram Stories, WhatsApp Status, Snapchat, Twitter — one tap. Each card features the confession text, mood badge, and Teaaa branding.",
@@ -295,9 +293,7 @@ export default function AboutPage() {
                     desc: "Enhance the reading experience with curated background audio — rain, ocean waves, fireplace, lo-fi beats, café ambiance, and more. Especially immersive when reading Secret Admirer letters.",
                   },
                   {
-                    icon: (
-                      <CheckCircle2 size={22} className="text-teal-500" />
-                    ),
+                    icon: <CheckCircle2 size={22} className="text-teal-500" />,
                     bg: "bg-teal-50",
                     title: "Creator-Verified Replies",
                     desc: "Board creators can reply to confessions with a verified badge, creating authentic dialogue while maintaining the community's anonymous nature. Replies show a special creator seal.",
@@ -343,8 +339,8 @@ export default function AboutPage() {
               Truly anonymous. Actually safe.
             </h2>
             <p className="text-sm text-black/35 max-w-lg mx-auto leading-relaxed">
-              We don&apos;t just say we&apos;re anonymous — we engineered it from
-              the ground up.
+              We don&apos;t just say we&apos;re anonymous — we engineered it
+              from the ground up.
             </p>
           </motion.div>
 
@@ -475,9 +471,7 @@ export default function AboutPage() {
                   <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-[11px] font-black">
                     {s.step}
                   </div>
-                  {i < 4 && (
-                    <div className="w-px h-16 bg-black/10 mt-2" />
-                  )}
+                  {i < 4 && <div className="w-px h-16 bg-black/10 mt-2" />}
                 </div>
                 <div className="pb-10">
                   <h4 className="text-lg font-black serif mb-1">{s.title}</h4>
@@ -564,8 +558,6 @@ export default function AboutPage() {
           </motion.div>
         </div>
       </section>
-
-
 
       {/* ── CREATOR ── */}
       <section className="px-4 sm:px-6 py-20 bg-white border-y border-black/5">

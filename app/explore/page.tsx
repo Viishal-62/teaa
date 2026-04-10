@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  Suspense,
+} from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -57,11 +64,15 @@ function ExplorePageContent() {
   const [showAllFilters, setShowAllFilters] = useState(false);
   const [showContextFilters, setShowContextFilters] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(
+    null,
+  );
   const [selectedContext, setSelectedContext] = useState<string | null>(null);
   const [contextSearch, setContextSearch] = useState("");
   const [mounted, setMounted] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({});
 
   // Auto-apply filters from URL search params
   const hasInitRef = useRef(false);
@@ -73,7 +84,7 @@ function ExplorePageContent() {
     const city = searchParams.get("city");
     const profession = searchParams.get("profession");
     const context = searchParams.get("context");
-    
+
     if (cat) setSelectedCategory(cat);
     if (city) setSelectedCity(city);
     if (profession) setSelectedProfession(profession);
@@ -94,7 +105,9 @@ function ExplorePageContent() {
     contextId: selectedContext ?? undefined,
   });
 
-  const contextDistribution = useQuery(api.confessions.getGlobalContextDistribution);
+  const contextDistribution = useQuery(
+    api.confessions.getGlobalContextDistribution,
+  );
 
   const summarize = useAction(api.ai.summarizeGlobal);
 
@@ -107,16 +120,16 @@ function ExplorePageContent() {
   const globalMood = useQuery(api.confessions.getGlobalMoodDistribution);
 
   const activeCategories = useMemo(() => {
-    const defaultCats = CATEGORIES.map(c => ({ ...c, isCustom: false }));
+    const defaultCats = CATEGORIES.map((c) => ({ ...c, isCustom: false }));
     const dynamicCats = [...defaultCats];
 
     if (globalMood?.distribution) {
-      Object.keys(globalMood.distribution).forEach(key => {
-        if (!defaultCats.find(c => c.key === key)) {
-          dynamicCats.push({ 
-            key, 
-            label: key, 
-            isCustom: true 
+      Object.keys(globalMood.distribution).forEach((key) => {
+        if (!defaultCats.find((c) => c.key === key)) {
+          dynamicCats.push({
+            key,
+            label: key,
+            isCustom: true,
           });
         }
       });
@@ -530,11 +543,33 @@ function ExplorePageContent() {
         {/* Category Filters */}
         <div className="mb-6 overflow-x-auto pb-3 px-4 no-scrollbar flex justify-center">
           <div className="flex gap-1.5 flex-wrap justify-center max-w-4xl">
-            {activeCategories.slice(0, showAllFilters ? activeCategories.length : 8).map((cat) => {
-              const isActive = selectedCategory === cat.key;
-              const catInfo = CATEGORY_INFO[cat.key];
+            {activeCategories
+              .slice(0, showAllFilters ? activeCategories.length : 8)
+              .map((cat) => {
+                const isActive = selectedCategory === cat.key;
+                const catInfo = CATEGORY_INFO[cat.key];
 
-              if (cat.isCustom) {
+                if (cat.isCustom) {
+                  return (
+                    <button
+                      key={cat.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(cat.key);
+                        setActiveIndex(0);
+                      }}
+                      className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                    >
+                      <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)] opacity-70 group-hover:opacity-100" />
+                      <span
+                        className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}
+                      >
+                        {cat.label}
+                      </span>
+                    </button>
+                  );
+                }
+
                 return (
                   <button
                     key={cat.key}
@@ -543,262 +578,318 @@ function ExplorePageContent() {
                       setSelectedCategory(cat.key);
                       setActiveIndex(0);
                     }}
-                    className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                    className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 flex items-center justify-center"
+                    style={{
+                      background: isActive
+                        ? (catInfo?.color ?? "#000")
+                        : "transparent",
+                      color: isActive ? "#fff" : "rgba(0,0,0,0.35)",
+                      border: `1px solid ${isActive ? "transparent" : "rgba(0,0,0,0.08)"}`,
+                    }}
                   >
-                    <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#8b5cf6_0%,#ec4899_50%,#8b5cf6_100%)] opacity-70 group-hover:opacity-100" />
-                    <span className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}>
-                      {cat.label}
-                    </span>
+                    {cat.label}
                   </button>
                 );
-              }
-
-              return (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(cat.key);
-                    setActiveIndex(0);
-                  }}
-                  className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 flex items-center justify-center"
-                  style={{
-                    background: isActive
-                      ? (catInfo?.color ?? "#000")
-                      : "transparent",
-                    color: isActive ? "#fff" : "rgba(0,0,0,0.35)",
-                    border: `1px solid ${isActive ? "transparent" : "rgba(0,0,0,0.08)"}`,
-                  }}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
+              })}
             {!showAllFilters && activeCategories.length > 8 && (
-               <button
-                  type="button"
-                  onClick={() => setShowAllFilters(true)}
-                  className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 border border-transparent bg-[#faf8f5] text-black/40 hover:text-black hover:bg-black/5 flex items-center justify-center flex-shrink-0"
-               >
-                 +{activeCategories.length - 8} More
-               </button>
+              <button
+                type="button"
+                onClick={() => setShowAllFilters(true)}
+                className="px-4 py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95 border border-transparent bg-[#faf8f5] text-black/40 hover:text-black hover:bg-black/5 flex items-center justify-center flex-shrink-0"
+              >
+                +{activeCategories.length - 8} More
+              </button>
             )}
           </div>
         </div>
 
         {/* Context Filters (City, Profession, About) */}
-        {contextDistribution && (contextDistribution.cities.length > 0 || contextDistribution.professions.length > 0 || contextDistribution.contexts.length > 0) && (
-          <div className="mb-6 px-4">
-            <div className="max-w-4xl mx-auto">
-              {/* Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setShowContextFilters(!showContextFilters)}
-                className="flex items-center justify-center gap-2 mx-auto mb-3 px-4 py-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 border border-black/8 hover:border-black/15 text-black/40 hover:text-black bg-white/50 backdrop-blur-sm"
-              >
-                <SlidersHorizontal size={12} />
-                Filter by Context
-                {(selectedCity || selectedProfession || selectedContext) && (
-                  <span className="ml-1 w-5 h-5 rounded-full bg-black text-white text-[9px] flex items-center justify-center font-black">
-                    {[selectedCity, selectedProfession, selectedContext].filter(Boolean).length}
-                  </span>
-                )}
-              </button>
+        {contextDistribution &&
+          (contextDistribution.cities.length > 0 ||
+            contextDistribution.professions.length > 0 ||
+            contextDistribution.contexts.length > 0) && (
+            <div className="mb-6 px-4">
+              <div className="max-w-4xl mx-auto">
+                {/* Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowContextFilters(!showContextFilters)}
+                  className="flex items-center justify-center gap-2 mx-auto mb-3 px-4 py-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 border border-black/8 hover:border-black/15 text-black/40 hover:text-black bg-white/50 backdrop-blur-sm"
+                >
+                  <SlidersHorizontal size={12} />
+                  Filter by Context
+                  {(selectedCity || selectedProfession || selectedContext) && (
+                    <span className="ml-1 w-5 h-5 rounded-full bg-black text-white text-[9px] flex items-center justify-center font-black">
+                      {
+                        [
+                          selectedCity,
+                          selectedProfession,
+                          selectedContext,
+                        ].filter(Boolean).length
+                      }
+                    </span>
+                  )}
+                </button>
 
-              {(() => {
-                const q = contextSearch.toLowerCase().trim();
-                const filterItems = (items: Array<{key: string, count: number}>) =>
-                  q ? items.filter(i => i.key.toLowerCase().includes(q)) : items;
+                {(() => {
+                  const q = contextSearch.toLowerCase().trim();
+                  const filterItems = (
+                    items: Array<{ key: string; count: number }>,
+                  ) =>
+                    q
+                      ? items.filter((i) => i.key.toLowerCase().includes(q))
+                      : items;
 
-                const filteredCities = filterItems(contextDistribution.cities);
-                const filteredProfessions = filterItems(contextDistribution.professions);
-                const filteredContexts = filterItems(contextDistribution.contexts);
-                const totalResults = filteredCities.length + filteredProfessions.length + filteredContexts.length;
+                  const filteredCities = filterItems(
+                    contextDistribution.cities,
+                  );
+                  const filteredProfessions = filterItems(
+                    contextDistribution.professions,
+                  );
+                  const filteredContexts = filterItems(
+                    contextDistribution.contexts,
+                  );
+                  const totalResults =
+                    filteredCities.length +
+                    filteredProfessions.length +
+                    filteredContexts.length;
 
-                const SHOW_LIMIT = 5;
+                  const SHOW_LIMIT = 5;
 
-                const renderPillSection = (
-                  items: Array<{key: string, count: number}>,
-                  icon: React.ReactNode,
-                  label: string,
-                  emoji: string,
-                  selectedValue: string | null,
-                  onSelect: (val: string | null) => void,
-                  gradient: string,
-                ) => {
-                  if (items.length === 0) return null;
-                  const showAll = q.length > 0 || expandedSections[label]; // show all when searching or expanded
-                  const visible = showAll ? items : items.slice(0, SHOW_LIMIT);
-                  const hiddenCount = items.length - SHOW_LIMIT;
+                  const renderPillSection = (
+                    items: Array<{ key: string; count: number }>,
+                    icon: React.ReactNode,
+                    label: string,
+                    emoji: string,
+                    selectedValue: string | null,
+                    onSelect: (val: string | null) => void,
+                    gradient: string,
+                  ) => {
+                    if (items.length === 0) return null;
+                    const showAll = q.length > 0 || expandedSections[label]; // show all when searching or expanded
+                    const visible = showAll
+                      ? items
+                      : items.slice(0, SHOW_LIMIT);
+                    const hiddenCount = items.length - SHOW_LIMIT;
 
-                  return (
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-2">
-                        {icon}
-                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-black/25">{label}</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {visible.map((item) => {
-                          const isActive = selectedValue === item.key;
-                          return (
+                    return (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-2">
+                          {icon}
+                          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-black/25">
+                            {label}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {visible.map((item) => {
+                            const isActive = selectedValue === item.key;
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                onClick={() => {
+                                  onSelect(isActive ? null : item.key);
+                                  setActiveIndex(0);
+                                }}
+                                className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                              >
+                                <span
+                                  className={`absolute inset-[-1000%] animate-[spin_3s_linear_infinite] ${gradient} ${isActive ? "opacity-100" : "opacity-50 group-hover:opacity-80"}`}
+                                />
+                                <span
+                                  className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 gap-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}
+                                >
+                                  {emoji} {item.key}
+                                  <span
+                                    className={`text-[8px] ${isActive ? "text-white/70" : "text-black/25"}`}
+                                  >
+                                    {item.count}
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                          {!showAll && hiddenCount > 0 && (
                             <button
-                              key={item.key}
                               type="button"
-                              onClick={() => { onSelect(isActive ? null : item.key); setActiveIndex(0); }}
-                              className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${isActive ? "" : "opacity-70 hover:opacity-100"}`}
+                              onClick={() =>
+                                setExpandedSections((prev) => ({
+                                  ...prev,
+                                  [label]: true,
+                                }))
+                              }
+                              className="px-3 min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 sm:h-7 rounded-full text-[10px] font-bold text-black/30 hover:text-black bg-black/[0.03] hover:bg-black/[0.06] transition-all active:scale-95 flex items-center justify-center"
                             >
-                              <span className={`absolute inset-[-1000%] animate-[spin_3s_linear_infinite] ${gradient} ${isActive ? "opacity-100" : "opacity-50 group-hover:opacity-80"}`} />
-                              <span className={`inline-flex h-full w-full items-center justify-center rounded-full px-3 gap-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-3xl transition-colors ${isActive ? "bg-transparent text-white" : "bg-white text-[#111] group-hover:bg-white/90"}`}>
-                                {emoji} {item.key}
-                                <span className={`text-[8px] ${isActive ? "text-white/70" : "text-black/25"}`}>{item.count}</span>
-                              </span>
+                              +{hiddenCount} more
                             </button>
-                          );
-                        })}
-                        {!showAll && hiddenCount > 0 && (
+                          )}
+                        </div>
+                      </div>
+                    );
+                  };
+
+                  const ContextFilterUI = (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 w-full">
+                        <div className="flex-1 relative min-w-0">
+                          <Search
+                            size={12}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20"
+                          />
+                          <input
+                            type="text"
+                            value={contextSearch}
+                            onChange={(e) => setContextSearch(e.target.value)}
+                            placeholder="Search city, profession, context..."
+                            className="w-full pl-8 pr-3 py-2 rounded-xl border border-black/8 bg-white text-[11px] text-black placeholder:text-black/25 outline-none focus:border-black/20 transition-colors"
+                          />
+                        </div>
+                        {(selectedCity ||
+                          selectedProfession ||
+                          selectedContext) && (
                           <button
                             type="button"
-                            onClick={() => setExpandedSections(prev => ({ ...prev, [label]: true }))}
-                            className="px-3 min-h-[44px] min-w-[44px] sm:min-h-7 sm:min-w-0 sm:h-7 rounded-full text-[10px] font-bold text-black/30 hover:text-black bg-black/[0.03] hover:bg-black/[0.06] transition-all active:scale-95 flex items-center justify-center"
+                            onClick={() => {
+                              setSelectedCity(null);
+                              setSelectedProfession(null);
+                              setSelectedContext(null);
+                              setContextSearch("");
+                              setActiveIndex(0);
+                            }}
+                            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all active:scale-95 whitespace-nowrap"
                           >
-                            +{hiddenCount} more
+                            <X size={10} />
+                            Clear
                           </button>
                         )}
                       </div>
-                    </div>
-                  );
-                };
 
-                const ContextFilterUI = (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 w-full">
-                      <div className="flex-1 relative min-w-0">
-                        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-black/20" />
-                        <input
-                          type="text"
-                          value={contextSearch}
-                          onChange={(e) => setContextSearch(e.target.value)}
-                          placeholder="Search city, profession, context..."
-                          className="w-full pl-8 pr-3 py-2 rounded-xl border border-black/8 bg-white text-[11px] text-black placeholder:text-black/25 outline-none focus:border-black/20 transition-colors"
-                        />
-                      </div>
-                      {(selectedCity || selectedProfession || selectedContext) && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedCity(null);
-                            setSelectedProfession(null);
-                            setSelectedContext(null);
-                            setContextSearch("");
-                            setActiveIndex(0);
-                          }}
-                          className="flex items-center gap-1 px-3 py-2 rounded-xl text-[9px] font-bold uppercase tracking-wider text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 transition-all active:scale-95 whitespace-nowrap"
-                        >
-                          <X size={10} />
-                          Clear
-                        </button>
+                      {q && totalResults === 0 ? (
+                        <div className="text-center py-6">
+                          <span className="text-3xl block mb-2">🫖</span>
+                          <p className="text-sm font-bold serif text-black/60 mb-1">
+                            No teas from &ldquo;{contextSearch}&rdquo; yet
+                          </p>
+                          <p className="text-[11px] text-black/30 mb-4">
+                            Be the first to spill from your city, profession, or
+                            vibe!
+                          </p>
+                          <Link
+                            href="/confess"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                          >
+                            <Plus size={12} />
+                            Drop a Confession
+                          </Link>
+                        </div>
+                      ) : (
+                        <>
+                          {renderPillSection(
+                            filteredCities,
+                            <MapPin size={12} className="text-black/25" />,
+                            "Cities",
+                            "📍",
+                            selectedCity,
+                            setSelectedCity,
+                            "bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#06b6d4_50%,#3b82f6_100%)]",
+                          )}
+                          {renderPillSection(
+                            filteredProfessions,
+                            <Briefcase size={12} className="text-black/25" />,
+                            "Professions",
+                            "💼",
+                            selectedProfession,
+                            setSelectedProfession,
+                            "bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)]",
+                          )}
+                          {renderPillSection(
+                            filteredContexts,
+                            <Heart size={12} className="text-black/25" />,
+                            "About / Feeling",
+                            "🫂",
+                            selectedContext,
+                            setSelectedContext,
+                            "bg-[conic-gradient(from_90deg_at_50%_50%,#a855f7_0%,#ec4899_50%,#a855f7_100%)]",
+                          )}
+                        </>
                       )}
                     </div>
+                  );
 
-                    {q && totalResults === 0 ? (
-                      <div className="text-center py-6">
-                        <span className="text-3xl block mb-2">🫖</span>
-                        <p className="text-sm font-bold serif text-black/60 mb-1">
-                          No teas from &ldquo;{contextSearch}&rdquo; yet
-                        </p>
-                        <p className="text-[11px] text-black/30 mb-4">
-                          Be the first to spill from your city, profession, or vibe!
-                        </p>
-                        <Link
-                          href="/confess"
-                          className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
-                        >
-                          <Plus size={12} />
-                          Drop a Confession
-                        </Link>
-                      </div>
-                    ) : (
-                      <>
-                        {renderPillSection(
-                          filteredCities, <MapPin size={12} className="text-black/25" />, "Cities", "📍",
-                          selectedCity, setSelectedCity,
-                          "bg-[conic-gradient(from_90deg_at_50%_50%,#3b82f6_0%,#06b6d4_50%,#3b82f6_100%)]"
-                        )}
-                        {renderPillSection(
-                          filteredProfessions, <Briefcase size={12} className="text-black/25" />, "Professions", "💼",
-                          selectedProfession, setSelectedProfession,
-                          "bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)]"
-                        )}
-                        {renderPillSection(
-                          filteredContexts, <Heart size={12} className="text-black/25" />, "About / Feeling", "🫂",
-                          selectedContext, setSelectedContext,
-                          "bg-[conic-gradient(from_90deg_at_50%_50%,#a855f7_0%,#ec4899_50%,#a855f7_100%)]"
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-
-                return (
-                  <>
-                    {/* Desktop Inline Filters */}
-                    <div className="hidden md:block">
-                      <AnimatePresence>
-                        {showContextFilters && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeInOut" }}
-                            className="bg-white/60 backdrop-blur-xl border border-black/5 rounded-2xl p-4 overflow-hidden"
-                          >
-                            {ContextFilterUI}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Mobile Bottom Sheet Filters */}
-                    {mounted && typeof document !== "undefined" && createPortal(
-                      <div className="md:hidden block">
+                  return (
+                    <>
+                      {/* Desktop Inline Filters */}
+                      <div className="hidden md:block">
                         <AnimatePresence>
                           {showContextFilters && (
-                            <>
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 bg-black/40 z-[9998]"
-                                onClick={() => setShowContextFilters(false)}
-                                style={{ touchAction: 'none' }}
-                              />
-                              <motion.div
-                                initial={{ y: "100%" }}
-                                animate={{ y: 0 }}
-                                exit={{ y: "100%" }}
-                                transition={{ type: "spring", damping: 28, stiffness: 280 }}
-                                className="fixed bottom-0 left-0 right-0 z-[9999] rounded-t-[2rem] bg-white text-left shadow-2xl max-h-[75dvh] flex flex-col w-full overscroll-contain"
-                                style={{ paddingBottom: "env(safe-area-inset-bottom, 24px)" }}
-                              >
-                                <div className="flex justify-center cursor-ns-resize pt-3 pb-2 flex-shrink-0" onClick={() => setShowContextFilters(false)}>
-                                  <div className="w-12 h-1.5 bg-black/10 rounded-full" />
-                                </div>
-                                <div className="px-4 pb-6 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
-                                  {ContextFilterUI}
-                                </div>
-                              </motion.div>
-                            </>
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.25, ease: "easeInOut" }}
+                              className="bg-white/60 backdrop-blur-xl border border-black/5 rounded-2xl p-4 overflow-hidden"
+                            >
+                              {ContextFilterUI}
+                            </motion.div>
                           )}
                         </AnimatePresence>
-                      </div>,
-                      document.body
-                    )}
-                  </>
-                );
-              })()}
+                      </div>
+
+                      {/* Mobile Bottom Sheet Filters */}
+                      {mounted &&
+                        typeof document !== "undefined" &&
+                        createPortal(
+                          <div className="md:hidden block">
+                            <AnimatePresence>
+                              {showContextFilters && (
+                                <>
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 bg-black/40 z-[9998]"
+                                    onClick={() => setShowContextFilters(false)}
+                                    style={{ touchAction: "none" }}
+                                  />
+                                  <motion.div
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    transition={{
+                                      type: "spring",
+                                      damping: 28,
+                                      stiffness: 280,
+                                    }}
+                                    className="fixed bottom-0 left-0 right-0 z-[9999] rounded-t-[2rem] bg-white text-left shadow-2xl max-h-[75dvh] flex flex-col w-full overscroll-contain"
+                                    style={{
+                                      paddingBottom:
+                                        "env(safe-area-inset-bottom, 24px)",
+                                    }}
+                                  >
+                                    <div
+                                      className="flex justify-center cursor-ns-resize pt-3 pb-2 flex-shrink-0"
+                                      onClick={() =>
+                                        setShowContextFilters(false)
+                                      }
+                                    >
+                                      <div className="w-12 h-1.5 bg-black/10 rounded-full" />
+                                    </div>
+                                    <div className="px-4 pb-6 overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+                                      {ContextFilterUI}
+                                    </div>
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>,
+                          document.body,
+                        )}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* ── Daily Highlights ── */}
         {(teaaOfDay || spillOfDay) && (
@@ -872,7 +963,8 @@ function ExplorePageContent() {
                           {spillOfDay.title}
                         </h3>
                         <p className="text-sm text-black/50 line-clamp-2 md:line-clamp-3 mb-6 leading-relaxed">
-                          {(spillOfDay as any).content || "Read this juicy spill..."}
+                          {(spillOfDay as any).content ||
+                            "Read this juicy spill..."}
                         </p>
                         <div className="flex items-center justify-center sm:justify-start gap-3 mt-auto">
                           <span className="text-[11px] font-bold text-black/60 px-3 py-1 rounded-full border border-black/10">
@@ -1023,11 +1115,13 @@ function ExplorePageContent() {
 
 export default function ExplorePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-black/5 border-t-black/40 rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-black/5 border-t-black/40 rounded-full animate-spin" />
+        </div>
+      }
+    >
       <ExplorePageContent />
     </Suspense>
   );

@@ -59,8 +59,8 @@ export default function DoodleConfessionCard({
   const reactionCountsArray = useQuery(api.reactions.getCounts, {
     confessionId: confession._id,
   });
-  const reactionCounts = reactionCountsArray 
-    ? Object.fromEntries(reactionCountsArray.map(r => [r.type, r.count])) 
+  const reactionCounts = reactionCountsArray
+    ? Object.fromEntries(reactionCountsArray.map((r) => [r.type, r.count]))
     : undefined;
   const totalReactions = useQuery(api.reactions.getTotalCount, {
     confessionId: confession._id,
@@ -79,23 +79,29 @@ export default function DoodleConfessionCard({
     setTimeout(() => setShowDoubleTapHeart(false), 900);
   }, [visitorId, confession._id, toggleReaction]);
 
-  const handleRevealedTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const now = Date.now();
-    if (now - lastTapRef.current < 350) {
-      e.preventDefault();
-      e.stopPropagation();
-      handleDoubleTap();
-      lastTapRef.current = 0;
-    } else {
-      lastTapRef.current = now;
-    }
-  }, [handleDoubleTap]);
+  const handleRevealedTap = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      const now = Date.now();
+      if (now - lastTapRef.current < 350) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleDoubleTap();
+        lastTapRef.current = 0;
+      } else {
+        lastTapRef.current = now;
+      }
+    },
+    [handleDoubleTap],
+  );
   const visitorReactions = useQuery(
     api.reactions.getVisitorReactions,
     visitorId ? { confessionId: confession._id, visitorId } : "skip",
   );
 
-  const handleReactionClick = async (type: string, e?: React.MouseEvent | any) => {
+  const handleReactionClick = async (
+    type: string,
+    e?: React.MouseEvent | any,
+  ) => {
     if (e?.stopPropagation) e.stopPropagation();
     if (!visitorId) return;
     try {
@@ -117,7 +123,8 @@ export default function DoodleConfessionCard({
           setShowRateLimit(true);
         }
       }
-      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
+      if (typeof navigator !== "undefined" && navigator.vibrate)
+        navigator.vibrate(50);
     }
   };
 
@@ -126,7 +133,8 @@ export default function DoodleConfessionCard({
       incrementView({ confessionId: confession._id }).catch(console.error);
       setHasViewed(true);
     }
-    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(50);
+    if (typeof navigator !== "undefined" && navigator.vibrate)
+      navigator.vibrate(50);
     setIsRevealed(!isRevealed);
   };
 
@@ -153,10 +161,14 @@ export default function DoodleConfessionCard({
     return REACTION_INFO[type]?.emoji || type;
   };
 
-  const activeReactions = Array.from(new Set([
-    ...(boardReactions && boardReactions.length > 0 ? boardReactions : ["❤️", "🔥", "😂"]),
-    ...(reactionCounts ? Object.keys(reactionCounts) : [])
-  ])).slice(0, 10);
+  const activeReactions = Array.from(
+    new Set([
+      ...(boardReactions && boardReactions.length > 0
+        ? boardReactions
+        : ["❤️", "🔥", "😂"]),
+      ...(reactionCounts ? Object.keys(reactionCounts) : []),
+    ]),
+  ).slice(0, 10);
 
   const captionText = confession.caption || confession.text;
 
@@ -246,11 +258,14 @@ export default function DoodleConfessionCard({
             <div className="absolute top-4 left-4 right-4 z-10 flex flex-col items-start gap-1.5 pointer-events-none">
               <div className="flex flex-wrap flex-col items-start justify-start gap-1.5">
                 <span className="text-[9px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider bg-white/15 text-white/80 backdrop-blur-sm shadow-sm flex items-center gap-1">
-                  {confession.contentType === "question" ? "❓ Q & A • " : ""}{catInfo?.label ?? confession.category}
+                  {confession.contentType === "question" ? "❓ Q & A • " : ""}
+                  {catInfo?.label ?? confession.category}
                 </span>
               </div>
-              
-              {(confession.cityId || confession.professionId || confession.contextId) && (
+
+              {(confession.cityId ||
+                confession.professionId ||
+                confession.contextId) && (
                 <div className="flex flex-wrap gap-1 mt-0.5">
                   {confession.cityId && (
                     <span className="text-[8.5px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider bg-black/20 text-white/90 backdrop-blur-md shadow-sm border border-white/10">
@@ -337,11 +352,14 @@ export default function DoodleConfessionCard({
           >
             {/* Background layer */}
             <div className="absolute inset-0 bg-[#faf7f2] rounded-2xl overflow-hidden" />
-            
+
             {/* Decorative border */}
             <div className="absolute inset-[6px] border border-dashed border-black/10 rounded-xl pointer-events-none" />
 
-            <div className="relative h-full flex flex-col p-4" onClick={handleRevealedTap}>
+            <div
+              className="relative h-full flex flex-col p-4"
+              onClick={handleRevealedTap}
+            >
               {/* Double-tap heart animation */}
               <AnimatePresence>
                 {showDoubleTapHeart && (
@@ -352,7 +370,9 @@ export default function DoodleConfessionCard({
                     transition={{ type: "spring", stiffness: 400, damping: 15 }}
                     className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
                   >
-                    <span className="text-7xl drop-shadow-[0_4px_20px_rgba(239,68,68,0.5)] select-none">❤️</span>
+                    <span className="text-7xl drop-shadow-[0_4px_20px_rgba(239,68,68,0.5)] select-none">
+                      ❤️
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -364,14 +384,31 @@ export default function DoodleConfessionCard({
                     className="text-[8px] font-bold uppercase tracking-[0.15em] text-center"
                     style={{ color: catInfo?.color ?? "#666" }}
                   >
-                    {confession.contentType === "question" ? "❓ QUESTION • " : ""}{catInfo?.label ?? confession.category}
+                    {confession.contentType === "question"
+                      ? "❓ QUESTION • "
+                      : ""}
+                    {catInfo?.label ?? confession.category}
                   </span>
                 </div>
-                {(confession.cityId || confession.professionId || confession.contextId) && (
+                {(confession.cityId ||
+                  confession.professionId ||
+                  confession.contextId) && (
                   <div className="flex flex-wrap justify-center gap-1 mt-1">
-                    {confession.cityId && <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">📍 {confession.cityId}</span>}
-                    {confession.professionId && <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">💼 {confession.professionId}</span>}
-                    {confession.contextId && <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60 max-w-[150px] truncate">🫂 {confession.contextId}</span>}
+                    {confession.cityId && (
+                      <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">
+                        📍 {confession.cityId}
+                      </span>
+                    )}
+                    {confession.professionId && (
+                      <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60">
+                        💼 {confession.professionId}
+                      </span>
+                    )}
+                    {confession.contextId && (
+                      <span className="text-[8px] px-2 py-0.5 rounded-[4px] font-bold uppercase tracking-wider bg-black/5 text-black/60 max-w-[150px] truncate">
+                        🫂 {confession.contextId}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -428,8 +465,8 @@ export default function DoodleConfessionCard({
                       type="button"
                       onClick={(e) => handleReactionClick(type, e)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all border ${
-                        isActive 
-                          ? "bg-black/10 border-black/20 text-black shadow-sm" 
+                        isActive
+                          ? "bg-black/10 border-black/20 text-black shadow-sm"
                           : "bg-[#faf8f5] border-transparent text-black/50 hover:bg-black/5 hover:text-black/80"
                       }`}
                     >
@@ -438,7 +475,7 @@ export default function DoodleConfessionCard({
                     </button>
                   );
                 })}
-                
+
                 {/* Add Reaction Button */}
                 {activeReactions.length < 10 && (
                   <div className="relative">
@@ -452,26 +489,32 @@ export default function DoodleConfessionCard({
                     >
                       <span className="text-xs">+</span>
                     </button>
-                    
+
                     {showEmojiPicker && (
                       <>
-                         <div className="fixed inset-0 z-[90]" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(false); }} />
-                         <div 
-                           className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:left-full md:bottom-[-20px] md:translate-x-0 md:translate-y-0 md:ml-3 md:top-auto z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
-                           onClick={(e) => e.stopPropagation()}
-                           onWheel={(e) => e.stopPropagation()}
-                           onTouchMove={(e) => e.stopPropagation()}
-                         >
-                           <Picker 
-                            data={data} 
+                        <div
+                          className="fixed inset-0 z-[90]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowEmojiPicker(false);
+                          }}
+                        />
+                        <div
+                          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:left-full md:bottom-[-20px] md:translate-x-0 md:translate-y-0 md:ml-3 md:top-auto z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                          onWheel={(e) => e.stopPropagation()}
+                          onTouchMove={(e) => e.stopPropagation()}
+                        >
+                          <Picker
+                            data={data}
                             theme="light"
                             previewPosition="none"
                             onEmojiSelect={(e: any) => {
-                               handleReactionClick(e.native);
-                               setShowEmojiPicker(false);
+                              handleReactionClick(e.native);
+                              setShowEmojiPicker(false);
                             }}
                           />
-                         </div>
+                        </div>
                       </>
                     )}
                   </div>

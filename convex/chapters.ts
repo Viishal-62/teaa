@@ -20,7 +20,9 @@ export const add = mutation({
     const customWords = board?.bannedWords ?? [];
 
     // Check chapter text
-    const textMod = moderateText(args.text, customWords, { disableCommonProfanityFilter: true });
+    const textMod = moderateText(args.text, customWords, {
+      disableCommonProfanityFilter: true,
+    });
     if (!textMod.isClean) {
       throw new Error(
         JSON.stringify({
@@ -33,7 +35,9 @@ export const add = mutation({
 
     // Check chapter title if provided
     if (args.title) {
-      const titleMod = moderateText(args.title, customWords, { disableCommonProfanityFilter: true });
+      const titleMod = moderateText(args.title, customWords, {
+        disableCommonProfanityFilter: true,
+      });
       if (!titleMod.isClean) {
         throw new Error(
           JSON.stringify({

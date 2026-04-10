@@ -383,7 +383,8 @@ export const globalFeed = query({
         if (confession.category !== args.category) continue;
       }
       if (args.cityId && confession.cityId !== args.cityId) continue;
-      if (args.professionId && confession.professionId !== args.professionId) continue;
+      if (args.professionId && confession.professionId !== args.professionId)
+        continue;
       if (args.contextId && confession.contextId !== args.contextId) continue;
 
       const ADMIRER_CATEGORIES = [
@@ -710,8 +711,13 @@ export const getGlobalContextDistribution = query({
   handler: async (ctx) => {
     const now = Date.now();
     const ADMIRER_CATS = [
-      "crush", "compliment", "attraction", "gratitude",
-      "admiration", "confession", "secret-admirer",
+      "crush",
+      "compliment",
+      "attraction",
+      "gratitude",
+      "admiration",
+      "confession",
+      "secret-admirer",
     ];
 
     const confessions = await ctx.db
@@ -729,7 +735,8 @@ export const getGlobalContextDistribution = query({
       if (ADMIRER_CATS.includes(c.category)) continue;
 
       if (c.cityId) cities[c.cityId] = (cities[c.cityId] || 0) + 1;
-      if (c.professionId) professions[c.professionId] = (professions[c.professionId] || 0) + 1;
+      if (c.professionId)
+        professions[c.professionId] = (professions[c.professionId] || 0) + 1;
       if (c.contextId) contexts[c.contextId] = (contexts[c.contextId] || 0) + 1;
     }
 

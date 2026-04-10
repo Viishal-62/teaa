@@ -17,166 +17,15 @@ export const metadata: Metadata = {
   keywords: [
     "anonymous confessions",
     "NGL alternative",
-    "NGL link alternative",
-    "best NGL alternative",
-    "apps like NGL",
-    "NGL alternative for Instagram",
-    "anonymous confession app",
-    "anonymous confession website",
-    "confession app",
-    "confession website",
-    "confession link",
-    "confession page",
-    "confession page for Instagram",
-    "create confession page",
-    "anonymous message link",
-    "send anonymous message",
-    "anonymous messaging",
+    "confession board",
     "anonymous messaging app",
-    "anonymous message for Instagram",
-    "secret message link",
-    "secret board",
-    "anonymous board",
-    "college confession page",
-    "school confession page",
-    "anonymous gossip",
-    "gossip app",
-    "anonymous voice message",
-    "voice confession",
-    "voice confessions app",
-    "secret admirer message",
     "secret admirer app",
-    "anonymous love letter",
-    "anonymous feedback",
-    "anonymous Q&A",
-    "ask me anything anonymous",
     "spill the tea",
-    "anonymous social media",
-    "Sarahah alternative",
-    "LMK alternative",
-    "Yolo alternative",
-    "anonymous app like NGL",
-    "free anonymous messaging",
-    "anonymous message website",
-    "send secret message online",
-    "anonymous doodle",
-    "anonymous stories",
-    "deep confessions",
-    "online confession box",
-    "confession box for college",
-    "anonymous truth",
-    "unfiltered confessions",
-
-    "anonymous messages",
-    "anonymous confession",
-    "confession website",
-    "anonymous chat",
-    "gossip app",
-    "anonymous posting",
-    "secret sharing app",
-    "anonymous social app",
-    "vent anonymously",
-    "anonymous feedback",
-
-
-    "anonymous confession website for students",
-    "post secrets anonymously online",
-    "where can I confess anonymously",
-    "anonymous confession app without login",
-    "write secret message anonymously",
-    "share secrets anonymously free",
-    "best anonymous confession platform",
-    "online confession board anonymous",
-    "submit confession anonymously website",
-
-
-    "confess crush anonymously online",
-    "send anonymous message to someone",
-    "how to tell someone anonymously you like them",
-    "anonymous love confession website",
-    "secret admirer message anonymous",
-    "send crush message anonymously free",
-    "anonymous flirting app",
-    "anonymous dating confession platform",
-
-    "complain about boss anonymously online",
-    "anonymous workplace feedback tool free",
-    "office gossip anonymous platform",
-    "expose company anonymously website",
-    "anonymous employee feedback app",
-    "share workplace issues anonymously",
-    "report toxic workplace anonymously",
-
-
-    "vent anonymously online free",
-    "where to share feelings anonymously",
-    "anonymous rant website",
-    "talk without revealing identity online",
-    "mental health anonymous sharing app",
-    "anonymous support community",
-    "safe place to vent anonymously",
-
-
-    "is there a site to post anonymously",
-    "how to send anonymous messages online",
-    "best anonymous confession websites",
-    "apps like NGL anonymous",
-    "how to confess without revealing identity",
-    "can I message someone anonymously",
-    "how to post secrets online anonymously",
-
-
-    "spill tea anonymously",
-    "drop secrets online",
-    "anonymous tea page",
-    "college tea gossip website",
-    "anonymous drama app",
-    "expose truth anonymously",
-    "tea page anonymous posting",
-    "spill secrets app",
-    "college confession page anonymous",
-
-
-    "anonymous voice message app",
-    "anonymous audio confession",
-    "anonymous board posting platform",
-    "no login anonymous social app",
-    "private anonymous community app",
-    "anonymous group confession app",
-    "temporary anonymous posts",
-    "anonymous voice note sharing",
-
-
-    "sites like NGL",
-    "apps like Sarahah",
-    "anonymous apps like Whisper",
-    "NGL alternative anonymous app",
-    "best apps for anonymous messaging",
-    "anonymous Q&A apps",
-    "sendit app alternatives anonymous",
-
-    "anonymous confession website for college students free",
-    "send anonymous voice messages without login",
-    "post gossip anonymously online free",
-    "best anonymous venting platforms 2026",
-    "free anonymous message sender no signup",
-    "how to create anonymous confession page",
-    "anonymous storytelling platform",
-    "share secrets with strangers anonymously",
-    "write confession without login website",
-    "anonymous community for students",
-
-
-    "reddit like anonymous confession site",
-    "anonymous discussion board for college",
-    "private gossip sharing platform",
-    "anonymous story sharing app",
-    "burner style anonymous posting app",
-    "dark confessions anonymous website",
-    "real stories anonymous platform",
-    "uncensored anonymous sharing app"
-
+    "anonymous voice confession",
   ],
+  alternates: {
+    canonical: "https://www.teaadrop.xyz",
+  },
   authors: [{ name: "Teaa" }],
   creator: "Teaa",
   openGraph: {
@@ -189,7 +38,7 @@ export const metadata: Metadata = {
       "Create a confession board, share the link, and let people confess anonymously. No sign-up. No trace. Just truth.",
     images: [
       {
-        url: "/og-image.jpeg", // Add a nice image at public/og-image.jpg for social sharing preview!
+        url: "/og-image.jpeg",
         width: 1200,
         height: 630,
         alt: "Teaa - Anonymous Confessions",
@@ -258,7 +107,10 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#111111" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="Teaa" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>

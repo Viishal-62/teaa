@@ -106,7 +106,8 @@ export default function DeepSpillReader() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " ") goToSlide(1);
       if (e.key === "ArrowLeft") goToSlide(-1);
-      if (e.key === "Escape") router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`);
+      if (e.key === "Escape")
+        router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -146,7 +147,9 @@ export default function DeepSpillReader() {
         <p className="text-sm font-medium">This spill doesn&apos;t exist.</p>
         <button
           type="button"
-          onClick={() => router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`)}
+          onClick={() =>
+            router.push(slug === "global" ? "/b/global/spill" : `/b/${slug}`)
+          }
           className="px-5 py-2.5 rounded-full bg-black/5 text-xs font-bold uppercase tracking-wider hover:bg-black/10 transition-colors"
         >
           Go Back
@@ -425,7 +428,10 @@ function CoverSlide({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
             className="text-[11px] font-medium leading-relaxed text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-400 to-purple-400 max-w-xs"
-            style={{ backgroundSize: '200% auto', animation: 'shimmerSweep 3s linear infinite' }}
+            style={{
+              backgroundSize: "200% auto",
+              animation: "shimmerSweep 3s linear infinite",
+            }}
           >
             {spill.about}
           </motion.p>
@@ -434,7 +440,8 @@ function CoverSlide({
         {/* Tags with gradient borders */}
         {(() => {
           const coverTags: string[] = [];
-          if (spill.tags && spill.tags.length > 0) coverTags.push(...spill.tags);
+          if (spill.tags && spill.tags.length > 0)
+            coverTags.push(...spill.tags);
           else if (spill.category) coverTags.push(spill.category);
           if (coverTags.length === 0) return null;
           return (
@@ -445,9 +452,16 @@ function CoverSlide({
               className="flex flex-wrap gap-1.5 justify-center"
             >
               {coverTags.map((t, i) => (
-                <span key={i} className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]">
+                <span
+                  key={i}
+                  className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]"
+                >
                   <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)] opacity-60" />
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider backdrop-blur-sm ${spill.aiImageUrl ? 'bg-black/30 text-white/80' : 'bg-white/80 text-black/50'}`}>{t}</span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider backdrop-blur-sm ${spill.aiImageUrl ? "bg-black/30 text-white/80" : "bg-white/80 text-black/50"}`}
+                  >
+                    {t}
+                  </span>
                 </span>
               ))}
             </motion.div>
@@ -595,8 +609,8 @@ function EndSlide({
   const reactionCountsArray = useQuery(api.spillReactions.getCounts, {
     spillId: spill._id,
   });
-  const reactionCounts = reactionCountsArray 
-    ? Object.fromEntries(reactionCountsArray.map(r => [r.type, r.count])) 
+  const reactionCounts = reactionCountsArray
+    ? Object.fromEntries(reactionCountsArray.map((r) => [r.type, r.count]))
     : undefined;
   const myReactions = useQuery(
     api.spillReactions.getVisitorReactions,
@@ -668,23 +682,34 @@ function EndSlide({
           )}
           {/* About (flashy shimmer) */}
           {spill.about && (
-            <p className="text-[10px] font-medium leading-relaxed text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-rose-500 to-purple-500 mt-2"
-               style={{ backgroundSize: '200% auto', animation: 'shimmerSweep 3s linear infinite' }}>
+            <p
+              className="text-[10px] font-medium leading-relaxed text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-rose-500 to-purple-500 mt-2"
+              style={{
+                backgroundSize: "200% auto",
+                animation: "shimmerSweep 3s linear infinite",
+              }}
+            >
               {spill.about}
             </p>
           )}
           {/* Tags */}
           {(() => {
             const endTags: string[] = [];
-            if (spill.tags && spill.tags.length > 0) endTags.push(...spill.tags);
+            if (spill.tags && spill.tags.length > 0)
+              endTags.push(...spill.tags);
             else if (spill.category) endTags.push(spill.category);
             if (endTags.length === 0) return null;
             return (
               <div className="flex flex-wrap gap-1 justify-center mt-2">
                 {endTags.map((t, i) => (
-                  <span key={i} className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]">
+                  <span
+                    key={i}
+                    className="relative inline-flex items-center overflow-hidden rounded-full p-[1px]"
+                  >
                     <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f59e0b_0%,#ef4444_50%,#f59e0b_100%)] opacity-40" />
-                    <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[7px] font-bold uppercase tracking-wider text-black/50">{t}</span>
+                    <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[7px] font-bold uppercase tracking-wider text-black/50">
+                      {t}
+                    </span>
                   </span>
                 ))}
               </div>

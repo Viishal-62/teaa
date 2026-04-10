@@ -36,8 +36,7 @@ export default function CreatePollPage() {
     board ? { boardId: board._id } : "skip",
   );
 
-  const creatorToken =
-    typeof window !== "undefined" ? getCreatorToken() : "";
+  const creatorToken = typeof window !== "undefined" ? getCreatorToken() : "";
   const isOwner = board?.creatorToken === creatorToken;
 
   const [question, setQuestion] = useState("");
@@ -406,8 +405,7 @@ export default function CreatePollPage() {
           {/* Options */}
           <div className="p-5">
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
-              Options{" "}
-              <span className="text-black/15 normal-case">(2-5)</span>
+              Options <span className="text-black/15 normal-case">(2-5)</span>
             </p>
             <div className="space-y-2">
               {options.map((opt, i) => (

@@ -148,7 +148,13 @@ function GlobalStyles() {
 /* ─────────────────────────────────────────────────────────────
    Decorative corner SVG
 ───────────────────────────────────────────────────────────── */
-function CornerOrnament({ className = "", style }: { className?: string, style?: React.CSSProperties }) {
+function CornerOrnament({
+  className = "",
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
       className={`absolute text-gold ${className}`}
@@ -159,9 +165,20 @@ function CornerOrnament({ className = "", style }: { className?: string, style?:
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M2 2 L2 14 M2 2 L14 2" stroke="#c9962a" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M2 2 L2 14 M2 2 L14 2"
+        stroke="#c9962a"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <circle cx="2" cy="2" r="2" fill="#c9962a" />
-      <path d="M8 8 Q16 8 16 16" stroke="#c9962a" strokeWidth="0.8" strokeDasharray="2 2" opacity="0.5" />
+      <path
+        d="M8 8 Q16 8 16 16"
+        stroke="#c9962a"
+        strokeWidth="0.8"
+        strokeDasharray="2 2"
+        opacity="0.5"
+      />
     </svg>
   );
 }
@@ -209,8 +226,9 @@ function TagChip({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${active ? "shadow-md" : "opacity-70 hover:opacity-100"
-        }`}
+      className={`group relative inline-flex min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 items-center justify-center overflow-hidden rounded-full p-[1.5px] focus:outline-none transition-all active:scale-95 ${
+        active ? "shadow-md" : "opacity-70 hover:opacity-100"
+      }`}
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       <span
@@ -380,9 +398,7 @@ export default function SpillLibraryPage() {
                   count={item.count}
                   active={selectedTag === item.key}
                   onClick={() =>
-                    setSelectedTag(
-                      selectedTag === item.key ? null : item.key,
-                    )
+                    setSelectedTag(selectedTag === item.key ? null : item.key)
                   }
                 />
               ))}
@@ -468,7 +484,7 @@ export default function SpillLibraryPage() {
               <button
                 type="button"
                 onClick={() => setShowContextFilters(!showContextFilters)}
-                className={`flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-full border border-[#c9962a]/25 text-[var(--ink-faint)] cursor-pointer transition-all duration-200 font-sans ${showContextFilters ? 'bg-[#c9962a]/10' : 'bg-transparent'}`}
+                className={`flex items-center justify-center gap-1 min-h-[44px] min-w-[44px] px-2.5 py-1.5 rounded-full border border-[#c9962a]/25 text-[var(--ink-faint)] cursor-pointer transition-all duration-200 font-sans ${showContextFilters ? "bg-[#c9962a]/10" : "bg-transparent"}`}
               >
                 <SlidersHorizontal size={11} />
                 {activeFilterCount > 0 && (
@@ -543,7 +559,11 @@ export default function SpillLibraryPage() {
                       initial={{ y: "100%" }}
                       animate={{ y: 0 }}
                       exit={{ y: "100%" }}
-                      transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                      transition={{
+                        type: "spring",
+                        damping: 28,
+                        stiffness: 280,
+                      }}
                       style={{
                         position: "fixed",
                         bottom: 0,
@@ -623,11 +643,13 @@ export default function SpillLibraryPage() {
             <CornerOrnament className="" style={{ top: 32, left: 0 } as any} />
             <CornerOrnament
               className=""
-              style={{
-                top: 32,
-                right: 0,
-                transform: "scaleX(-1)",
-              } as any}
+              style={
+                {
+                  top: 32,
+                  right: 0,
+                  transform: "scaleX(-1)",
+                } as any
+              }
             />
 
             <motion.div
@@ -673,7 +695,10 @@ export default function SpillLibraryPage() {
               <em style={{ fontStyle: "italic", color: "#c9962a" }}>Stories</em>
             </motion.h2>
 
-            <hr className="reading-rule" style={{ maxWidth: 320, margin: "0 auto 16px" }} />
+            <hr
+              className="reading-rule"
+              style={{ maxWidth: 320, margin: "0 auto 16px" }}
+            />
 
             <motion.p
               initial={{ opacity: 0 }}
@@ -689,7 +714,8 @@ export default function SpillLibraryPage() {
                 fontStyle: "italic",
               }}
             >
-              Full-length anonymous stories with chapters. Tap any cover to begin reading, or pick up your quill and write your own.
+              Full-length anonymous stories with chapters. Tap any cover to
+              begin reading, or pick up your quill and write your own.
             </motion.p>
           </div>
 
@@ -821,8 +847,6 @@ export default function SpillLibraryPage() {
   );
 }
 
-
-
 /* ─────────────────────────────────────────────────────────────
    Empty shelf
 ───────────────────────────────────────────────────────────── */
@@ -910,7 +934,8 @@ function EmptyShelf({
           transition: "transform 0.2s",
         }}
         onMouseEnter={(e) =>
-          ((e.currentTarget as HTMLAnchorElement).style.transform = "scale(1.04)")
+          ((e.currentTarget as HTMLAnchorElement).style.transform =
+            "scale(1.04)")
         }
         onMouseLeave={(e) =>
           ((e.currentTarget as HTMLAnchorElement).style.transform = "scale(1)")

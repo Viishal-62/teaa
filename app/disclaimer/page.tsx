@@ -2,8 +2,21 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Disclaimer | Teaa",
-  description: "Crucial disclaimers and safety notices for Teaa users.",
+  title: "Disclaimer & Safety Notice | Teaa",
+  description:
+    "Important disclaimers and safety notices for Teaa users. Not a substitute for professional help. Content is user-generated fiction. Zero-tolerance moderation policy.",
+  keywords: [
+    "teaa disclaimer",
+    "anonymous platform safety",
+    "confession app safety notice",
+    "teaa moderation policy",
+    "anonymous content disclaimer",
+    "teaa user safety",
+    "AI moderation disclaimer",
+  ],
+  alternates: {
+    canonical: "https://www.teaadrop.xyz/disclaimer",
+  },
 };
 
 export default function DisclaimerPage() {
@@ -32,10 +45,12 @@ export default function DisclaimerPage() {
               1. Not Professional Support
             </h2>
             <p className="text-red-900/80">
-              Teaa is an entertainment and venting platform. It is <strong>NOT</strong> a substitute 
-              for professional mental health advice, therapy, or emergency services. If you are 
-              experiencing a crisis, feeling overwhelmed, or considering self-harm, please close 
-              this site and contact your local emergency services or mental health hotlines immediately.
+              Teaa is an entertainment and venting platform. It is{" "}
+              <strong>NOT</strong> a substitute for professional mental health
+              advice, therapy, or emergency services. If you are experiencing a
+              crisis, feeling overwhelmed, or considering self-harm, please
+              close this site and contact your local emergency services or
+              mental health hotlines immediately.
             </p>
           </section>
 
@@ -44,12 +59,13 @@ export default function DisclaimerPage() {
               2. The Reality of "Absolute Anonymity"
             </h2>
             <p>
-              While we intentionally design our application to obscure identities by omitting 
-              user accounts and relying strictly on randomized local storage tokens, no system 
-              on the open internet provides absolute, mathematically perfect anonymity against 
-              determined state-level adversaries or court-ordered subpoenas. We will comply 
-              with lawful requests, but we intentionally collect as little data as technically 
-              possible to operate the service.
+              While we intentionally design our application to obscure
+              identities by omitting user accounts and relying strictly on
+              randomized local storage tokens, no system on the open internet
+              provides absolute, mathematically perfect anonymity against
+              determined state-level adversaries or court-ordered subpoenas. We
+              will comply with lawful requests, but we intentionally collect as
+              little data as technically possible to operate the service.
             </p>
           </section>
 
@@ -58,10 +74,12 @@ export default function DisclaimerPage() {
               3. User-Generated Content
             </h2>
             <p>
-              Everything you read on Teaa is user-generated. We do not verify the authenticity, 
-              accuracy, or truthfulness of any confession, gossip, or secret posted to the platform. 
-              Information encountered should be treated as fiction or entertainment. The views expressed 
-              by users do not represent the views or opinions of Teaa's developers.
+              Everything you read on Teaa is user-generated. We do not verify
+              the authenticity, accuracy, or truthfulness of any confession,
+              gossip, or secret posted to the platform. Information encountered
+              should be treated as fiction or entertainment. The views expressed
+              by users do not represent the views or opinions of Teaa's
+              developers.
             </p>
           </section>
 
@@ -70,10 +88,11 @@ export default function DisclaimerPage() {
               4. Zero-Tolerance Policy
             </h2>
             <p>
-              Despite the freedom of anonymity, we implement strict automated AI-moderation barriers. 
-              Any attempts to use our platform to coordinate illegal acts, engage in targeted severe bullying, 
-              or exploit minors will result in immediate content destruction and potential IP/device bans 
-              at the edge-network level.
+              Despite the freedom of anonymity, we implement strict automated
+              AI-moderation barriers. Any attempts to use our platform to
+              coordinate illegal acts, engage in targeted severe bullying, or
+              exploit minors will result in immediate content destruction and
+              potential IP/device bans at the edge-network level.
             </p>
           </section>
         </div>

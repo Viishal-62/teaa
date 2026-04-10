@@ -144,14 +144,14 @@ export type ModerationResult = {
 export function moderateText(
   text: string,
   customBannedWords: string[] = [],
-  options: { disableCommonProfanityFilter?: boolean } = {}
+  options: { disableCommonProfanityFilter?: boolean } = {},
 ): ModerationResult {
   if (!text || text.trim().length === 0) {
     return { isClean: true, flaggedWords: [], message: "" };
   }
 
   const lowerText = text.toLowerCase();
-  
+
   let baseWords = [...STRICT_BANNED_WORDS];
   if (!options.disableCommonProfanityFilter) {
     baseWords = [...baseWords, ...COMMON_PROFANITY_WORDS];

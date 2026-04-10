@@ -19,7 +19,9 @@ export const create = mutation({
 
     // ─── Content Moderation ───
     const board = await ctx.db.get(args.boardId);
-    const titleMod = moderateText(args.title, board?.bannedWords ?? [], { disableCommonProfanityFilter: true });
+    const titleMod = moderateText(args.title, board?.bannedWords ?? [], {
+      disableCommonProfanityFilter: true,
+    });
     if (!titleMod.isClean) {
       throw new Error(
         JSON.stringify({
@@ -129,28 +131,30 @@ export const listAllPublic = query({
   handler: async (ctx) => {
     // Fetch a larger pool since we will filter out private ones
     const spills = await ctx.db.query("spills").order("desc").take(50);
-    
+
     // Attach board slug + reactions + filter out private boards
-    const enriched = (await Promise.all(
-      spills.map(async (spill) => {
-        const board = await ctx.db.get(spill.boardId);
-        if (!board || board.visibility === "private") {
-          return null; // Exclude private board spills
-        }
-        
-        const reactions = await ctx.db
-          .query("spillReactions")
-          .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
-          .collect();
-          
-        return {
-          ...spill,
-          boardSlug: board.slug,
-          totalReactions: reactions.length,
-        };
-      }),
-    )).filter((s): s is NonNullable<typeof s> => s !== null);
-    
+    const enriched = (
+      await Promise.all(
+        spills.map(async (spill) => {
+          const board = await ctx.db.get(spill.boardId);
+          if (!board || board.visibility === "private") {
+            return null; // Exclude private board spills
+          }
+
+          const reactions = await ctx.db
+            .query("spillReactions")
+            .withIndex("by_spillId", (q) => q.eq("spillId", spill._id))
+            .collect();
+
+          return {
+            ...spill,
+            boardSlug: board.slug,
+            totalReactions: reactions.length,
+          };
+        }),
+      )
+    ).filter((s): s is NonNullable<typeof s> => s !== null);
+
     return enriched;
   },
 });

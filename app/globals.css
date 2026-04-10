@@ -46,6 +46,51 @@ body {
   overflow-x: hidden;
 }
 
+/* ── WCAG Color Contrast Overrides ──
+   Boost minimum contrast for small text labels and descriptions.
+   Placeholder text and decorative/border elements are exempt. */
+
+/* Section labels & uppercase tracking text — must be readable */
+[class*="uppercase"][class*="tracking"] {
+  --tw-text-opacity: 1;
+}
+
+/* Boost very low contrast text-black/15 through text-black/25 for readable content */
+p[class*="text-black/15"],
+span[class*="text-black/15"],
+div[class*="text-black/15"] {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+
+p[class*="text-black/20"],
+span[class*="text-black/20"],
+div[class*="text-black/20"],
+h1[class*="text-black/20"] {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+p[class*="text-black/25"],
+span[class*="text-black/25"],
+div[class*="text-black/25"],
+h3[class*="text-black/25"] {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Ensure description text meets minimum 4.5:1 ratio */
+p[class*="text-black/30"] {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+
+p[class*="text-black/35"] {
+  color: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Keep placeholder text exempt — users don't read it for content */
+input::placeholder,
+textarea::placeholder {
+  color: rgba(0, 0, 0, 0.25) !important;
+}
+
 /* Glassmorphism helpers */
 .glass {
   background: var(--glass);
@@ -98,8 +143,12 @@ body {
 }
 
 @keyframes shimmerSweep {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes float {
@@ -403,13 +452,27 @@ em-emoji-picker {
 
 /* Animated gradient border — continuously flowing rainbow */
 @keyframes gradientBorder {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .animate-gradient-border {
-  background: linear-gradient(270deg, #f43f5e, #a855f7, #3b82f6, #22c55e, #f59e0b, #f43f5e);
+  background: linear-gradient(
+    270deg,
+    #f43f5e,
+    #a855f7,
+    #3b82f6,
+    #22c55e,
+    #f59e0b,
+    #f43f5e
+  );
   background-size: 400% 100%;
   animation: gradientBorder 3s ease infinite;
 }

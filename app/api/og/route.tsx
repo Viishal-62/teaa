@@ -346,7 +346,8 @@ async function renderSpillOG(spillId: string) {
           width: "600px",
           height: "600px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
+          background:
+            "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
       <div
@@ -357,7 +358,8 @@ async function renderSpillOG(spillId: string) {
           width: "600px",
           height: "600px",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%)",
+          background:
+            "radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
 
@@ -378,7 +380,14 @@ async function renderSpillOG(spillId: string) {
         }}
       >
         {/* Emoji Cover */}
-        <div style={{ fontSize: "100px", marginBottom: "20px", display: "flex", filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.3))" }}>
+        <div
+          style={{
+            fontSize: "100px",
+            marginBottom: "20px",
+            display: "flex",
+            filter: "drop-shadow(0 10px 15px rgba(0,0,0,0.3))",
+          }}
+        >
           {spill.coverEmoji || "📔"}
         </div>
 
@@ -396,7 +405,9 @@ async function renderSpillOG(spillId: string) {
             textShadow: "0 2px 10px rgba(0,0,0,0.5)",
           }}
         >
-          {spill.title.length > 50 ? `${spill.title.slice(0, 50)}...` : spill.title}
+          {spill.title.length > 50
+            ? `${spill.title.slice(0, 50)}...`
+            : spill.title}
         </div>
 
         {/* Author Line */}
@@ -452,7 +463,7 @@ async function renderSpillOG(spillId: string) {
         </div>
       </div>
     </div>,
-    { width: 1200, height: 630 }
+    { width: 1200, height: 630 },
   );
 }
 
@@ -482,7 +493,8 @@ async function renderAdmirersOG(slug: string) {
           width: "500",
           height: "500",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(233, 30, 99, 0.4) 0%, rgba(0,0,0,0) 70%)",
+          background:
+            "radial-gradient(circle, rgba(233, 30, 99, 0.4) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
       <div
@@ -493,7 +505,8 @@ async function renderAdmirersOG(slug: string) {
           width: "500",
           height: "500",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(156, 39, 176, 0.4) 0%, rgba(0,0,0,0) 70%)",
+          background:
+            "radial-gradient(circle, rgba(156, 39, 176, 0.4) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
 
@@ -510,7 +523,9 @@ async function renderAdmirersOG(slug: string) {
           border: "1px solid rgba(255, 255, 255, 0.2)",
         }}
       >
-        <div style={{ fontSize: "72px", marginBottom: "24px", display: "flex" }}>
+        <div
+          style={{ fontSize: "72px", marginBottom: "24px", display: "flex" }}
+        >
           💌
         </div>
         <div
@@ -559,7 +574,7 @@ async function renderAdmirersOG(slug: string) {
         </div>
       </div>
     </div>,
-    { width: 1200, height: 630 }
+    { width: 1200, height: 630 },
   );
 }
 
@@ -589,10 +604,11 @@ async function renderCreateSpillOG(slug: string) {
           width: "400",
           height: "400",
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
+          background:
+            "radial-gradient(circle, rgba(147, 51, 234, 0.15) 0%, rgba(0,0,0,0) 70%)",
         }}
       />
-      
+
       <div
         style={{
           display: "flex",
@@ -604,7 +620,14 @@ async function renderCreateSpillOG(slug: string) {
           background: "rgba(255, 255, 255, 0.02)",
         }}
       >
-        <div style={{ fontSize: "72px", marginBottom: "20px", display: "flex", filter: "grayscale(100%)" }}>
+        <div
+          style={{
+            fontSize: "72px",
+            marginBottom: "20px",
+            display: "flex",
+            filter: "grayscale(100%)",
+          }}
+        >
           ✒️
         </div>
         <div
@@ -634,7 +657,7 @@ async function renderCreateSpillOG(slug: string) {
           ON THE {board.name.toUpperCase()} BOARD
         </div>
       </div>
-      
+
       <div
         style={{
           position: "absolute",
@@ -652,7 +675,7 @@ async function renderCreateSpillOG(slug: string) {
         Teaaa Deep Gossip
       </div>
     </div>,
-    { width: 1200, height: 630 }
+    { width: 1200, height: 630 },
   );
 }
 

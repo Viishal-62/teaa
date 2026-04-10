@@ -7,15 +7,21 @@ import { motion } from "framer-motion";
 
 interface DeepSpillCardProps {
   slug: string; // The board slug
-  spill: any;   // Accept any spill type
+  spill: any; // Accept any spill type
   index?: number;
   rank?: number; // Optional global rank index
 }
 
-export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpillCardProps) {
-  const theme = THEMES.find((e: any) => e.key === spill.coverTheme) || THEMES[0];
+export default function DeepSpillCard({
+  slug,
+  spill,
+  index = 0,
+  rank,
+}: DeepSpillCardProps) {
+  const theme =
+    THEMES.find((e: any) => e.key === spill.coverTheme) || THEMES[0];
   const spillTags: string[] = [];
-  
+
   // Aggregate tags/categories
   if (spill.tags && spill.tags.length > 0) {
     spillTags.push(...spill.tags);
@@ -49,7 +55,13 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
           }
         `}
         >
-          {rank === 0 ? "🥇" : rank === 1 ? "🥈" : rank === 2 ? "🥉" : `${rank + 1}`}
+          {rank === 0
+            ? "🥇"
+            : rank === 1
+              ? "🥈"
+              : rank === 2
+                ? "🥉"
+                : `${rank + 1}`}
         </div>
       )}
 
@@ -87,8 +99,10 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
               aspectRatio: "3/4",
               borderRadius: "3px 12px 12px 3px",
               overflow: "hidden",
-              boxShadow: "var(--shadow-book, 0 20px 60px rgba(26,18,9,0.18), 0 4px 16px rgba(26,18,9,0.12))",
-              transition: "transform 0.35s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.35s ease",
+              boxShadow:
+                "var(--shadow-book, 0 20px 60px rgba(26,18,9,0.18), 0 4px 16px rgba(26,18,9,0.12))",
+              transition:
+                "transform 0.35s cubic-bezier(0.34,1.4,0.64,1), box-shadow 0.35s ease",
               background: spill.aiImageUrl
                 ? `url(${spill.aiImageUrl}) center/cover`
                 : theme.bg,
@@ -144,7 +158,9 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
                   letterSpacing: "0.25em",
                   textTransform: "uppercase",
                   fontFamily: "'DM Sans', system-ui, sans-serif",
-                  color: spill.aiImageUrl ? "rgba(245,239,230,0.75)" : theme.accent,
+                  color: spill.aiImageUrl
+                    ? "rgba(245,239,230,0.75)"
+                    : theme.accent,
                 }}
               >
                 Spill Story
@@ -178,7 +194,7 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
                     lineHeight: 1.15,
                     color: spill.aiImageUrl ? "#fff" : theme.text,
                     letterSpacing: "-0.01em",
-                    fontFamily: "'Playfair Display', Georgia, serif"
+                    fontFamily: "'Playfair Display', Georgia, serif",
                   }}
                 >
                   {spill.title}
@@ -203,8 +219,10 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
                   fontSize: 9,
                   fontStyle: "italic",
                   letterSpacing: "0.12em",
-                  color: spill.aiImageUrl ? "rgba(232,194,106,0.9)" : theme.accent,
-                  fontFamily: "'EB Garamond', Georgia, serif"
+                  color: spill.aiImageUrl
+                    ? "rgba(232,194,106,0.9)"
+                    : theme.accent,
+                  fontFamily: "'EB Garamond', Georgia, serif",
                 }}
               >
                 Read Now →
@@ -292,7 +310,8 @@ export default function DeepSpillCard({ slug, spill, index = 0, rank }: DeepSpil
                       position: "absolute",
                       inset: "-1000%",
                       animation: "spin-slow 4s linear infinite",
-                      background: "conic-gradient(from 90deg at 50% 50%, #c9962a 0%, #8b2635 50%, #c9962a 100%)",
+                      background:
+                        "conic-gradient(from 90deg at 50% 50%, #c9962a 0%, #8b2635 50%, #c9962a 100%)",
                       opacity: 0.3,
                     }}
                   />

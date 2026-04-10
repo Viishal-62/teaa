@@ -172,8 +172,7 @@ export default function PollCard({ poll, boardSlug, isOwner }: PollCardProps) {
       const IMAGE_H = poll.imageUrl ? 300 : 0;
       const HEADER_H = 140 + (poll.imageUrl ? IMAGE_H + 24 : 0);
       const OPTIONS_H =
-        poll.options.length * OPTION_H +
-        (poll.options.length - 1) * OPTION_GAP;
+        poll.options.length * OPTION_H + (poll.options.length - 1) * OPTION_GAP;
       const FOOTER_H = 100;
       const H = HEADER_H + OPTIONS_H + FOOTER_H + PADDING * 2;
 
@@ -290,9 +289,7 @@ export default function PollCard({ poll, boardSlug, isOwner }: PollCardProps) {
         const count = optionCounts[i] ?? 0;
         const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
         const barWidth =
-          totalVotes > 0
-            ? ((W - PADDING * 2 - 80) * count) / maxCount
-            : 0;
+          totalVotes > 0 ? ((W - PADDING * 2 - 80) * count) / maxCount : 0;
 
         const color = OPTION_COLORS[i % OPTION_COLORS.length];
 
@@ -323,11 +320,7 @@ export default function PollCard({ poll, boardSlug, isOwner }: PollCardProps) {
         ctx.fillText(`${pct}%`, W - PADDING - 16, y + 34);
 
         // Winner crown
-        if (
-          isEnded &&
-          totalVotes > 0 &&
-          count === Math.max(...optionCounts)
-        ) {
+        if (isEnded && totalVotes > 0 && count === Math.max(...optionCounts)) {
           ctx.font = "16px sans-serif";
           ctx.textAlign = "right";
           ctx.fillText("🏆", W - PADDING - 56, y + 36);
@@ -385,15 +378,7 @@ export default function PollCard({ poll, boardSlug, isOwner }: PollCardProps) {
       console.error("Download failed:", e);
       setIsDownloading(false);
     }
-  }, [
-    isOwner,
-    isDownloading,
-    poll,
-    results,
-    totalVotes,
-    isEnded,
-    boardSlug,
-  ]);
+  }, [isOwner, isDownloading, poll, results, totalVotes, isEnded, boardSlug]);
 
   return (
     <motion.div

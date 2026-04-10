@@ -124,18 +124,22 @@ export default function ConfessionDetailPage() {
   // Fetch reactions state globally for the confession
   const visitorId = typeof window !== "undefined" ? getVisitorId() : null;
   const countsArray = useQuery(api.reactions.getCounts, { confessionId });
-  const counts = countsArray 
-    ? Object.fromEntries(countsArray.map(r => [r.type, r.count])) 
+  const counts = countsArray
+    ? Object.fromEntries(countsArray.map((r) => [r.type, r.count]))
     : undefined;
   const myReactions = useQuery(
     api.reactions.getVisitorReactions,
     visitorId ? { confessionId, visitorId } : "skip",
   );
 
-  const activeReactions = Array.from(new Set([
-    ...(board?.allowedReactions && board.allowedReactions.length > 0 ? board.allowedReactions : ["❤️", "🔥", "😂"]),
-    ...(counts ? Object.keys(counts) : [])
-  ])).slice(0, 10);
+  const activeReactions = Array.from(
+    new Set([
+      ...(board?.allowedReactions && board.allowedReactions.length > 0
+        ? board.allowedReactions
+        : ["❤️", "🔥", "😂"]),
+      ...(counts ? Object.keys(counts) : []),
+    ]),
+  ).slice(0, 10);
 
   // Internal Reaction Button component
   const LocalReactionButton = ({ type }: { type: string }) => {
@@ -383,31 +387,41 @@ export default function ConfessionDetailPage() {
                       >
                         <span className="text-xl">+</span>
                       </button>
-                      
+
                       {showEmojiPicker && (
                         <>
-                           <div className="fixed inset-0 z-[90]" onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(false); }} />
-                           <div 
-                             className="absolute top-full left-0 mt-2 z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" 
-                             onClick={(e) => e.stopPropagation()}
-                           >
-                             <Picker 
-                              data={data} 
+                          <div
+                            className="fixed inset-0 z-[90]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowEmojiPicker(false);
+                            }}
+                          />
+                          <div
+                            className="absolute top-full left-0 mt-2 z-[100] shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Picker
+                              data={data}
                               theme="light"
                               previewPosition="none"
                               onEmojiSelect={async (e: any) => {
-                                 const emoji = e.native;
-                                 if (visitorId) {
-                                   try {
-                                     await toggleReaction({ confessionId, type: emoji, visitorId });
-                                   } catch (err) {
-                                     handleConvexError(err);
-                                   }
-                                 }
-                                 setShowEmojiPicker(false);
+                                const emoji = e.native;
+                                if (visitorId) {
+                                  try {
+                                    await toggleReaction({
+                                      confessionId,
+                                      type: emoji,
+                                      visitorId,
+                                    });
+                                  } catch (err) {
+                                    handleConvexError(err);
+                                  }
+                                }
+                                setShowEmojiPicker(false);
                               }}
                             />
-                           </div>
+                          </div>
                         </>
                       )}
                     </div>

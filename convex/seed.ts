@@ -3,24 +3,86 @@ import { generateAnonName, CATEGORIES } from "./helpers";
 
 const CITIES = [
   // India — heavy
-  "BENGALURU", "MUMBAI", "DELHI_NCR", "PUNE", "HYDERABAD", "CHENNAI", "GURUGRAM", "NOIDA",
-  "JAIPUR", "LUCKNOW", "KOCHI", "INDORE", "AHMEDABAD", "CHANDIGARH", "KOLKATA", "BHOPAL",
-  "COIMBATORE", "NAGPUR", "VIZAG", "THIRUVANANTHAPURAM", "MYSURU", "SURAT", "VADODARA",
-  "DEHRADUN", "RANCHI", "PATNA", "GUWAHATI", "BHUBANESWAR", "MANGALORE", "TRIVANDRUM",
+  "BENGALURU",
+  "MUMBAI",
+  "DELHI_NCR",
+  "PUNE",
+  "HYDERABAD",
+  "CHENNAI",
+  "GURUGRAM",
+  "NOIDA",
+  "JAIPUR",
+  "LUCKNOW",
+  "KOCHI",
+  "INDORE",
+  "AHMEDABAD",
+  "CHANDIGARH",
+  "KOLKATA",
+  "BHOPAL",
+  "COIMBATORE",
+  "NAGPUR",
+  "VIZAG",
+  "THIRUVANANTHAPURAM",
+  "MYSURU",
+  "SURAT",
+  "VADODARA",
+  "DEHRADUN",
+  "RANCHI",
+  "PATNA",
+  "GUWAHATI",
+  "BHUBANESWAR",
+  "MANGALORE",
+  "TRIVANDRUM",
   // US
-  "SAN_FRANCISCO", "NEW_YORK", "AUSTIN", "SEATTLE", "CHICAGO", "BOSTON",
+  "SAN_FRANCISCO",
+  "NEW_YORK",
+  "AUSTIN",
+  "SEATTLE",
+  "CHICAGO",
+  "BOSTON",
 ];
 
 const PROFESSIONS = [
-  "SDE", "FOUNDER", "PRODUCT_MANAGER", "STUDENT", "DESIGNER", "HR", "CONSULTANT",
-  "DATA_SCIENTIST", "INVESTMENT_BANKER", "MARKETING", "BARISTA", "CONTENT_CREATOR",
-  "FREELANCER", "CA", "DOCTOR", "LAWYER", "MBA_STUDENT", "ANALYST",
+  "SDE",
+  "FOUNDER",
+  "PRODUCT_MANAGER",
+  "STUDENT",
+  "DESIGNER",
+  "HR",
+  "CONSULTANT",
+  "DATA_SCIENTIST",
+  "INVESTMENT_BANKER",
+  "MARKETING",
+  "BARISTA",
+  "CONTENT_CREATOR",
+  "FREELANCER",
+  "CA",
+  "DOCTOR",
+  "LAWYER",
+  "MBA_STUDENT",
+  "ANALYST",
 ];
 
 const CONTEXTS = [
-  "COWORKER", "EX", "MANAGER", "STARTUP_BRO", "ROOMMATE", "CRUSH", "INTERVIEWER",
-  "SITUATIONSHIP", "BEST_FRIEND", "MATCH", "CLIENT", "PROFESSOR", "COFOUNDER",
-  "FLATMATE", "SENIOR", "JUNIOR", "BATCHMATE", "GYM_CRUSH", "TINDER_DATE",
+  "COWORKER",
+  "EX",
+  "MANAGER",
+  "STARTUP_BRO",
+  "ROOMMATE",
+  "CRUSH",
+  "INTERVIEWER",
+  "SITUATIONSHIP",
+  "BEST_FRIEND",
+  "MATCH",
+  "CLIENT",
+  "PROFESSOR",
+  "COFOUNDER",
+  "FLATMATE",
+  "SENIOR",
+  "JUNIOR",
+  "BATCHMATE",
+  "GYM_CRUSH",
+  "TINDER_DATE",
 ];
 
 export const GOSSIP_DATA = [
@@ -179,8 +241,8 @@ const SPILLS_DATA = [
         title: "The Truth",
         text: "I opened it. 'Mom' was his long term girlfriend of 3 years. He had told her he was out of town for a 'conference', but had actually booked the cabin for BOTH of us on overlapping days. He was planning to fake an 'emergency' to send me home early so she could drive up for the weekend. I took his keys and drove his car back to the city.",
       },
-    ]
-  }
+    ],
+  },
 ];
 
 function randomViews() {
@@ -291,8 +353,10 @@ export const runSeed = internalMutation({
       const createdAt = getRandomRecentDate(); // Random date within last 72 hours
 
       const cityId = Math.random() > 0.1 ? getRandomItem(CITIES) : undefined;
-      const professionId = Math.random() > 0.1 ? getRandomItem(PROFESSIONS) : undefined;
-      const contextId = Math.random() > 0.1 ? getRandomItem(CONTEXTS) : undefined;
+      const professionId =
+        Math.random() > 0.1 ? getRandomItem(PROFESSIONS) : undefined;
+      const contextId =
+        Math.random() > 0.1 ? getRandomItem(CONTEXTS) : undefined;
 
       const confId = await ctx.db.insert("confessions", {
         boardId: boardIds[boardSlug],
@@ -314,7 +378,12 @@ export const runSeed = internalMutation({
 
       // Add reactions slightly after confession created
       const numReactions = Math.floor(Math.random() * (views - 1));
-      const types = ["holding-you", "feels-heavy", "youll-be-ok", "no-it-burns"];
+      const types = [
+        "holding-you",
+        "feels-heavy",
+        "youll-be-ok",
+        "no-it-burns",
+      ];
       for (let i = 0; i < numReactions; i++) {
         await ctx.db.insert("reactions", {
           confessionId: confId,
@@ -338,27 +407,52 @@ export const runSeed = internalMutation({
 
     // Insert gossips
     for (const [i, g] of GOSSIP_DATA.entries()) {
-      await addConfession("juicy-gossips", g, i, "LMAO this is way too accurate 😭");
+      await addConfession(
+        "juicy-gossips",
+        g,
+        i,
+        "LMAO this is way too accurate 😭",
+      );
     }
 
     // Insert startup horrors
     for (const [i, g] of STARTUP_HORROR_DATA.entries()) {
-      await addConfession("startup-horror", g, i + 3, "I feel seen. This is literally me.");
+      await addConfession(
+        "startup-horror",
+        g,
+        i + 3,
+        "I feel seen. This is literally me.",
+      );
     }
 
     // Insert toxic dating
     for (const [i, g] of TOXIC_DATING_DATA.entries()) {
-      await addConfession("toxic-dating", g, i + 5, "Men are a disease honestly.");
+      await addConfession(
+        "toxic-dating",
+        g,
+        i + 5,
+        "Men are a disease honestly.",
+      );
     }
 
     // Insert college confessions
     for (const [i, g] of COLLEGE_DATA.entries()) {
-      await addConfession("college-confessions", g, i + 2, "Report the professor to the dean ASAP.");
+      await addConfession(
+        "college-confessions",
+        g,
+        i + 2,
+        "Report the professor to the dean ASAP.",
+      );
     }
 
     // Insert admirer notes
     for (const [i, n] of ADMIRER_DATA.entries()) {
-      await addConfession("secret-admirers", n, i + 1, "If someone wrote this about me I would actually cry.");
+      await addConfession(
+        "secret-admirers",
+        n,
+        i + 1,
+        "If someone wrote this about me I would actually cry.",
+      );
     }
 
     // 3. Add Spills (Deep Gossip Books)
@@ -383,22 +477,27 @@ export const runSeed = internalMutation({
           chapterNumber: i + 1,
           title: chapter.title,
           text: chapter.text,
-          createdAt: spillCreatedAt + (1000 * 60 * 60 * i), // Each chapter 1 hr later
+          createdAt: spillCreatedAt + 1000 * 60 * 60 * i, // Each chapter 1 hr later
         });
       }
 
       const spillReactions = ["fire", "mind-blown", "tea", "crying"];
-      const r_count = Math.floor(Math.random() * (views > 1 ? views - 1 : 1)) + 1;
+      const r_count =
+        Math.floor(Math.random() * (views > 1 ? views - 1 : 1)) + 1;
       for (let j = 0; j < Math.min(r_count, 4); j++) {
         await ctx.db.insert("spillReactions", {
           spillId: spillId,
-          type: spillReactions[Math.floor(Math.random() * spillReactions.length)],
+          type: spillReactions[
+            Math.floor(Math.random() * spillReactions.length)
+          ],
           visitorId: "seed-spill-reactor-" + j,
           createdAt: spillCreatedAt + 1000 * 60 * 30 * j,
         });
       }
     }
 
-    console.log("Hyper-realistic MASSSIVE Seed data created successfully, old data wiped!");
+    console.log(
+      "Hyper-realistic MASSSIVE Seed data created successfully, old data wiped!",
+    );
   },
 });

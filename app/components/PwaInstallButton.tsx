@@ -32,7 +32,10 @@ export default function PwaInstallButton() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);

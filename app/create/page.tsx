@@ -7,7 +7,16 @@ import { api } from "@/convex/_generated/api";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { getCreatorToken, REACTION_INFO, SHARE_PROMPTS } from "@/app/lib/utils";
-import { ArrowRight, Check, Copy, Home, Lock, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Copy,
+  Home,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Settings2,
+} from "lucide-react";
 import Link from "next/link";
 
 const THEMES = [
@@ -75,7 +84,9 @@ export default function CreateBoard() {
     "🔥",
     "😂",
   ]);
-  const [editingEmojiIndex, setEditingEmojiIndex] = useState<number | null>(null);
+  const [editingEmojiIndex, setEditingEmojiIndex] = useState<number | null>(
+    null,
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -83,11 +94,7 @@ export default function CreateBoard() {
       if (qs.get("type") === "secret-admirer") {
         setBoardType("secret-admirer");
         setTheme("midnight-rose");
-        setAllowedReactions([
-          "💝",
-          "🦋",
-          "🥺",
-        ]);
+        setAllowedReactions(["💝", "🦋", "🥺"]);
       }
     }
   }, []);
@@ -286,11 +293,7 @@ export default function CreateBoard() {
               onClick={() => {
                 setBoardType("default");
                 setTheme("noir");
-                setAllowedReactions([
-                  "❤️",
-                  "🔥",
-                  "😂",
-                ]);
+                setAllowedReactions(["❤️", "🔥", "😂"]);
               }}
               className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
                 boardType === "default"
@@ -305,11 +308,7 @@ export default function CreateBoard() {
               onClick={() => {
                 setBoardType("secret-admirer");
                 setTheme("midnight-rose");
-                setAllowedReactions([
-                  "💝",
-                  "🦋",
-                  "🥺",
-                ]);
+                setAllowedReactions(["💝", "🦋", "🥺"]);
               }}
               className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all ${
                 boardType === "secret-admirer"
@@ -409,9 +408,15 @@ export default function CreateBoard() {
                   </span>
                 </div>
                 {showAdvanced ? (
-                  <ChevronUp size={14} className="text-black/30 group-hover:text-black/50 transition-transform" />
+                  <ChevronUp
+                    size={14}
+                    className="text-black/30 group-hover:text-black/50 transition-transform"
+                  />
                 ) : (
-                  <ChevronDown size={14} className="text-black/30 group-hover:text-black/50 transition-transform" />
+                  <ChevronDown
+                    size={14}
+                    className="text-black/30 group-hover:text-black/50 transition-transform"
+                  />
                 )}
               </button>
             </div>
@@ -424,189 +429,193 @@ export default function CreateBoard() {
                     Viewer Prompt (Optional)
                   </label>
                   <input
-                type="text"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder={
-                  boardType === "secret-admirer"
-                    ? "e.g. Tell me your favorite thing about me..."
-                    : "e.g. Rate me out of 10 and be brutally honest 😈"
-                }
-                className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15"
-              />
-            </div>
+                    type="text"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder={
+                      boardType === "secret-admirer"
+                        ? "e.g. Tell me your favorite thing about me..."
+                        : "e.g. Rate me out of 10 and be brutally honest 😈"
+                    }
+                    className="w-full text-sm font-medium bg-[#faf8f5] border border-black/5 rounded-xl px-4 py-3 outline-none focus:border-black/15 focus:ring-2 focus:ring-black/5 transition-all placeholder:text-black/15"
+                  />
+                </div>
 
-            {/* Custom Reactions (Default Emojis) */}
-            <div>
-              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
-                Default Board Reactions (Tap to change)
-              </label>
-              <div className="flex gap-4 relative">
-                {allowedReactions.map((emoji, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                        if (editingEmojiIndex === idx) {
-                            setEditingEmojiIndex(null);
-                        } else {
-                            setEditingEmojiIndex(idx);
-                        }
-                    }}
-                    className={`w-14 h-14 flex items-center justify-center text-2xl rounded-2xl border transition-all ${editingEmojiIndex === idx ? 'bg-black/5 border-black/20 scale-110 shadow-sm z-10' : 'bg-white border-black/10 hover:border-black/20 hover:scale-105'}`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-                {editingEmojiIndex !== null && (
-                    <div className="absolute top-16 left-0 z-50">
-                        <div className="fixed inset-0" onClick={() => setEditingEmojiIndex(null)} />
-                        <div className="relative shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                            <Picker 
-                                data={data} 
-                                onEmojiSelect={(e: any) => {
-                                    const newArr = [...allowedReactions];
-                                    newArr[editingEmojiIndex] = e.native;
-                                    setAllowedReactions(newArr);
-                                    setEditingEmojiIndex(null);
-                                }} 
-                                theme="light"
-                                previewPosition="none"
-                            />
-                        </div>
-                    </div>
-                )}
-              </div>
-            </div>
-
-            {/* Share Prompt */}
-            <div>
-              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
-                Social Media sharing text
-              </label>
-              <div className="space-y-2">
-                {SHARE_PROMPTS.map((p) => (
-                  <label
-                    key={p.id}
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                      sharePrompt === p.id
-                        ? "bg-black/5 border-black/20"
-                        : "bg-white border-black/5 hover:border-black/15"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="sharePrompt"
-                      value={p.id}
-                      checked={sharePrompt === p.id}
-                      onChange={() => setSharePrompt(p.id)}
-                      className="mt-1"
-                    />
-                    <span className="text-[11px] font-medium text-black/70 leading-relaxed">
-                      {p.text}
-                    </span>
+                {/* Custom Reactions (Default Emojis) */}
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                    Default Board Reactions (Tap to change)
                   </label>
-                ))}
-              </div>
-            </div>
+                  <div className="flex gap-4 relative">
+                    {allowedReactions.map((emoji, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          if (editingEmojiIndex === idx) {
+                            setEditingEmojiIndex(null);
+                          } else {
+                            setEditingEmojiIndex(idx);
+                          }
+                        }}
+                        className={`w-14 h-14 flex items-center justify-center text-2xl rounded-2xl border transition-all ${editingEmojiIndex === idx ? "bg-black/5 border-black/20 scale-110 shadow-sm z-10" : "bg-white border-black/10 hover:border-black/20 hover:scale-105"}`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                    {editingEmojiIndex !== null && (
+                      <div className="absolute top-16 left-0 z-50">
+                        <div
+                          className="fixed inset-0"
+                          onClick={() => setEditingEmojiIndex(null)}
+                        />
+                        <div className="relative shadow-2xl rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                          <Picker
+                            data={data}
+                            onEmojiSelect={(e: any) => {
+                              const newArr = [...allowedReactions];
+                              newArr[editingEmojiIndex] = e.native;
+                              setAllowedReactions(newArr);
+                              setEditingEmojiIndex(null);
+                            }}
+                            theme="light"
+                            previewPosition="none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {/* Banned Words Settings */}
-            {boardType !== "secret-admirer" && (
-              <div className="p-4 rounded-xl bg-red-50/30 border border-red-100/50">
-                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-red-900/40 mb-2 block">
-                  🛡️ Pro Moderation: Banned Words
-                </label>
-                <textarea
-                  value={bannedWordsInput}
-                  onChange={(e) => setBannedWordsInput(e.target.value)}
-                  placeholder="nigger, faggot, tranny, kike, paki (comma separated)"
-                  rows={2}
-                  className="w-full text-[11px] font-medium bg-white border border-red-100/50 rounded-xl px-4 py-3 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100/50 transition-all placeholder:text-black/10 resize-none"
-                />
-                <p className="text-[9px] text-red-900/30 font-medium mt-1.5 leading-relaxed">
-                  Confessions containing these words will be automatically
-                  hidden. Global restricted words are filtered by default.
-                </p>
-              </div>
-            )}
+                {/* Share Prompt */}
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-2 block">
+                    Social Media sharing text
+                  </label>
+                  <div className="space-y-2">
+                    {SHARE_PROMPTS.map((p) => (
+                      <label
+                        key={p.id}
+                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                          sharePrompt === p.id
+                            ? "bg-black/5 border-black/20"
+                            : "bg-white border-black/5 hover:border-black/15"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="sharePrompt"
+                          value={p.id}
+                          checked={sharePrompt === p.id}
+                          onChange={() => setSharePrompt(p.id)}
+                          className="mt-1"
+                        />
+                        <span className="text-[11px] font-medium text-black/70 leading-relaxed">
+                          {p.text}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Theme selector */}
-            <div>
-              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-3 block">
-                Choose a vibe
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {THEMES.map((t) => (
+                {/* Banned Words Settings */}
+                {boardType !== "secret-admirer" && (
+                  <div className="p-4 rounded-xl bg-red-50/30 border border-red-100/50">
+                    <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-red-900/40 mb-2 block">
+                      🛡️ Pro Moderation: Banned Words
+                    </label>
+                    <textarea
+                      value={bannedWordsInput}
+                      onChange={(e) => setBannedWordsInput(e.target.value)}
+                      placeholder="nigger, faggot, tranny, kike, paki (comma separated)"
+                      rows={2}
+                      className="w-full text-[11px] font-medium bg-white border border-red-100/50 rounded-xl px-4 py-3 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100/50 transition-all placeholder:text-black/10 resize-none"
+                    />
+                    <p className="text-[9px] text-red-900/30 font-medium mt-1.5 leading-relaxed">
+                      Confessions containing these words will be automatically
+                      hidden. Global restricted words are filtered by default.
+                    </p>
+                  </div>
+                )}
+
+                {/* Theme selector */}
+                <div>
+                  <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-black/30 mb-3 block">
+                    Choose a vibe
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {THEMES.map((t) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setTheme(t.key)}
+                        className={`relative flex items-center gap-2.5 p-3 rounded-xl transition-all ${
+                          theme === t.key
+                            ? "bg-black text-white shadow-md shadow-black/10"
+                            : "bg-[#faf8f5] border border-black/5 text-black/50 hover:text-black hover:border-black/10"
+                        }`}
+                      >
+                        <span className="text-base">{t.emoji}</span>
+                        <span className="text-[10px] font-bold truncate">
+                          {t.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Public/Private toggle */}
+                <div className="flex items-center justify-between p-4 rounded-xl bg-[#faf8f5]">
+                  <div>
+                    <div className="text-xs font-bold text-black/60">
+                      Public Board
+                    </div>
+                    <div className="text-[9px] text-black/25 font-medium mt-0.5">
+                      {isPublic
+                        ? "Visible in explore feed"
+                        : "Hidden — PIN required to view"}
+                    </div>
+                  </div>
                   <button
-                    key={t.key}
                     type="button"
-                    onClick={() => setTheme(t.key)}
-                    className={`relative flex items-center gap-2.5 p-3 rounded-xl transition-all ${
-                      theme === t.key
-                        ? "bg-black text-white shadow-md shadow-black/10"
-                        : "bg-[#faf8f5] border border-black/5 text-black/50 hover:text-black hover:border-black/10"
+                    onClick={() => setIsPublic(!isPublic)}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                      isPublic ? "bg-black" : "bg-black/10"
                     }`}
                   >
-                    <span className="text-base">{t.emoji}</span>
-                    <span className="text-[10px] font-bold truncate">
-                      {t.name}
-                    </span>
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
+                        isPublic ? "translate-x-5" : ""
+                      }`}
+                    />
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Public/Private toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-[#faf8f5]">
-              <div>
-                <div className="text-xs font-bold text-black/60">
-                  Public Board
                 </div>
-                <div className="text-[9px] text-black/25 font-medium mt-0.5">
-                  {isPublic
-                    ? "Visible in explore feed"
-                    : "Hidden — PIN required to view"}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsPublic(!isPublic)}
-                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
-                  isPublic ? "bg-black" : "bg-black/10"
-                }`}
-              >
-                <div
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all ${
-                    isPublic ? "translate-x-5" : ""
-                  }`}
-                />
-              </button>
-            </div>
 
-            {/* PIN input (private boards) */}
-            {!isPublic && (
-              <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-200/30">
-                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-amber-700/50 mb-2 flex items-center gap-1.5">
-                  <Lock size={10} />
-                  Set a PIN (4-6 digits) <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  value={pin}
-                  onChange={(e) =>
-                    setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  placeholder="e.g. 1234"
-                  className="w-full text-2xl font-mono font-bold text-center tracking-[0.5em] bg-white border border-amber-200/50 rounded-xl px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200/50 transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-sm"
-                />
-                <p className="text-[9px] text-amber-600/40 font-medium mt-1.5">
-                  Visitors need this PIN to view confessions on your board
-                </p>
-              </div>
-            )}
+                {/* PIN input (private boards) */}
+                {!isPublic && (
+                  <div className="p-4 rounded-xl bg-amber-50/50 border border-amber-200/30">
+                    <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-amber-700/50 mb-2 flex items-center gap-1.5">
+                      <Lock size={10} />
+                      Set a PIN (4-6 digits){" "}
+                      <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      value={pin}
+                      onChange={(e) =>
+                        setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      placeholder="e.g. 1234"
+                      className="w-full text-2xl font-mono font-bold text-center tracking-[0.5em] bg-white border border-amber-200/50 rounded-xl px-4 py-3 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200/50 transition-all placeholder:text-black/10 placeholder:tracking-normal placeholder:text-sm"
+                    />
+                    <p className="text-[9px] text-amber-600/40 font-medium mt-1.5">
+                      Visitors need this PIN to view confessions on your board
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

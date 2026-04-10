@@ -11,7 +11,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, spillId } = await params;
 
   try {
-    const spill = await fetchQuery(api.spills.getById, { spillId: spillId as Id<"spills"> });
+    const spill = await fetchQuery(api.spills.getById, {
+      spillId: spillId as Id<"spills">,
+    });
 
     if (!spill) {
       return { title: "Spill Not Found — Teaaa 🫖" };
@@ -20,12 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = `${spill.title} — Teaaa 🫖`;
     const description = `Read this deep spill by ${spill.displayName} on Teaaa 🫖.`;
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.teaadrop.xyz";
-    const ogImageUrl = spill.aiImageUrl || `${siteUrl}/api/og?type=spill&id=${spillId}`;
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.teaadrop.xyz";
+    const ogImageUrl =
+      spill.aiImageUrl || `${siteUrl}/api/og?type=spill&id=${spillId}`;
 
     return {
       title,
       description,
+      alternates: {
+        canonical: `https://www.teaadrop.xyz/b/${slug}/s/${spillId}`,
+      },
       openGraph: {
         title,
         description,

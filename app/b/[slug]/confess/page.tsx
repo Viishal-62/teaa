@@ -44,7 +44,17 @@ const PREDEFINED_CITIES = ["New York", "London", "Los Angeles"];
 const PREDEFINED_PROFESSIONS = ["Student", "Software Engineer", "Healthcare"];
 const PREDEFINED_MATCHES = ["Office Boss", "Ex", "Coworker"];
 
-function ContextSelector({ title, options, value, onChange }: { title: string, options: string[], value: string, onChange: (v: string) => void }) {
+function ContextSelector({
+  title,
+  options,
+  value,
+  onChange,
+}: {
+  title: string;
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
   const [isOther, setIsOther] = useState(false);
 
   const handleUse = () => {
@@ -53,11 +63,13 @@ function ContextSelector({ title, options, value, onChange }: { title: string, o
 
   return (
     <div className="mb-4 last:mb-0">
-      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-2">{title}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-2">
+        {title}
+      </p>
       {isOther ? (
         <div className="flex items-center gap-2">
-          <input 
-            type="text" 
+          <input
+            type="text"
             autoFocus
             maxLength={30}
             placeholder="Type here..."
@@ -65,7 +77,7 @@ function ContextSelector({ title, options, value, onChange }: { title: string, o
             onChange={(e) => onChange(e.target.value)}
             className="flex-1 bg-[#faf8f5] border border-black/10 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-black/30"
           />
-          <button 
+          <button
             type="button"
             onClick={handleUse}
             className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-4 py-2.5 rounded-xl transition-all"
@@ -75,7 +87,7 @@ function ContextSelector({ title, options, value, onChange }: { title: string, o
         </div>
       ) : (
         <div className="flex flex-wrap gap-1.5">
-          {options.map(opt => (
+          {options.map((opt) => (
             <button
               key={opt}
               type="button"
@@ -90,18 +102,21 @@ function ContextSelector({ title, options, value, onChange }: { title: string, o
             </button>
           ))}
           {value && !options.includes(value) && (
-             <button
+            <button
               type="button"
               onClick={() => onChange("")}
               className="px-3 py-2 rounded-lg text-[10px] font-semibold transition-all active:scale-95 bg-black text-white shadow-sm flex items-center gap-1.5"
-             >
-               {value} <span className="opacity-60 text-[8px]">✕</span>
-             </button>
+            >
+              {value} <span className="opacity-60 text-[8px]">✕</span>
+            </button>
           )}
 
           <button
             type="button"
-            onClick={() => { setIsOther(true); onChange(""); }}
+            onClick={() => {
+              setIsOther(true);
+              onChange("");
+            }}
             className={`px-3 py-2 rounded-lg text-[10px] font-semibold transition-all active:scale-95 bg-black/[0.02] text-black/40 border-dashed border border-black/15 hover:border-black/30 hover:text-black/60`}
           >
             + Other
@@ -182,17 +197,19 @@ export default function ConfessPage() {
   const [showRateLimit, setShowRateLimit] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState("");
   const [debouncedText, setDebouncedText] = useState("");
-  
-  const [contentType, setContentType] = useState<"confession" | "question">("confession");
+
+  const [contentType, setContentType] = useState<"confession" | "question">(
+    "confession",
+  );
   const [cityId, setCityId] = useState("");
   const [professionId, setProfessionId] = useState("");
   const [contextId, setContextId] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
-     if (board && board.contentType === "ama") {
-       setContentType("question");
-     }
+    if (board && board.contentType === "ama") {
+      setContentType("question");
+    }
   }, [board]);
 
   // Debounce text for real-time moderation check
@@ -509,10 +526,14 @@ export default function ConfessPage() {
         <div className="text-center mb-8">
           <span className="text-3xl block mb-3">🫖</span>
           <h1 className="text-xl font-black serif tracking-tight text-black mb-1">
-            {contentType === "question" ? "Got a question to ask?" : "Got something to say?"}
+            {contentType === "question"
+              ? "Got a question to ask?"
+              : "Got something to say?"}
           </h1>
           <p className="text-[11px] text-black/30 font-medium tracking-wide mb-4">
-            {contentType === "question" ? "Ask anything anonymously. No names." : "No names. No judgment. Just the raw truth."}
+            {contentType === "question"
+              ? "Ask anything anonymously. No names."
+              : "No names. No judgment. Just the raw truth."}
           </p>
           <Link
             href={`/b/${slug}/spill`}
@@ -538,7 +559,9 @@ export default function ConfessPage() {
           )}
 
           {/* Post Type Tabs */}
-          <div className={`flex bg-[#faf8f5] border-b border-black/5 p-1 gap-1 ${!board.prompt ? "rounded-t-2xl" : ""}`}>
+          <div
+            className={`flex bg-[#faf8f5] border-b border-black/5 p-1 gap-1 ${!board.prompt ? "rounded-t-2xl" : ""}`}
+          >
             <button
               type="button"
               onClick={() => setContentType("confession")}
@@ -718,13 +741,26 @@ export default function ConfessPage() {
             </button>
           </div>
 
-
-
           {/* Context Identifiers */}
           <div className="p-5">
-             <ContextSelector title="Where are you from?" options={PREDEFINED_CITIES} value={cityId} onChange={setCityId} />
-             <ContextSelector title="What do you do?" options={PREDEFINED_PROFESSIONS} value={professionId} onChange={setProfessionId} />
-             <ContextSelector title="Who is this about? (Optional Connection)" options={PREDEFINED_MATCHES} value={contextId} onChange={setContextId} />
+            <ContextSelector
+              title="Where are you from?"
+              options={PREDEFINED_CITIES}
+              value={cityId}
+              onChange={setCityId}
+            />
+            <ContextSelector
+              title="What do you do?"
+              options={PREDEFINED_PROFESSIONS}
+              value={professionId}
+              onChange={setProfessionId}
+            />
+            <ContextSelector
+              title="Who is this about? (Optional Connection)"
+              options={PREDEFINED_MATCHES}
+              value={contextId}
+              onChange={setContextId}
+            />
           </div>
 
           <div className="h-px bg-black/5" />
@@ -736,8 +772,8 @@ export default function ConfessPage() {
             </p>
             {isAddingCustom ? (
               <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   autoFocus
                   maxLength={15}
                   placeholder="Type feeling..."
@@ -745,7 +781,7 @@ export default function ConfessPage() {
                   onChange={(e) => setCategory(e.target.value)}
                   className="flex-1 bg-white border border-black/10 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-black/30"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsAddingCustom(false)}
                   className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-4 py-2.5 rounded-xl transition-all"
@@ -789,7 +825,10 @@ export default function ConfessPage() {
                 )}
                 <button
                   type="button"
-                  onClick={() => { setIsAddingCustom(true); setCategory(""); }}
+                  onClick={() => {
+                    setIsAddingCustom(true);
+                    setCategory("");
+                  }}
                   className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 bg-black/[0.02] text-black/40 border-dashed border border-black/15 hover:border-black/30 hover:text-black/60`}
                 >
                   + Other
@@ -807,7 +846,9 @@ export default function ConfessPage() {
             className="w-full p-5 flex items-center justify-between text-left transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">Advanced Options</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">
+                Advanced Options
+              </span>
             </div>
             <div className="flex items-center gap-2">
               {disappearMode !== "never" && (
@@ -815,14 +856,29 @@ export default function ConfessPage() {
                   Auto-delete set
                 </span>
               )}
-              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg" className={`text-black/30 transition-transform ${showAdvanced ? "rotate-180" : ""}`}>
-                <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                width="10"
+                height="6"
+                viewBox="0 0 10 6"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className={`text-black/30 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+              >
+                <path
+                  d="M1 1L5 5L9 1"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
           </button>
 
           {/* Disappearing Tea (Moved inside Advanced Settings) */}
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? "max-h-[800px] opacity-100 border-t border-black/5" : "max-h-0 opacity-0"}`}>
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? "max-h-[800px] opacity-100 border-t border-black/5" : "max-h-0 opacity-0"}`}
+          >
             <div className="p-5 bg-[#faf8f5]">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25">

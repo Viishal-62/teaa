@@ -26,6 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       description,
+      alternates: {
+        canonical: `https://www.teaadrop.xyz/b/${slug}/spill`,
+      },
       openGraph: {
         title,
         description,

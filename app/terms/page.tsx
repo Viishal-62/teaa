@@ -3,7 +3,20 @@ import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
   title: "Terms of Service | Teaa",
-  description: "Terms and conditions for using the Teaa anonymous platform.",
+  description:
+    "Terms and conditions for using Teaa — the anonymous confession platform. User conduct rules, content guidelines, creator responsibilities and liability terms.",
+  keywords: [
+    "teaa terms of service",
+    "confession app terms",
+    "anonymous platform rules",
+    "teaa user guidelines",
+    "confession content policy",
+    "teaa legal terms",
+    "anonymous posting rules",
+  ],
+  alternates: {
+    canonical: "https://www.teaadrop.xyz/terms",
+  },
 };
 
 export default function TermsPage() {
@@ -33,8 +46,9 @@ export default function TermsPage() {
             </h2>
             <p>
               By accessing and using Teaa ("the Platform"), you accept and agree
-              to be bound by the terms and provisions of this agreement. If you do
-              not agree to abide by these terms, please do not use our service.
+              to be bound by the terms and provisions of this agreement. If you
+              do not agree to abide by these terms, please do not use our
+              service.
             </p>
           </section>
 
@@ -44,10 +58,10 @@ export default function TermsPage() {
             </h2>
             <p>
               Teaa is an anonymous platform designed for dropping confessions,
-              secrets, and gossip. We provide the infrastructure for users to express
-              themselves anonymously. While we implement AI moderation, we are not
-              the publishers of user-generated content and do not actively endorse or verify
-              the accuracy of any submissions.
+              secrets, and gossip. We provide the infrastructure for users to
+              express themselves anonymously. While we implement AI moderation,
+              we are not the publishers of user-generated content and do not
+              actively endorse or verify the accuracy of any submissions.
             </p>
           </section>
 
@@ -55,15 +69,25 @@ export default function TermsPage() {
             <h2 className="text-lg font-bold text-black sans-serif tracking-wide uppercase text-[11px] mb-3">
               3. User Conduct and Content Rules
             </h2>
-            <p>You are solely responsible for the content you submit. You agree NOT to post:</p>
+            <p>
+              You are solely responsible for the content you submit. You agree
+              NOT to post:
+            </p>
             <ul className="list-disc pl-5 mt-2 space-y-2 text-red-900/60 font-medium">
               <li>Hate speech, severe bullying, or targeted harassment.</li>
-              <li>Illegal content, explicit non-consensual imagery, or threats of violence.</li>
-              <li>Doxxing or highly sensitive personal identifiable information (PII) of others.</li>
+              <li>
+                Illegal content, explicit non-consensual imagery, or threats of
+                violence.
+              </li>
+              <li>
+                Doxxing or highly sensitive personal identifiable information
+                (PII) of others.
+              </li>
             </ul>
             <p className="mt-3">
-              Teaa utilizes AI moderation filters and creator-enforced banned word lists.
-              We reserve the right to remove any content at our sole discretion, without notice.
+              Teaa utilizes AI moderation filters and creator-enforced banned
+              word lists. We reserve the right to remove any content at our sole
+              discretion, without notice.
             </p>
           </section>
 
@@ -72,9 +96,10 @@ export default function TermsPage() {
               4. Creator Responsibilities
             </h2>
             <p>
-              Users who create private or public "Boards" on Teaa are granted administrative
-              controls (such as deleting posts or viewing inboxes). Creators are expected to
-              manage their boards responsibly and respect the anonymity built into the platform.
+              Users who create private or public "Boards" on Teaa are granted
+              administrative controls (such as deleting posts or viewing
+              inboxes). Creators are expected to manage their boards responsibly
+              and respect the anonymity built into the platform.
             </p>
           </section>
 
@@ -83,10 +108,10 @@ export default function TermsPage() {
               5. Limitation of Liability
             </h2>
             <p>
-              Teaa and its operators shall not be liable for any indirect, incidental,
-              special, consequential, or punitive damages resulting from your use of the
-              service or any user-generated content hosted on our boards. Use the platform
-              at your own risk.
+              Teaa and its operators shall not be liable for any indirect,
+              incidental, special, consequential, or punitive damages resulting
+              from your use of the service or any user-generated content hosted
+              on our boards. Use the platform at your own risk.
             </p>
           </section>
         </div>

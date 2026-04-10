@@ -103,7 +103,9 @@ export default function GlobalConfessPage() {
     if (prefilled) setText(prefilled);
   }, []);
 
-  const selectedBoard = publicBoards?.find((b: any) => b._id === selectedBoardId);
+  const selectedBoard = publicBoards?.find(
+    (b: any) => b._id === selectedBoardId,
+  );
 
   const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
   const parsedCustomExpireAt = customExpireAt
@@ -434,15 +436,15 @@ export default function GlobalConfessPage() {
 
             <div className="h-px bg-black/5" />
 
-          {/* Category picker */}
+            {/* Category picker */}
             <div className="p-5">
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25 mb-3">
                 What does it feel like?
               </p>
               {isAddingCustom ? (
                 <div className="flex items-center gap-2">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     autoFocus
                     maxLength={15}
                     placeholder="Type feeling..."
@@ -450,7 +452,7 @@ export default function GlobalConfessPage() {
                     onChange={(e) => setCategory(e.target.value)}
                     className="flex-1 bg-[#faf8f5] border border-black/10 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-black/30"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setIsAddingCustom(false)}
                     className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-4 py-2.5 rounded-xl transition-all"
@@ -489,12 +491,16 @@ export default function GlobalConfessPage() {
                       onClick={() => setCategory("")}
                       className="px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 bg-black text-white shadow-sm flex items-center gap-1.5"
                     >
-                      {category} <span className="opacity-60 text-[8px]">✕</span>
+                      {category}{" "}
+                      <span className="opacity-60 text-[8px]">✕</span>
                     </button>
                   )}
                   <button
                     type="button"
-                    onClick={() => { setIsAddingCustom(true); setCategory(""); }}
+                    onClick={() => {
+                      setIsAddingCustom(true);
+                      setCategory("");
+                    }}
                     className={`px-3.5 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-95 bg-black/[0.02] text-black/40 border-dashed border border-black/15 hover:border-black/30 hover:text-black/60`}
                   >
                     + Other
@@ -512,7 +518,9 @@ export default function GlobalConfessPage() {
               className="w-full p-5 flex items-center justify-between text-left transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">Advanced Options</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-black/40">
+                  Advanced Options
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 {disappearMode !== "never" && (
@@ -528,7 +536,9 @@ export default function GlobalConfessPage() {
             </button>
 
             {/* Disappearing Tea (Moved inside Advanced Settings) */}
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? "max-h-[800px] opacity-100 border-t border-black/5" : "max-h-0 opacity-0"}`}>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${showAdvanced ? "max-h-[800px] opacity-100 border-t border-black/5" : "max-h-0 opacity-0"}`}
+            >
               <div className="p-5 bg-[#faf8f5]">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/25">
