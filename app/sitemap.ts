@@ -1,6 +1,9 @@
 import { MetadataRoute } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+import { getAllPosts } from "@/lib/blog";
+
+export const dynamic = "force-dynamic";
 
 const BASE = "https://www.teaadrop.xyz";
 
@@ -15,6 +18,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${BASE}/explore`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
@@ -131,5 +140,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Sitemap: Failed to fetch spills", e);
   }
 
-  return [...staticPages, ...boardPages, ...spillPages];
+  // ── Dynamic Pages: Blog Posts ──
+  let blogPages: MetadataRoute.Sitemap = [];
+  try {
+    const posts = getAllPosts();
+    blogPages = posts.map((post) => ({
+      url: `${BASE}/blog/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+  } catch (e) {
+    console.error("Sitemap: Failed to fetch blog posts", e);
+  }
+
+  return [...staticPages, ...boardPages, ...spillPages, ...blogPages];
 }
