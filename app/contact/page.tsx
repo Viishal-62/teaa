@@ -10,44 +10,66 @@ import {
   Send,
   CheckCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function ContactPage() {
-  const [formState, setFormState] = useState<"idle" | "sending" | "sent">(
+  const [formState, setFormState] = useState<"idle" | "sending" | "sent" | "error">(
     "idle",
   );
+  const [errorMessage, setErrorMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [loadedAt, setLoadedAt] = useState<number>(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    setLoadedAt(Date.now());
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormState("sending");
+    setErrorMessage("");
 
-    // Build mailto link and open it
-    const mailtoSubject = encodeURIComponent(
-      subject || "Contact from Teaa Website",
-    );
-    const mailtoBody = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\n\n${message}`,
-    );
-    window.open(
-      `mailto:wishalgautam2@gmail.com?subject=${mailtoSubject}&body=${mailtoBody}`,
-      "_self",
-    );
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+          _honeypot: honeypot,
+          _loadedAt: loadedAt,
+        }),
+      });
 
-    setTimeout(() => {
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send message. Please try again.");
+      }
+
       setFormState("sent");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+      
+      // Reset back to idle after 5 seconds automatically
       setTimeout(() => {
         setFormState("idle");
-        setName("");
-        setEmail("");
-        setSubject("");
-        setMessage("");
-      }, 3000);
-    }, 500);
+      }, 5000);
+    } catch (error: any) {
+      setFormState("error");
+      setErrorMessage(error.message || "An unexpected error occurred.");
+    }
   };
 
   const quickLinks = [
@@ -93,45 +115,37 @@ export default function ContactPage() {
           </p>
         </header>
 
-        {/* Email Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-          className="mb-10 p-6 rounded-2xl border border-black/5 bg-white/60 backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-black/5 flex items-center justify-center">
-              <Mail size={20} className="text-black/50" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-black/40 font-semibold mb-1">
-                Email us directly
-              </p>
-              <a
-                href="mailto:wishalgautam2@gmail.com"
-                className="text-lg font-bold text-black hover:text-accent transition-colors serif"
-              >
-                wishalgautam2@gmail.com
-              </a>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Contact Form */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: [0.2, 0.8, 0.2, 1] }}
-          className="mb-12"
+          className="mb-12 bg-white/60 backdrop-blur-sm p-6 sm:p-8 rounded-2xl border border-black/5"
         >
-          <h2 className="text-[11px] font-bold text-black uppercase tracking-wide mb-6">
-            Or send us a message
-          </h2>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-xl bg-black/5 flex items-center justify-center">
+              <Mail size={18} className="text-black/50" />
+            </div>
+            <h2 className="text-lg font-bold text-black serif">
+              Get in Touch
+            </h2>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Honeypot field - hidden from users but visible to bots */}
+            <div aria-hidden="true" className="opacity-0 absolute top-0 left-0 h-0 w-0 -z-10 overflow-hidden">
+              <input
+                type="text"
+                name="_honeypot"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
+
             {/* Name & Email row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label
                   htmlFor="contact-name"
@@ -211,34 +225,54 @@ export default function ContactPage() {
               />
             </div>
 
-            {/* Submit */}
-            <AnimatePresence mode="wait">
-              {formState === "sent" ? (
-                <motion.div
-                  key="sent"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-xl px-5 py-3 text-sm font-medium"
-                >
-                  <CheckCircle size={16} />
-                  Your email client should have opened! We&apos;ll get back to
-                  you soon.
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="submit"
-                  type="submit"
-                  disabled={formState === "sending"}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-black text-white text-sm font-semibold hover:bg-black/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Send size={14} />
-                  {formState === "sending" ? "Opening..." : "Send Message"}
-                </motion.button>
-              )}
-            </AnimatePresence>
+            {/* Submit & Status */}
+            <div className="pt-2">
+              <AnimatePresence mode="wait">
+                {formState === "sent" ? (
+                  <motion.div
+                    key="sent"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex items-center gap-3 text-green-700 bg-green-50 border border-green-200 rounded-xl px-5 py-4 text-sm font-medium"
+                  >
+                    <CheckCircle size={18} className="shrink-0" />
+                    <span>Message sent successfully! We&apos;ll get back to you soon.</span>
+                  </motion.div>
+                ) : formState === "error" ? (
+                  <motion.div
+                    key="error"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex flex-col gap-3"
+                  >
+                    <div className="flex items-center gap-3 text-red-700 bg-red-50 border border-red-200 rounded-xl px-5 py-4 text-sm font-medium">
+                      <span>{errorMessage}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormState("idle")}
+                      className="self-start text-[11px] uppercase tracking-widest font-bold text-black/40 hover:text-black transition-colors"
+                    >
+                      Try Again
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="submit"
+                    type="submit"
+                    disabled={formState === "sending"}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-black text-white text-sm font-semibold hover:bg-black/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={15} />
+                    {formState === "sending" ? "Sending..." : "Send Message"}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </form>
         </motion.div>
 
@@ -256,16 +290,18 @@ export default function ContactPage() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="group p-4 rounded-xl border border-black/5 bg-white/40 hover:bg-white/80 hover:border-black/10 transition-all"
+                className="group p-5 rounded-xl border border-black/5 bg-white/40 hover:bg-white/80 hover:border-black/10 transition-all flex flex-col items-start"
               >
-                <link.icon
-                  size={18}
-                  className="text-black/30 group-hover:text-black/60 transition-colors mb-2"
-                />
-                <p className="text-sm font-semibold text-black/70 group-hover:text-black transition-colors">
+                <div className="mb-3 p-2 rounded-lg bg-black/5 group-hover:bg-black/10 transition-colors">
+                  <link.icon
+                    size={18}
+                    className="text-black/60 group-hover:text-black transition-colors"
+                  />
+                </div>
+                <p className="text-sm font-semibold text-black/80 group-hover:text-black transition-colors">
                   {link.title}
                 </p>
-                <p className="text-[11px] text-black/40 mt-0.5">
+                <p className="text-[11px] text-black/40 mt-1 leading-relaxed">
                   {link.description}
                 </p>
               </Link>
@@ -274,9 +310,9 @@ export default function ContactPage() {
         </motion.div>
 
         {/* Footer note */}
-        <p className="mt-12 text-[11px] text-black/30 text-center serif">
+        <p className="mt-12 text-[11px] text-black/30 text-center serif max-w-sm mx-auto">
           We take every message seriously — especially content reports and
-          safety concerns.
+          safety concerns. Your trust means everything.
         </p>
       </div>
     </div>
