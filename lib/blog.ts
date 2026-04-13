@@ -10,6 +10,8 @@ export type BlogPost = {
   date: string;
   description: string;
   content: string;
+  tags: string[];
+  readingTime: number;
   toc: { level: number; text: string; id: string }[];
 };
 
@@ -22,6 +24,11 @@ function generateSlug(text: string) {
     .replace(/\-\-+/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
+}
+
+function estimateReadingTime(content: string): number {
+  const words = content.trim().split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 230));
 }
 
 export function getPostSlugs() {
@@ -56,6 +63,8 @@ export function getPostBySlug(slug: string): BlogPost {
     date: data.date || new Date().toISOString(),
     description: data.description || "",
     content: content,
+    tags: data.tags || [],
+    readingTime: estimateReadingTime(content),
     toc,
   };
 }
