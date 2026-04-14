@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // ─── Toggle a reaction (add or remove) ───
 export const toggle = mutation({
@@ -51,6 +52,21 @@ export const toggle = mutation({
       visitorId: args.visitorId,
       createdAt: Date.now(),
     });
+
+    // Notify creator
+    const confession = await ctx.db.get(args.confessionId);
+    if (confession) {
+      const board = await ctx.db.get(confession.boardId);
+      if (board?.creatorToken) {
+        await ctx.scheduler.runAfter(0, internal.push.sendPushToCreator, {
+          creatorToken: board.creatorToken,
+          title: "Reaction alert 🚨",
+          body: `Someone reacted to a confession on your board.`,
+          url: `/board/${board.slug}`
+        });
+      }
+    }
+
     return { action: "added" };
   },
 });

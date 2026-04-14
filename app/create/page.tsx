@@ -18,6 +18,7 @@ import {
   Settings2,
 } from "lucide-react";
 import Link from "next/link";
+import PushSubscribeButton from "@/app/components/PushSubscribeButton";
 
 const THEMES = [
   {
@@ -218,6 +219,7 @@ export default function CreateBoard() {
             )}
 
             <div className="flex flex-col gap-2">
+              <PushSubscribeButton creatorToken={getCreatorToken()} />
               <Link
                 href={`/b/${result.slug}`}
                 className="group flex items-center justify-center gap-2 py-3 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95"
