@@ -108,7 +108,7 @@ export default function Home() {
   const [quickText, setQuickText] = useState("");
   const [heroReady, setHeroReady] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setHeroReady(true), 100);
+    const t = setTimeout(() => setHeroReady(true), 50);
     return () => clearTimeout(t);
   }, []);
 
@@ -122,7 +122,11 @@ export default function Home() {
     if (popupDismissed) return;
     const seen = sessionStorage.getItem("teaaa_popup_seen");
     if (seen) { setPopupDismissed(true); return; }
-    const t = setTimeout(() => setShowEngagementPopup(true), 6000);
+    const t = setTimeout(() => {
+      // Only show popup if user hasn't scrolled much (engaged users are scrolling)
+      const scrollPct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      if (scrollPct < 0.3) setShowEngagementPopup(true);
+    }, 45000);
     return () => clearTimeout(t);
   }, [popupDismissed]);
 
@@ -144,35 +148,84 @@ export default function Home() {
     sessionStorage.setItem("teaaa_popup_seen", "1");
   };
 
-  // Live activity toasts — cycle through confessions using Sonner
+  // Live activity toasts — continuously cycle through varied social proof
   useEffect(() => {
-    if (!globalFeed || globalFeed.length === 0) return;
-    const feed = globalFeed.filter((c: any) => c.type !== "voice" && c.text);
-    if (feed.length === 0) return;
+    const feed = globalFeed?.filter((c: any) => c.type !== "voice" && c.text) ?? [];
+    const cities = contextDistribution?.cities ?? [];
+    const voiceCount = voiceFeed?.length ?? 0;
+    const total = (globalFeed?.length ?? 0) + voiceCount;
+
+    // Build a pool of varied toast configs
+    const toastPool: Array<{ msg: string; desc: string; icon: string; href: string }> = [];
+
+    // Confession previews
+    feed.slice(0, 6).forEach((c: any) => {
+      const preview = c.text?.slice(0, 50) + (c.text?.length > 50 ? "…" : "");
+      toastPool.push({
+        msg: `"${preview}"`,
+        desc: "Tap to read more →",
+        icon: "🔥",
+        href: "/explore",
+      });
+    });
+
+    // Voice drop notifications
+    if (voiceCount > 0) {
+      toastPool.push({
+        msg: "Someone just dropped a voice confession",
+        desc: `${voiceCount} anonymous voice drops waiting`,
+        icon: "🎙️",
+        href: "/explore/voice",
+      });
+    }
+
+    // City-based toasts
+    cities.slice(0, 3).forEach((city: any) => {
+      toastPool.push({
+        msg: `New confession from ${city.key}`,
+        desc: `${city.count} teas from this city`,
+        icon: "📍",
+        href: `/explore?city=${encodeURIComponent(city.key)}`,
+      });
+    });
+
+    // Engagement counter
+    if (total > 0) {
+      toastPool.push({
+        msg: `${total}+ anonymous confessions and counting`,
+        desc: "What's your secret?",
+        icon: "👀",
+        href: "/confess",
+      });
+    }
+
+    if (toastPool.length === 0) return;
+
+    // Shuffle pool for variety
+    for (let i = toastPool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [toastPool[i], toastPool[j]] = [toastPool[j], toastPool[i]];
+    }
 
     let idx = 0;
     const showNext = () => {
-      const c = feed[idx % feed.length] as any;
-      const preview = c.text?.slice(0, 55) + (c.text?.length > 55 ? "..." : "");
-      toast(
-        `"${preview}"`,
-        {
-          description: "Tap to read more confessions →",
-          icon: "🔥",
-          duration: 5000,
-          action: {
-            label: "Explore",
-            onClick: () => router.push("/explore"),
-          },
-        }
-      );
+      const t = toastPool[idx % toastPool.length];
+      toast(t.msg, {
+        description: t.desc,
+        icon: t.icon,
+        duration: 5000,
+        action: {
+          label: "Read it →",
+          onClick: () => router.push(t.href),
+        },
+      });
       idx++;
     };
 
-    const initialDelay = setTimeout(showNext, 10000);
-    const interval = setInterval(showNext, 18000);
+    const initialDelay = setTimeout(showNext, 15000);
+    const interval = setInterval(showNext, 25000);
     return () => { clearTimeout(initialDelay); clearInterval(interval); };
-  }, [globalFeed, router]);
+  }, [globalFeed, voiceFeed, contextDistribution, router]);
 
   // Sticky bottom CTA bar — show after scrolling past hero
   useEffect(() => {
@@ -246,6 +299,13 @@ export default function Home() {
               <Mic size={10} /> Voice
             </Link>
             <Link
+              href="#how-to-use"
+              className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors flex items-center gap-1.5"
+            >
+              How to use 
+              <span className="px-1.5 py-[2px] bg-accent/10 border border-accent/20 text-accent text-[8px] font-black rounded-md tracking-wider">NEW</span>
+            </Link>
+            <Link
               href="/confess"
               className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors"
             >
@@ -300,6 +360,7 @@ export default function Home() {
               <nav className="flex-1 p-5 space-y-1 overflow-y-auto">
                 {[
                   { href: "/explore", label: "Explore", icon: "🧭" },
+                  { href: "#how-to-use", label: "How to use", icon: "🗺️", badge: "NEW" },
                   { href: "/forum", label: "Community", icon: "💬" },
                   { href: "/explore/voice", label: "Voice Confess", icon: "🎙️" },
                   { href: "/confess", label: "Confess Now", icon: "✍️" },
@@ -318,9 +379,14 @@ export default function Home() {
                     className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-black/[0.03] transition-colors group"
                   >
                     <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm font-bold text-black/60 group-hover:text-black transition-colors">
+                    <span className="text-sm font-bold text-black/60 group-hover:text-black transition-colors flex-1">
                       {item.label}
                     </span>
+                    {item.badge && (
+                      <span className="px-2 py-1 bg-accent/10 border border-accent/20 text-accent text-[9px] font-black uppercase tracking-widest rounded-md">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 ))}
               </nav>
@@ -715,6 +781,7 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
+
         </motion.div>
       </section>
 
@@ -814,6 +881,195 @@ export default function Home() {
           ))}
         </div>
       </motion.section>
+
+
+      {/* ── RECENT CONFESSIONS ── */}
+      {textConfessions.length > 0 && (
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-2xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center justify-between mb-8"
+            >
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                  </span>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent">
+                    Live
+                  </p>
+                </div>
+                <h2 className="text-2xl font-black serif">
+                  People are confessing
+                </h2>
+              </div>
+              <Link
+                href="/explore"
+                className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black transition-colors"
+              >
+                View all →
+              </Link>
+            </motion.div>
+
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="space-y-3"
+            >
+              {textConfessions.slice(0, 3).map((confession: any) => {
+                const catInfo = CATEGORY_INFO[confession.category];
+                const previewText =
+                  typeof confession.text === "string" &&
+                    confession.text.trim().length > 0
+                    ? confession.text
+                    : "Anonymous confession";
+                return (
+                  <motion.div key={confession._id} variants={fadeUp}>
+                    <div
+                      onClick={() => router.push("/explore")}
+                      className="cursor-pointer flex items-center gap-4 px-5 py-6 bg-white border border-black/5 rounded-2xl hover:shadow-lg hover:shadow-black/[0.03] transition-all group"
+                    >
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm"
+                        style={{
+                          background: catInfo?.color ?? "#ccc",
+                          boxShadow: `0 0 8px ${catInfo?.color ?? "#ccc"}40`,
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm serif text-black/60 leading-relaxed select-none mb-1.5">
+                          {previewText.slice(0, 60)}
+                          {previewText.length > 60 ? "..." : ""}
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {catInfo && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/explore?category=${encodeURIComponent(confession.category)}`,
+                                );
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
+                              style={{
+                                background: `${catInfo.color}10`,
+                                color: catInfo.color,
+                              }}
+                            >
+                              {catInfo.label}
+                            </button>
+                          )}
+                          {confession.cityId && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/explore?city=${encodeURIComponent(confession.cityId)}`,
+                                );
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-400 hover:bg-blue-100 transition-colors"
+                            >
+                              📍 {confession.cityId}
+                            </button>
+                          )}
+                          {confession.professionId && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(
+                                  `/explore?profession=${encodeURIComponent(confession.professionId)}`,
+                                );
+                              }}
+                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 hover:bg-amber-100 transition-colors"
+                            >
+                              💼 {confession.professionId}
+                            </button>
+                          )}
+                          <span className="text-[9px] text-black/15 font-medium">
+                            {timeAgo(confession.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold text-black/10 group-hover:text-accent uppercase tracking-widest flex-shrink-0 transition-colors">
+                        Reveal →
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+
+            {textConfessions.length > 3 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+              >
+                <Link
+                  href="/explore"
+                  className="flex items-center justify-center gap-2 mt-4 py-4 bg-white border border-black/5 rounded-xl text-[11px] font-bold text-black/25 hover:text-black hover:border-black/15 transition-all group"
+                >
+                  <span>+{textConfessions.length - 3} more secrets</span>
+                  <ArrowRight
+                    size={12}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </Link>
+              </motion.div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── DEEP SPILLS ── */}
+      {recentSpills && recentSpills.length > 0 && (
+        <section className="py-20 px-4 sm:px-6">
+          <div className="max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center justify-between mb-8"
+            >
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mb-1">
+                  Stories
+                </p>
+                <h2 className="text-2xl font-black serif">Deep Spills</h2>
+              </div>
+              <Link
+                href="/explore"
+                className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black transition-colors"
+              >
+                View all →
+              </Link>
+            </motion.div>
+
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+            >
+              {recentSpills.slice(0, 3).map((spill, i) => (
+                <DeepSpillCard
+                  key={spill._id}
+                  spill={spill}
+                  slug={(spill as any).boardSlug || "global"}
+                  index={i}
+                />
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════
           HOW TO USE TEAAA — Roadmap
@@ -1824,193 +2080,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── RECENT CONFESSIONS ── */}
-      {textConfessions.length > 0 && (
-        <section className="py-20 px-4 sm:px-6">
-          <div className="max-w-2xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-center justify-between mb-8"
-            >
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                  </span>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent">
-                    Live
-                  </p>
-                </div>
-                <h2 className="text-2xl font-black serif">
-                  People are confessing
-                </h2>
-              </div>
-              <Link
-                href="/explore"
-                className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black transition-colors"
-              >
-                View all →
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={stagger}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              className="space-y-3"
-            >
-              {textConfessions.slice(0, 3).map((confession: any) => {
-                const catInfo = CATEGORY_INFO[confession.category];
-                const previewText =
-                  typeof confession.text === "string" &&
-                    confession.text.trim().length > 0
-                    ? confession.text
-                    : "Anonymous confession";
-                return (
-                  <motion.div key={confession._id} variants={fadeUp}>
-                    <div
-                      onClick={() => router.push("/explore")}
-                      className="cursor-pointer flex items-center gap-4 px-5 py-6 bg-white border border-black/5 rounded-2xl hover:shadow-lg hover:shadow-black/[0.03] transition-all group"
-                    >
-                      <div
-                        className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm"
-                        style={{
-                          background: catInfo?.color ?? "#ccc",
-                          boxShadow: `0 0 8px ${catInfo?.color ?? "#ccc"}40`,
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm serif text-black/60 leading-relaxed select-none mb-1.5">
-                          {previewText.slice(0, 60)}
-                          {previewText.length > 60 ? "..." : ""}
-                        </p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {catInfo && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/explore?category=${encodeURIComponent(confession.category)}`,
-                                );
-                              }}
-                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full hover:scale-105 active:scale-95 transition-transform"
-                              style={{
-                                background: `${catInfo.color}10`,
-                                color: catInfo.color,
-                              }}
-                            >
-                              {catInfo.label}
-                            </button>
-                          )}
-                          {confession.cityId && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/explore?city=${encodeURIComponent(confession.cityId)}`,
-                                );
-                              }}
-                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-400 hover:bg-blue-100 transition-colors"
-                            >
-                              📍 {confession.cityId}
-                            </button>
-                          )}
-                          {confession.professionId && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(
-                                  `/explore?profession=${encodeURIComponent(confession.professionId)}`,
-                                );
-                              }}
-                              className="text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-500 hover:bg-amber-100 transition-colors"
-                            >
-                              💼 {confession.professionId}
-                            </button>
-                          )}
-                          <span className="text-[9px] text-black/15 font-medium">
-                            {timeAgo(confession.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[9px] font-bold text-black/10 group-hover:text-accent uppercase tracking-widest flex-shrink-0 transition-colors">
-                        Reveal →
-                      </span>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-
-            {textConfessions.length > 3 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-              >
-                <Link
-                  href="/explore"
-                  className="flex items-center justify-center gap-2 mt-4 py-4 bg-white border border-black/5 rounded-xl text-[11px] font-bold text-black/25 hover:text-black hover:border-black/15 transition-all group"
-                >
-                  <span>+{textConfessions.length - 3} more secrets</span>
-                  <ArrowRight
-                    size={12}
-                    className="group-hover:translate-x-1 transition-transform"
-                  />
-                </Link>
-              </motion.div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* ── DEEP SPILLS ── */}
-      {recentSpills && recentSpills.length > 0 && (
-        <section className="py-20 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-center justify-between mb-8"
-            >
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-accent mb-1">
-                  Stories
-                </p>
-                <h2 className="text-2xl font-black serif">Deep Spills</h2>
-              </div>
-              <Link
-                href="/explore"
-                className="text-[9px] font-bold text-black/20 uppercase tracking-widest hover:text-black transition-colors"
-              >
-                View all →
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={stagger}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-            >
-              {recentSpills.slice(0, 3).map((spill, i) => (
-                <DeepSpillCard
-                  key={spill._id}
-                  spill={spill}
-                  slug={(spill as any).boardSlug || "global"}
-                  index={i}
-                />
-              ))}
-            </motion.div>
-          </div>
-        </section>
-      )}
 
       {/* ── FAQ ── */}
       <section className="py-20 px-4 sm:px-6 bg-[#faf8f5]">
