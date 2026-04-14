@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
 import PwaInstallButton from "@/app/components/PwaInstallButton";
 import { FaApple, FaAndroid } from "react-icons/fa";
 import { useQuery } from "convex/react";
@@ -109,6 +110,77 @@ export default function Home() {
   useEffect(() => {
     const t = setTimeout(() => setHeroReady(true), 100);
     return () => clearTimeout(t);
+  }, []);
+
+  /* ── Engagement: Popup, Toasts, Sticky Bar ── */
+  const [showEngagementPopup, setShowEngagementPopup] = useState(false);
+  const [popupDismissed, setPopupDismissed] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  // Timed engagement popup — show after 6s on first visit
+  useEffect(() => {
+    if (popupDismissed) return;
+    const seen = sessionStorage.getItem("teaaa_popup_seen");
+    if (seen) { setPopupDismissed(true); return; }
+    const t = setTimeout(() => setShowEngagementPopup(true), 6000);
+    return () => clearTimeout(t);
+  }, [popupDismissed]);
+
+  // Exit-intent detection (desktop only)
+  useEffect(() => {
+    if (popupDismissed) return;
+    const handler = (e: MouseEvent) => {
+      if (e.clientY <= 5 && !popupDismissed) {
+        setShowEngagementPopup(true);
+      }
+    };
+    document.addEventListener("mouseleave", handler);
+    return () => document.removeEventListener("mouseleave", handler);
+  }, [popupDismissed]);
+
+  const dismissPopup = () => {
+    setShowEngagementPopup(false);
+    setPopupDismissed(true);
+    sessionStorage.setItem("teaaa_popup_seen", "1");
+  };
+
+  // Live activity toasts — cycle through confessions using Sonner
+  useEffect(() => {
+    if (!globalFeed || globalFeed.length === 0) return;
+    const feed = globalFeed.filter((c: any) => c.type !== "voice" && c.text);
+    if (feed.length === 0) return;
+
+    let idx = 0;
+    const showNext = () => {
+      const c = feed[idx % feed.length] as any;
+      const preview = c.text?.slice(0, 55) + (c.text?.length > 55 ? "..." : "");
+      toast(
+        `"${preview}"`,
+        {
+          description: "Tap to read more confessions →",
+          icon: "🔥",
+          duration: 5000,
+          action: {
+            label: "Explore",
+            onClick: () => router.push("/explore"),
+          },
+        }
+      );
+      idx++;
+    };
+
+    const initialDelay = setTimeout(showNext, 10000);
+    const interval = setInterval(showNext, 18000);
+    return () => { clearTimeout(initialDelay); clearInterval(interval); };
+  }, [globalFeed, router]);
+
+  // Sticky bottom CTA bar — show after scrolling past hero
+  useEffect(() => {
+    const handler = () => {
+      setShowStickyBar(window.scrollY > window.innerHeight * 0.8);
+    };
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
   }, []);
 
   const heroRef = useRef<HTMLElement>(null);
@@ -742,6 +814,163 @@ export default function Home() {
           ))}
         </div>
       </motion.section>
+
+      {/* ══════════════════════════════════════════
+          HOW TO USE TEAAA — Roadmap
+         ══════════════════════════════════════════ */}
+      <section className="py-24 px-4 sm:px-6" id="how-to-use">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-14"
+          >
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent mb-3">
+              ✦ How it works
+            </p>
+            <h2 className="text-3xl font-black serif tracking-tight">
+              Three steps to start
+            </h2>
+          </motion.div>
+
+          {/* Horizontal stepper — desktop */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="hidden md:block mb-12"
+          >
+            <div className="flex items-center justify-between max-w-md mx-auto mb-10">
+              {[1, 2, 3].map((n, i) => (
+                <span key={n} className="contents">
+                  {/* Circle */}
+                  <div className="w-11 h-11 rounded-full bg-white border-2 border-black/10 flex items-center justify-center text-sm font-black serif text-black/60 shadow-sm">
+                    {n}
+                  </div>
+                  {/* Connector line */}
+                  {i < 2 && (
+                    <div className="flex-1 mx-3 flex items-center">
+                      <div className="flex-1 h-px bg-black/10" />
+                      <ArrowRight size={12} className="text-black/15 mx-1 flex-shrink-0" />
+                      <div className="flex-1 h-px bg-black/10" />
+                    </div>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {/* Step details — 3 columns */}
+            <div className="grid grid-cols-3 gap-6 text-center">
+              {[
+                {
+                  emoji: "🫖",
+                  title: "Create a Board",
+                  desc: "Pick a name and theme. Your anonymous confession page is live in seconds.",
+                },
+                {
+                  emoji: "🔗",
+                  title: "Share the Link",
+                  desc: "Post it on Instagram Stories, WhatsApp, or Snapchat. One tap.",
+                },
+                {
+                  emoji: "🔥",
+                  title: "Watch It Blow Up",
+                  desc: "Confessions pour in — text, voice, doodles, polls. All anonymous.",
+                },
+              ].map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 + 0.2, duration: 0.5 }}
+                >
+                  <span className="text-2xl block mb-3">{s.emoji}</span>
+                  <h3 className="text-base font-black serif mb-1.5">{s.title}</h3>
+                  <p className="text-[11px] text-black/30 leading-relaxed font-medium">
+                    {s.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Mobile stepper — vertical */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="md:hidden space-y-5 mb-10"
+          >
+            {[
+              {
+                n: "1",
+                emoji: "🫖",
+                title: "Create a Board",
+                desc: "Pick a name and theme. Your anonymous confession page is live in seconds.",
+              },
+              {
+                n: "2",
+                emoji: "🔗",
+                title: "Share the Link",
+                desc: "Post it on Instagram Stories, WhatsApp, or Snapchat. One tap.",
+              },
+              {
+                n: "3",
+                emoji: "🔥",
+                title: "Watch It Blow Up",
+                desc: "Confessions pour in — text, voice, doodles, polls. All anonymous.",
+              },
+            ].map((s) => (
+              <motion.div
+                key={s.n}
+                variants={fadeUp}
+                className="flex items-start gap-4"
+              >
+                <div className="w-10 h-10 rounded-full bg-white border-2 border-black/10 flex items-center justify-center text-sm font-black serif text-black/60 shadow-sm flex-shrink-0 mt-0.5">
+                  {s.n}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">{s.emoji}</span>
+                    <h3 className="text-[15px] font-black serif">{s.title}</h3>
+                  </div>
+                  <p className="text-[11px] text-black/30 leading-relaxed font-medium">
+                    {s.desc}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <Link
+              href="/create"
+              className="group inline-flex items-center gap-2 px-8 py-4 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/10"
+            >
+              <Plus size={14} />
+              <span>Create Your Board</span>
+              <ArrowRight
+                size={12}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Link>
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/15 mt-3">
+              Free · No sign-up · Takes 30 seconds
+            </p>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── WHAT'S BUZZING — Dynamic context showcase ── */}
       {contextDistribution &&
@@ -1638,7 +1867,7 @@ export default function Home() {
                 const catInfo = CATEGORY_INFO[confession.category];
                 const previewText =
                   typeof confession.text === "string" &&
-                  confession.text.trim().length > 0
+                    confession.text.trim().length > 0
                     ? confession.text
                     : "Anonymous confession";
                 return (
@@ -2436,6 +2665,120 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ══════════════════════════════════════════
+          ENGAGEMENT OVERLAYS
+         ══════════════════════════════════════════ */}
+
+      {/* ── TIMED / EXIT-INTENT ENGAGEMENT POPUP ── */}
+      <AnimatePresence>
+        {showEngagementPopup && !popupDismissed && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+              onClick={dismissPopup}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[101] w-[calc(100%-2rem)] max-w-sm"
+            >
+              <div className="bg-white rounded-[1.75rem] p-8 shadow-2xl shadow-black/20 text-center relative overflow-hidden">
+                {/* Decorative gradient */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-500 via-pink-500 to-amber-400" />
+
+                <button
+                  onClick={dismissPopup}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/5 flex items-center justify-center text-black/30 hover:text-black hover:bg-black/10 transition-all"
+                >
+                  <X size={14} />
+                </button>
+
+                <motion.div
+                  animate={{ rotate: [0, 10, -8, 0] }}
+                  transition={{ repeat: Infinity, duration: 3 }}
+                  className="text-5xl mb-4 inline-block"
+                >
+                  🫖
+                </motion.div>
+
+                <h3 className="text-xl font-black serif mb-2">
+                  Don&apos;t leave yet!
+                </h3>
+                <p className="text-[12px] text-black/40 font-medium leading-relaxed mb-6 max-w-xs mx-auto">
+                  {totalConfessions > 0
+                    ? `${totalConfessions} anonymous confessions are waiting. See what people are saying...`
+                    : "People are sharing anonymous confessions right now. Come see what they're saying..."}
+                </p>
+
+                <div className="flex flex-col gap-2.5">
+                  <Link
+                    href="/explore"
+                    onClick={dismissPopup}
+                    className="w-full py-3.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/10"
+                  >
+                    <Eye size={14} />
+                    Read Confessions
+                  </Link>
+                  <Link
+                    href="/create"
+                    onClick={dismissPopup}
+                    className="w-full py-3.5 border border-black/8 text-[10px] text-black/40 font-bold uppercase tracking-widest rounded-xl hover:text-black hover:border-black/15 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Plus size={14} />
+                    Create My Board
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Live activity toasts now handled by Sonner (see layout.tsx) */}
+
+      {/* ── STICKY BOTTOM CTA BAR (Mobile-focused) ── */}
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed bottom-0 left-0 right-0 z-[70] md:hidden"
+          >
+            <div className="bg-white/95 backdrop-blur-xl border-t border-black/5 px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center gap-2.5 max-w-lg mx-auto">
+                <Link
+                  href="/create"
+                  className="flex-1 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-md shadow-black/10"
+                >
+                  <Plus size={13} />
+                  Create Board
+                </Link>
+                <Link
+                  href="/confess"
+                  className="flex-1 py-3 border border-black/8 text-[10px] text-black/50 font-bold uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                >
+                  <Send size={13} />
+                  Confess
+                </Link>
+                <Link
+                  href="/explore"
+                  className="w-11 h-11 rounded-xl border border-black/8 flex items-center justify-center text-black/40 active:scale-95 transition-transform flex-shrink-0"
+                >
+                  <Eye size={16} />
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
