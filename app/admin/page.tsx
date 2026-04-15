@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,7 @@ import {
   Sparkles,
   BarChart3,
   Layers,
+  Bell,
 } from "lucide-react";
 
 // ─── Constants ───
@@ -37,6 +38,7 @@ const TABS = [
   { id: "reports", label: "Reports", icon: Flag },
   { id: "features", label: "Features", icon: Lightbulb },
   { id: "comments", label: "Comments", icon: MessageCircle },
+  { id: "push", label: "Broadcast", icon: Bell },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -717,6 +719,9 @@ export default function AdminDashboard() {
               )}
               {activeTab === "comments" && (
                 <CommentsTable search={searchQuery} />
+              )}
+              {activeTab === "push" && (
+                <PushBroadcastPanel />
               )}
             </div>
           </GlassPanel>
@@ -1764,5 +1769,112 @@ function TypeBadge({ type }: { type: string }) {
     >
       {type.replace("-", " ")}
     </span>
+  );
+}
+
+function PushBroadcastPanel() {
+  const [secret, setSecret] = useState("");
+  const [title, setTitle] = useState("New tea dropped ☕ ");
+  const [body, setBody] = useState("");
+  const [url, setUrl] = useState("/");
+  const [status, setStatus] = useState("");
+
+  const broadcastPushPublic = useAction(api.push.broadcastPushPublic);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("Sending...");
+    try {
+      const count = await broadcastPushPublic({ title, body, url, secret });
+      setStatus(`Success! Sent to ${count} devices.`);
+    } catch (err: any) {
+      setStatus(`Error: ${err.message}`);
+    }
+  };
+
+  return (
+    <div className="py-12 px-4 flex justify-center w-full items-center min-h-[500px]">
+      <div className="w-full max-w-lg relative z-10 p-8 rounded-3xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col gap-6">
+          <div className="flex items-center gap-4 border-b border-white/10 pb-5">
+            <div className="w-12 h-12 rounded-[18px] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <Bell size={22} className="text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                Push Broadcast
+              </h2>
+              <p className="text-xs text-white/40 font-medium tracking-wide mt-0.5">Global engagement payload</p>
+            </div>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5 focus-within:-translate-y-1 transition-transform duration-300">
+              <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest pl-1">Admin Password</label>
+              <input 
+                type="password" 
+                value={secret} 
+                onChange={e => setSecret(e.target.value)}
+                className="w-full px-4 py-3.5 bg-black/30 border border-white/5 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none focus:border-amber-500/50 focus:bg-black/50 transition-all font-mono"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div className="flex items-stretch gap-4">
+              <div className="flex flex-col gap-1.5 flex-1 focus-within:-translate-y-1 transition-transform duration-300">
+                <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest pl-1">Title</label>
+                <input 
+                  type="text" 
+                  value={title} 
+                  onChange={e => setTitle(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-black/30 border border-white/5 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500/50 focus:bg-black/50 transition-all font-semibold"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5 flex-1 focus-within:-translate-y-1 transition-transform duration-300">
+                <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest pl-1">Target URL</label>
+                <input 
+                  type="text" 
+                  value={url} 
+                  onChange={e => setUrl(e.target.value)}
+                  className="w-full px-4 py-3.5 bg-black/30 border border-white/5 rounded-xl text-sm text-white/70 focus:outline-none focus:border-amber-500/50 focus:bg-black/50 transition-all font-mono"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5 focus-within:-translate-y-1 transition-transform duration-300">
+              <label className="text-[11px] font-bold text-white/40 uppercase tracking-widest pl-1">Body / Teaser</label>
+              <textarea 
+                value={body} 
+                onChange={e => setBody(e.target.value)}
+                placeholder="I dated a guy in our class and..."
+                className="w-full px-4 py-4 bg-black/30 border border-white/5 rounded-xl text-sm text-white leading-relaxed placeholder-white/20 focus:outline-none focus:border-amber-500/50 focus:bg-black/50 transition-all min-h-[120px] resize-y"
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit"
+              className="mt-2 w-full py-4 rounded-xl border-none bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[12px] font-bold uppercase tracking-widest shadow-[0_4px_16px_rgba(245,158,11,0.3)] hover:shadow-[0_8px_24px_rgba(245,158,11,0.5)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              Blast to All Subscribers
+            </button>
+          </form>
+
+          {status && (
+            <div className={`mt-2 p-4 border rounded-xl text-center text-sm font-medium backdrop-blur-md transition-all ${status.startsWith("Error:") ? "bg-red-500/10 border-red-500/20 text-red-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"}`}>
+              {status}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

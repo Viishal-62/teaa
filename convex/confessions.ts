@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { generateAnonName } from "./helpers";
 import { moderateText } from "./moderation";
 
@@ -199,6 +200,30 @@ export const create = mutation({
       contextId: args.contextId,
       createdAt: Date.now(),
     });
+
+    if (board) {
+      const defaultText = confessionType === "voice" ? "Someone dropped a voice note 🎤" : "Someone dropped a doodle 🎨";
+      const bodyText = confessionType === "text" && args.text 
+        ? (args.text.length > 40 ? args.text.substring(0, 40) + "..." : args.text) 
+        : defaultText;
+
+      // Notify the board creator specifically
+      if (board.creatorToken) {
+        await ctx.scheduler.runAfter(0, internal.push.sendPushToCreator, {
+          creatorToken: board.creatorToken,
+          title: `🔥 New on ${board.name}`,
+          body: bodyText,
+          url: `/b/${board.slug}`
+        });
+      }
+
+      // Broadcast to all global subscribers
+      await ctx.scheduler.runAfter(0, internal.push.broadcastPush, {
+        title: "New tea dropped ☕",
+        body: bodyText,
+        url: `/b/${board.slug}`
+      });
+    }
 
     return { confessionId, displayName };
   },

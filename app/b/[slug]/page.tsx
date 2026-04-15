@@ -36,6 +36,7 @@ import SummaryCard from "@/app/components/SummaryCard";
 import DeepSpillCard from "@/app/components/DeepSpillCard";
 import MoodRing from "@/app/components/MoodRing";
 import PollCard from "@/app/components/PollCard";
+import PushSubscribeButton from "@/app/components/PushSubscribeButton";
 import { motion, AnimatePresence } from "framer-motion";
 
 const ADMIRER_CATEGORIES = [
@@ -670,6 +671,9 @@ export default function BoardViewPage() {
           )}
         </div>
       </header>
+
+      {/* Push Notification Banner */}
+      <PushSubscribeButton variant="floating" />
 
       {/* Shimmer animation */}
       <style>{`

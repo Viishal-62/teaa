@@ -9,4 +9,10 @@ crons.interval(
   internal.confessions.cleanupExpired,
 );
 
+crons.interval(
+  "global engagement hook",
+  { hours: 1 },
+  internal.push.sendGlobalHook,
+);
+
 export default crons;

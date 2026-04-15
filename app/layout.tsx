@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
-import NotificationCenter from "./components/NotificationCenter";
 import { Analytics } from "@vercel/analytics/next";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "sonner";
+import { PushNotificationManager } from "./components/PushNotificationManager";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.teaadrop.xyz"),
@@ -117,7 +117,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ConvexClientProvider>
           {children}
-          <NotificationCenter />
+          <PushNotificationManager />
           <BottomNav />
         </ConvexClientProvider>
         <Toaster
