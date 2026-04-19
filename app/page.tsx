@@ -9,6 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import {
   ArrowRight,
+  Compass,
   Plus,
   Mic,
   Headphones,
@@ -39,24 +40,31 @@ import DeepSpillCard from "@/app/components/DeepSpillCard";
 import { useEffect, useState, useRef } from "react";
 import {
   motion,
-  useScroll,
-  useTransform,
-  useMotionValue,
-  useSpring as useFMSpring,
   AnimatePresence,
 } from "framer-motion";
-import { useSpring, animated } from "@react-spring/web";
 import { THEMES } from "@/convex/helpers";
 import { useRouter } from "next/navigation";
 
-/* ── Animated number ── */
+/* ── Lightweight animated number (no react-spring) ── */
 function AnimNum({ value }: { value: number }) {
-  const sp = useSpring({
-    val: value,
-    from: { val: 0 },
-    config: { tension: 40, friction: 20 },
-  });
-  return <animated.span>{sp.val.to((v) => Math.floor(v))}</animated.span>;
+  const [display, setDisplay] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (value === 0) return;
+    let start = 0;
+    const duration = 1200;
+    const startTime = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.floor(eased * value));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [value]);
+  return <span ref={ref}>{display}</span>;
 }
 
 /* ── Variants ── */
@@ -105,20 +113,19 @@ export default function Home() {
   );
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [quickText, setQuickText] = useState("");
-  const [heroReady, setHeroReady] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setHeroReady(true), 50);
-    return () => clearTimeout(t);
-  }, []);
 
-  /* ── Engagement: Popup, Toasts, Sticky Bar ── */
+
+  /* ── Engagement: Popup, Toasts ── */
   const [showEngagementPopup, setShowEngagementPopup] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
-  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  const isDesktopViewport = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 768px)").matches;
 
   // Timed engagement popup — show after 6s on first visit
   useEffect(() => {
+    if (!isDesktopViewport()) return;
     if (popupDismissed) return;
     const seen = sessionStorage.getItem("teaaa_popup_seen");
     if (seen) { setPopupDismissed(true); return; }
@@ -132,6 +139,7 @@ export default function Home() {
 
   // Exit-intent detection (desktop only)
   useEffect(() => {
+    if (!isDesktopViewport()) return;
     if (popupDismissed) return;
     const handler = (e: MouseEvent) => {
       if (e.clientY <= 5 && !popupDismissed) {
@@ -147,6 +155,17 @@ export default function Home() {
     setPopupDismissed(true);
     sessionStorage.setItem("teaaa_popup_seen", "1");
   };
+
+  // Prevent background scroll while mobile drawers/popups are open
+  useEffect(() => {
+    const isDesktopPopupActive = showEngagementPopup && isDesktopViewport();
+    if (!isMobileMenuOpen && !isDesktopPopupActive) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobileMenuOpen, showEngagementPopup]);
 
   // Live activity toasts — continuously cycle through varied social proof
   useEffect(() => {
@@ -227,42 +246,352 @@ export default function Home() {
     return () => { clearTimeout(initialDelay); clearInterval(interval); };
   }, [globalFeed, voiceFeed, contextDistribution, router]);
 
-  // Sticky bottom CTA bar — show after scrolling past hero
-  useEffect(() => {
-    const handler = () => {
-      setShowStickyBar(window.scrollY > window.innerHeight * 0.8);
-    };
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
-  }, []);
 
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   const totalConfessions = (globalFeed?.length ?? 0) + (voiceFeed?.length ?? 0);
   const textConfessions =
     globalFeed?.filter((c: any) => c.type !== "voice") ?? [];
-
-  /* Cursor glow on hero */
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const smoothX = useFMSpring(mouseX, { stiffness: 150, damping: 20 });
-  const smoothY = useFMSpring(mouseY, { stiffness: 150, damping: 20 });
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    mouseX.set(e.clientX - rect.left);
-    mouseY.set(e.clientY - rect.top);
-  };
+  const mobileConfessions = textConfessions.slice(0, 5);
+  const mobileBoards = (publicBoards ?? []).slice(0, 8);
+  const mobileSpills = (recentSpills ?? []).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-black font-sans selection:bg-accent/10 overflow-x-hidden">
+    <>
+      <div className="md:hidden min-h-screen pb-28 text-black relative bg-[#f8f9fc] overflow-hidden">
+        {/* Background Blur Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[40%] rounded-full bg-rose-200/40 blur-[80px] pointer-events-none mix-blend-multiply" />
+        <div className="absolute top-[20%] right-[-20%] w-[70%] h-[50%] rounded-full bg-blue-200/40 blur-[100px] pointer-events-none mix-blend-multiply" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[60%] h-[40%] rounded-full bg-amber-100/40 blur-[80px] pointer-events-none mix-blend-multiply" />
+
+        <header className="sticky top-0 z-40 px-5 pt-5 pb-4 bg-white/50 backdrop-blur-2xl border-b border-black/[0.03]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-black/40">
+                Unfiltered & Anonymous
+              </p>
+              <h1 className="text-[24px] font-black serif tracking-tight leading-tight">
+                Spill Your Truth
+              </h1>
+            </div>
+            <PwaInstallButton compact />
+          </div>
+          <div className="mt-4 flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 mask-linear-right">
+            <Link
+              href="/explore"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Compass size={14} className="text-blue-500" />
+              Explore
+            </Link>
+            <Link
+              href="/explore/voice"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Mic size={14} className="text-rose-500" />
+              Voice
+            </Link>
+            <Link
+              href="/boards"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Users size={14} className="text-amber-500" />
+              Boards
+            </Link>
+          </div>
+        </header>
+
+        <main className="px-5 pt-5 pb-10 space-y-6 relative z-10">
+          {/* Live Activity Hero - Premium Glossy Card */}
+          <section className="relative overflow-hidden rounded-[32px] bg-[#0a0a0a] text-white p-6 shadow-[0_20px_40px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#2a2a2a,transparent_70%)] opacity-60" />
+            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-rose-500/20 blur-[50px] pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-blue-500/20 blur-[50px] pointer-events-none" />
+            
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+                  Live activity
+                </p>
+              </div>
+              <h2 className="text-[36px] mt-1 leading-none font-black serif tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent drop-shadow-sm">
+                {totalConfessions > 0 ? totalConfessions : "0"}
+              </h2>
+              <p className="mt-1.5 text-[13px] text-white/50 font-medium tracking-wide">drops in the feed right now</p>
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Text</p>
+                  <p className="text-lg font-black leading-none">{textConfessions.length}</p>
+                </div>
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Voice</p>
+                  <p className="text-lg font-black leading-none">{voiceFeed?.length ?? 0}</p>
+                </div>
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Boards</p>
+                  <p className="text-lg font-black leading-none">{publicBoards?.length ?? 0}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Quick Confess Form - Frosted Glass */}
+          <section className="relative rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-black/5 flex items-center justify-center">
+                    <Zap size={12} className="text-amber-500" />
+                  </div>
+                  <p className="text-[13px] font-black tracking-wide text-black/80">Drop a Secret</p>
+                </div>
+                <Link href="/confess" className="text-[11px] text-black/40 font-bold hover:text-black transition-colors uppercase tracking-wider">
+                  Write more
+                </Link>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const text = (formData.get("quickText") as string) || "";
+                  if (text.trim()) {
+                    router.push(`/confess?text=${encodeURIComponent(text.trim())}`);
+                  } else {
+                    router.push("/confess");
+                  }
+                }}
+                className="flex items-center gap-2.5"
+              >
+                <input
+                  name="quickText"
+                  placeholder="Drop it here..."
+                  className="flex-1 h-12 rounded-[16px] border border-white/50 bg-white/50 px-4 text-[14px] font-medium placeholder:text-black/30 outline-none focus:border-black/20 focus:bg-white transition-all shadow-inner"
+                />
+                <button
+                  type="submit"
+                  className="h-12 w-12 rounded-[16px] bg-[#111] text-white flex items-center justify-center active:scale-95 transition-transform shadow-[0_4px_14px_rgba(0,0,0,0.15)] group"
+                  aria-label="Send confession draft"
+                >
+                  <Send size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* Action Grid - Meshed gradients & micro-animations */}
+          <section className="grid grid-cols-2 gap-3.5">
+            <Link href="/confess" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-rose-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <MessageCircle size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Write</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Drop text instantly</p>
+            </Link>
+
+            <Link href="/explore/voice" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-sky-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-sky-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <Mic size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Voice</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Listen & speak</p>
+            </Link>
+
+            <Link href="/create" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-violet-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-violet-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <Plus size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Create</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Start your board</p>
+            </Link>
+
+            <Link href="/b/global/spill" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-amber-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <BookOpen size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Spills</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Read long stories</p>
+            </Link>
+          </section>
+
+          {/* Fresh Drops - Glassmorphism cards */}
+          <section>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                Fresh Drops <span className="text-lg">💧</span>
+              </h3>
+              <Link href="/explore" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                View all
+                <ArrowRight size={12} />
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {mobileConfessions.length === 0 ? (
+                <div className="p-6 text-center rounded-[24px] bg-white/40 backdrop-blur-md border border-white/60">
+                   <p className="text-[13px] font-medium text-black/40">Loading confessions...</p>
+                </div>
+              ) : (
+                mobileConfessions.map((item: any, i: number) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Link
+                      href={item?.boardSlug ? `/b/${item.boardSlug}/c/${item._id}` : "/explore"}
+                      className="group block rounded-[24px] bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_20px_rgba(0,0,0,0.03)] p-4 active:scale-[0.99] transition-all relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative z-10">
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                          <span
+                            className="inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-white shadow-sm"
+                            style={{
+                              background: CATEGORY_INFO[item?.category as keyof typeof CATEGORY_INFO]?.color ?? "#6b7280",
+                            }}
+                          >
+                            {CATEGORY_INFO[item?.category as keyof typeof CATEGORY_INFO]?.label ?? item?.category ?? "Confession"}
+                          </span>
+                          <span className="text-[10px] font-bold text-black/30 bg-black/5 px-2 py-0.5 rounded-md">{timeAgo(item._creationTime)}</span>
+                        </div>
+                        <p className="text-[15px] leading-[1.4] text-black/90 font-medium line-clamp-3 serif">
+                          {item.text || "Untitled confession"}
+                        </p>
+                        <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-[11px] font-semibold text-black/40">
+                          <span className="max-w-[70%] truncate group-hover:text-black/60 transition-colors">
+                            {item?.boardSlug ? `/${item.boardSlug}` : "Global Feed"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-black/5 group-hover:bg-black/10 px-2 py-1 rounded-md transition-colors text-black/60">
+                            <Eye size={12} />
+                            Read
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Popular Boards - Squircle shape Carousel */}
+          <section className="relative -mx-5 px-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                Popular Boards <span className="text-lg">🔥</span>
+              </h3>
+              <Link href="/boards" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                Browse
+              </Link>
+            </div>
+            {/* The right mask for smoothly dying off scroll */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8f9fc] to-transparent z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#f8f9fc] to-transparent z-10 pointer-events-none" />
+            
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4 -mb-4 snap-x snap-mandatory pr-6 pl-5 -ml-5">
+              {mobileBoards.map((board: any, i: number) => {
+                const colors = [
+                  "from-amber-100/80 to-amber-50/20",
+                  "from-sky-100/80 to-sky-50/20",
+                  "from-rose-100/80 to-rose-50/20",
+                  "from-emerald-100/80 to-emerald-50/20",
+                  "from-violet-100/80 to-violet-50/20"
+                ];
+                const gradient = colors[i % colors.length];
+
+                return (
+                  <Link
+                    key={board._id}
+                    href={board?.slug ? `/b/${board.slug}` : "/boards"}
+                    className={`shrink-0 snap-start w-[240px] rounded-[32px] bg-gradient-to-br ${gradient} bg-white/40 backdrop-blur-xl border border-white shadow-[0_8px_24px_rgba(0,0,0,0.04)] p-5 active:scale-[0.98] transition-transform relative overflow-hidden`}
+                  >
+                    <div className="absolute top-0 right-0 w-full h-full bg-[linear-gradient(135deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0)_100%)] pointer-events-none" />
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center shadow-sm">
+                           <span className="text-[14px]">🫖</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-black/50 bg-white/60 backdrop-blur-md px-2 py-1 rounded-lg">
+                          {(board?.totalConfessions ?? board?.count ?? 0)} drops
+                        </span>
+                      </div>
+                      <p className="text-[16px] font-black truncate text-black/90 mb-1">{board.name}</p>
+                      <p className="text-[12px] font-medium text-black/50 line-clamp-2 leading-snug mb-4 flex-1">
+                        {board.tagline || "Discover this anonymous space"}
+                      </p>
+                      <div className="inline-flex items-center justify-center bg-white/90 backdrop-blur-md text-[11px] font-bold text-black/80 px-3 py-1.5 rounded-xl truncate w-full shadow-sm">
+                        {board?.slug ? `b/${board.slug}` : "Open space"}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Top Spills - Editorial Layout */}
+          {mobileSpills.length > 0 && (
+            <section className="pt-2">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                  Top Spills <span className="text-lg">📖</span>
+                </h3>
+                <Link href="/b/global/spill" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                  Read More
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {mobileSpills.map((spill: any) => (
+                  <Link
+                    key={spill._id}
+                    href={`/b/${spill.boardSlug || "global"}/s/${spill._id}`}
+                    className="group block rounded-[28px] bg-white border border-white shadow-[0_12px_40px_rgba(0,0,0,0.06)] overflow-hidden active:scale-[0.99] transition-transform"
+                  >
+                    <div className="p-5">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-100/50">
+                          Editor's Pick
+                        </span>
+                        <span className="text-[10px] font-bold text-black/30 flex items-center gap-1">
+                          <Eye size={10} />
+                          {spill?.views ?? 0}
+                        </span>
+                      </div>
+                      <h4 className="text-[18px] font-black serif leading-[1.2] mb-2 group-hover:text-amber-700 transition-colors">
+                        {spill.title}
+                      </h4>
+                      <p className="text-[13px] font-medium text-black/50 leading-relaxed line-clamp-3 relative">
+                        {spill.content || "Read the full spill directly inside..."}
+                        {/* Fade out text effect */}
+                        <span className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent" />
+                      </p>
+                    </div>
+                    <div className="bg-[#fafafa] px-5 py-3 border-t border-black/5 flex items-center justify-between">
+                       <span className="text-[11px] font-bold text-black/40 uppercase tracking-wide truncate max-w-[60%]">
+                        By {spill?.displayName || "Anonymous"}
+                      </span>
+                      <span className="text-[11px] font-bold text-black/70 flex items-center gap-1 bg-white border border-black/5 px-2 py-0.5 rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                        <Flame size={12} className="text-orange-500" />
+                        {spill?.totalReactions ?? 0}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+
+      <div className="hidden md:block min-h-screen bg-[#faf8f5] text-black font-sans selection:bg-accent/10 overflow-x-hidden">
       {/* ── NAV ── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
@@ -302,7 +631,7 @@ export default function Home() {
               href="#how-to-use"
               className="text-[10px] font-bold uppercase tracking-widest text-black/30 hover:text-black transition-colors flex items-center gap-1.5"
             >
-              How to use 
+              How to use
               <span className="px-1.5 py-[2px] bg-accent/10 border border-accent/20 text-accent text-[8px] font-black rounded-md tracking-wider">NEW</span>
             </Link>
             <Link
@@ -409,8 +738,6 @@ export default function Home() {
           HERO — Ultra Premium section
          ══════════════════════════════════════════ */}
       <section
-        ref={heroRef}
-        onMouseMove={handleMouseMove}
         className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 pb-16 overflow-hidden bg-[#faf8f5]"
       >
         {/* Subtle noise/grid overlay */}
@@ -423,168 +750,156 @@ export default function Home() {
         ></div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_40%,#000_20%,transparent_100%)] pointer-events-none hidden sm:block" />
 
-        {/* ── Mesh gradient background ── */}
+        {/* ── Mesh gradient background — CSS animated (GPU composited) ── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 hidden sm:block">
-          <motion.div
-            animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
-            transition={{ repeat: Infinity, duration: 25, ease: "easeInOut" }}
-            className="absolute -top-[10%] -left-[10%] w-[800px] h-[800px] rounded-full blur-[140px] opacity-40 mix-blend-multiply"
+          <div
+            className="mesh-blob-1 absolute -top-[10%] -left-[10%] w-[800px] h-[800px] rounded-full blur-[140px] opacity-40 mix-blend-multiply"
             style={{
               background: "radial-gradient(circle, #fca5a5, transparent 60%)",
             }}
           />
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], x: [0, -20, 0] }}
-            transition={{ repeat: Infinity, duration: 30, ease: "easeInOut" }}
-            className="absolute top-[20%] left-[30%] w-[700px] h-[700px] rounded-full blur-[180px] opacity-30 mix-blend-multiply"
+          <div
+            className="mesh-blob-2 absolute top-[20%] left-[30%] w-[700px] h-[700px] rounded-full blur-[180px] opacity-30 mix-blend-multiply"
             style={{
               background: "radial-gradient(circle, #fde047, transparent 70%)",
             }}
           />
-          <motion.div
-            animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
-            transition={{ repeat: Infinity, duration: 28, ease: "easeInOut" }}
-            className="absolute -bottom-[20%] -right-[10%] w-[900px] h-[900px] rounded-full blur-[160px] opacity-40 mix-blend-multiply"
+          <div
+            className="mesh-blob-3 absolute -bottom-[20%] -right-[10%] w-[900px] h-[900px] rounded-full blur-[160px] opacity-40 mix-blend-multiply"
             style={{
               background: "radial-gradient(circle, #c4b5fd, transparent 70%)",
             }}
           />
         </div>
 
-        {/* Cursor interactive glow */}
-        <motion.div
-          className="absolute z-0 pointer-events-none w-[500px] h-[500px] rounded-full mix-blend-screen opacity-[0.15] hidden md:block"
-          style={{
-            background: "radial-gradient(circle, #ff0080, transparent 60%)",
-            x: smoothX,
-            y: smoothY,
-            translateX: "-50%",
-            translateY: "-50%",
-          }}
-        />
-
-        {/* ── Floating glass confession previews (Desktop) ── */}
-        <div className="absolute inset-0 pointer-events-none z-[1] hidden lg:block perspective-[1000px]">
+        {/* ── Floating confession previews (Desktop) — Exact flip card back face ── */}
+        <div className="absolute inset-0 pointer-events-none z-[1] hidden lg:block">
           {[
             {
               item: textConfessions[0] || {
                 text: "I accidentally sent the screenshot to the group chat instead of my best friend.",
                 category: "Regret",
                 _creationTime: Date.now(),
+                views: 42,
               },
-              className:
-                "absolute top-[20%] left-[8%] 2xl:left-[15%] w-[250px]",
-              anim: { y: [0, -15, 0], rotateZ: [0, 2, 0] },
-              delay: 1.2,
-              bgGrad: "from-pink-400 to-rose-400",
-              avatar: "A",
-              rotateX: 10,
-              rotateY: -10,
+              posClass: "absolute top-[15%] left-[5%] 2xl:left-[12%] w-[220px]",
+              enterClass: "card-enter-1",
+              floatClass: "float-card-1",
+              fakeReactions: ["\u2764\ufe0f", "\ud83d\udd25", "\ud83d\ude02"],
+              fakeFelt: 18,
             },
             {
               item: textConfessions[1] || {
-                text: "I know you're dating someone else, but I still wait for your text.",
+                text: "I know you're dating someone else, but I still wait for your text every night.",
                 category: "Longing",
                 _creationTime: Date.now() - 300000,
+                views: 67,
               },
-              className:
-                "absolute top-[40%] right-[6%] 2xl:right-[12%] w-[240px]",
-              anim: { y: [0, 20, 0], rotateZ: [0, -2, 0] },
-              delay: 1.5,
-              bgGrad: "from-indigo-400 to-violet-400",
-              avatar: "J",
-              rotateX: 10,
-              rotateY: 10,
+              posClass: "absolute top-[30%] right-[4%] 2xl:right-[9%] w-[220px]",
+              enterClass: "card-enter-2",
+              floatClass: "float-card-2",
+              fakeReactions: ["\ud83d\udc9b", "\ud83e\udee3", "\ud83d\udd25"],
+              fakeFelt: 34,
             },
             {
               item: textConfessions[2] || {
                 text: "Everyone thinks I have it together, but I'm just guessing my way through life.",
                 category: "Fear",
                 _creationTime: Date.now() - 3600000,
+                views: 31,
               },
-              className:
-                "absolute bottom-[10%] left-[12%] 2xl:left-[20%] w-[230px]",
-              anim: { y: [0, -10, 0], rotateZ: [0, -1, 0] },
-              delay: 1.8,
-              bgGrad: "from-emerald-400 to-teal-400",
-              avatar: "S",
-              rotateX: 15,
-              rotateY: -5,
+              posClass: "absolute bottom-[8%] left-[8%] 2xl:left-[16%] w-[210px]",
+              enterClass: "card-enter-3",
+              floatClass: "float-card-3",
+              fakeReactions: ["\u2764\ufe0f", "\ud83d\ude22", "\ud83e\udec2"],
+              fakeFelt: 12,
             },
           ].map((card, i) => {
             const catInfo = CATEGORY_INFO[
               card.item.category as keyof typeof CATEGORY_INFO
             ] || {
-              emoji: "💭",
+              emoji: "\ud83d\udcad",
               label: card.item.category || "Confession",
               color: "#cbd5e1",
             };
-            const cardText = card.item.text || (card.item as any).body || ""; // fallback safely if property shape differs
+            const cardText = card.item.text || (card.item as any).body || "";
+            const views = (card.item as any).views || 30;
 
             return (
-              <motion.div
+              <div
                 key={i}
-                initial={{
-                  opacity: 0,
-                  y: 50,
-                  rotateX: card.rotateX,
-                  rotateY: card.rotateY,
-                }}
-                animate={
-                  heroReady ? { opacity: 1, y: 0, rotateX: 0, rotateY: 0 } : {}
-                }
-                transition={{
-                  delay: card.delay,
-                  duration: 1.2,
-                  type: "spring",
-                  stiffness: 50,
-                }}
-                className={card.className}
+                className={`${card.posClass} ${card.enterClass}`}
               >
-                <motion.div
-                  animate={card.anim}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 7 + i,
-                    ease: "easeInOut",
-                  }}
-                  className="bg-white/50 backdrop-blur-3xl border border-white/80 rounded-[2rem] p-5 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.08),0_0_0_1px_rgba(255,255,255,0.5)_inset]"
+                <div
+                  className={`${card.floatClass} relative rounded-2xl overflow-hidden`}
+                  style={{ boxShadow: "0 12px 40px rgba(0,0,0,0.08)" }}
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div
-                      className={`w-8 h-8 rounded-full bg-gradient-to-tr ${card.bgGrad} shadow-[inset_0_2px_4px_rgba(255,255,255,0.5)] flex items-center justify-center text-white text-[10px] font-bold`}
-                    >
-                      {card.avatar}
+                  {/* Cream paper background */}
+                  <div className="absolute inset-0 bg-[#faf7f2] rounded-2xl" />
+                  {/* Dashed border inset frame */}
+                  <div className="absolute inset-[5px] border border-dashed border-black/10 rounded-xl pointer-events-none" />
+
+                  <div className="relative flex flex-col items-center p-4 pt-5" style={{ aspectRatio: "3/4" }}>
+                    {/* Category pill badge */}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 mb-auto">
+                      <span
+                        className="text-[8px] font-extrabold uppercase tracking-[0.15em] px-2.5 py-1 rounded-md"
+                        style={{
+                          color: catInfo.color,
+                          background: `${catInfo.color}15`,
+                        }}
+                      >
+                        {catInfo.label}
+                      </span>
                     </div>
-                    <div>
-                      <div className="text-[11px] font-black uppercase tracking-widest text-black/70">
-                        Anonymous
-                      </div>
-                      <div className="text-[9px] text-black/40 font-bold uppercase tracking-wider">
-                        {timeAgo(card.item._creationTime)}
-                      </div>
+
+                    {/* Confession text — large centered serif */}
+                    <div className="flex-1 flex items-center justify-center w-full px-1 my-2">
+                      <p className="serif text-[13px] leading-[1.55] text-[#2a2a2a] text-center">
+                        {cardText.length > 65
+                          ? cardText.slice(0, 65) + "..."
+                          : cardText}
+                      </p>
                     </div>
+
+                    {/* Stats: views + felt by */}
+                    <div className="flex items-center justify-center gap-2 text-[8px] text-black/25 font-medium uppercase tracking-wider mb-2">
+                      <span className="flex items-center gap-1">
+                        <Eye size={8} className="opacity-60" /> {views}
+                      </span>
+                      <span className="w-0.5 h-0.5 rounded-full bg-black/15" />
+                      <span>Felt by {card.fakeFelt}</span>
+                    </div>
+
+                    {/* Reaction emoji row */}
+                    <div className="flex items-center justify-center gap-1.5 mb-2">
+                      {card.fakeReactions.map((emoji, ri) => (
+                        <span
+                          key={ri}
+                          className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-[#faf8f5]"
+                        >
+                          <span>{emoji}</span>
+                          <span className="text-[8px] text-black/40 font-bold">{ri + 2}</span>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* View thread link */}
+
                   </div>
-                  <p className="text-[13px] text-black/70 leading-relaxed font-semibold mb-4">
-                    {cardText.length > 80
-                      ? cardText.slice(0, 80) + "..."
-                      : cardText}
-                  </p>
-                  <div
-                    className="inline-flex px-2.5 py-1.5 rounded-lg bg-black/[0.04] border border-black/[0.02] text-[9px] font-black uppercase tracking-widest"
-                    style={{ color: catInfo.color }}
-                  >
-                    {catInfo.emoji} {catInfo.label}
+
+                  {/* Close X — top right */}
+                  <div className="absolute top-2.5 right-2.5 w-5 h-5 rounded-full bg-black/5 flex items-center justify-center text-[8px] text-black/25">
+                    &#x2715;
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+              </div>
             );
           })}
         </div>
 
-        {/* ── Main content ── */}
-        <motion.div
-          style={{ y: heroY, scale: heroScale, opacity: heroOpacity }}
+        {/* ── Main content — CSS entrance animations (no JS gating) ── */}
+        <div
           className="relative z-10 text-center max-w-4xl mx-auto"
         >
           {/* ── Top Trending Badge ── */}
@@ -592,11 +907,8 @@ export default function Home() {
             (contextDistribution.cities.length > 0 ||
               contextDistribution.professions.length > 0 ||
               contextDistribution.contexts.length > 0) && (
-              <motion.div
-                initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                animate={heroReady ? { opacity: 1, y: 0, scale: 1 } : {}}
-                transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
-                className="flex justify-center mb-8"
+              <div
+                className="flex justify-center mb-8 hero-badge"
               >
                 <div className="p-[1px] rounded-full bg-gradient-to-r from-rose-400 via-fuchsia-500 to-indigo-500 shadow-sm inline-block select-none max-w-[calc(100vw-2rem)]">
                   <div className="bg-[#faf8f5] rounded-full px-3 sm:px-4 py-1.5 flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar">
@@ -640,65 +952,46 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
 
           {/* Epic Typography Setup */}
           <div className="flex flex-col items-center justify-center mb-6 leading-[0.9]">
-            <motion.h1
-              initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-              animate={
-                heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
-              }
-              transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[2.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-black text-black tracking-tighter"
+            <h1
+              className="hero-title-1 text-[2.5rem] sm:text-[5rem] md:text-[6.5rem] lg:text-[7.5rem] font-black text-black tracking-tighter"
             >
               Unfiltered.
-            </motion.h1>
+            </h1>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-              animate={
-                heroReady ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}
-              }
-              transition={{ delay: 0.35, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="text-[1.75rem] sm:text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-serif italic tracking-tight relative -mt-1 sm:-mt-5 lg:-mt-6 z-10"
+            <h1
+              className="hero-title-2 text-[1.75rem] sm:text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-serif italic tracking-tight relative -mt-1 sm:-mt-5 lg:-mt-6 z-10"
             >
               <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm px-1 sm:px-4">
                 Raw. Anonymous.
               </span>
-            </motion.h1>
+            </h1>
           </div>
 
           {/* SEO Tagline */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={heroReady ? { opacity: 1 } : {}}
-            transition={{ delay: 0.45, duration: 0.6 }}
-            className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-black/15 mb-5 text-center"
+          <p
+            className="hero-seo text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.25em] text-black/15 mb-5 text-center"
           >
             Anonymous Message Link Generator – Send Secret Messages Online
-          </motion.p>
+          </p>
 
           {/* Refined Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={heroReady ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-            className="text-[14px] sm:text-base md:text-lg text-black/50 max-w-xl mx-auto mb-10 font-medium leading-[1.6] text-balance px-4"
+          <p
+            className="hero-subtitle text-[14px] sm:text-base md:text-lg text-black/50 max-w-xl mx-auto mb-10 font-medium leading-[1.6] text-balance px-4"
           >
             The anonymous platform where you write, speak, doodle, or spill your
             deepest truth — no sign-up needed. Trusted by thousands.
-          </motion.p>
+          </p>
 
           {/* Advanced CTAs */}
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            animate={heroReady ? "show" : "hidden"}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
+          <div
+            className="hero-ctas flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           >
-            <motion.div variants={fadeUp}>
+            <div>
               <Link
                 href="/create"
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#0f0f0f] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:scale-[1.02] active:scale-95 transition-all shadow-[0_16px_40px_-12px_rgba(0,0,0,0.4)] overflow-hidden"
@@ -707,9 +1000,9 @@ export default function Home() {
                 <Plus size={14} className="text-white/70" />
                 <span>Create Board</span>
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp}>
+            <div>
               <Link
                 href="/explore"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-xl border border-black/5 hover:border-black/10 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-white active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.05)]"
@@ -717,9 +1010,9 @@ export default function Home() {
                 <span className="text-[14px] leading-none">🫖</span>
                 <span>Explore Feed</span>
               </Link>
-            </motion.div>
+            </div>
 
-            <motion.div variants={fadeUp}>
+            <div>
               <Link
                 href="/explore/voice"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/50 backdrop-blur-xl border border-black/5 hover:border-black/10 text-black text-[10px] font-black uppercase tracking-[0.2em] rounded-full hover:bg-white active:scale-95 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.05)]"
@@ -727,70 +1020,69 @@ export default function Home() {
                 <Mic size={14} className="text-black/70" />
                 <span>Voice Confess</span>
               </Link>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
-          {/* ── Quick Confess Widget ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={heroReady ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="mt-10 w-full max-w-md mx-auto"
+          {/* ── Quick Confess ── */}
+          {/* Desktop: inline input widget */}
+          <div
+            className="hero-quick-confess mt-10 w-full max-w-lg mx-auto hidden sm:block"
           >
-            <div className="bg-white/60 backdrop-blur-2xl border border-white/80 rounded-2xl p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-sm">💭</span>
-                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/30">
-                  Quick anonymous confess
-                </span>
-              </div>
-              <div className="flex gap-2">
+            <div className="bg-white/70 backdrop-blur-2xl border border-white/60 rounded-2xl p-3 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-shadow duration-500">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const text = (formData.get("quickText") as string) || "";
+                  if (text.trim()) {
+                    router.push(`/confess?text=${encodeURIComponent(text.trim())}`);
+                  } else {
+                    router.push("/confess");
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <div className="w-9 h-9 rounded-xl bg-black/[0.03] flex items-center justify-center flex-shrink-0">
+                  <span className="text-base">💭</span>
+                </div>
                 <input
                   type="text"
-                  value={quickText}
-                  onChange={(e) => setQuickText(e.target.value)}
-                  placeholder="What's on your mind..."
-                  className="flex-1 bg-black/[0.03] border border-black/5 rounded-xl px-4 py-3 text-sm font-medium text-black/70 placeholder:text-black/20 outline-none focus:border-black/15 transition-colors serif"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && quickText.trim()) {
-                      router.push(
-                        `/confess?text=${encodeURIComponent(quickText.trim())}`,
-                      );
-                    }
-                  }}
+                  name="quickText"
+                  placeholder="What's your secret? Drop it anonymously..."
+                  className="flex-1 bg-transparent py-2.5 px-2 text-sm font-medium text-black/70 placeholder:text-black/25 outline-none serif"
                 />
                 <button
-                  onClick={() => {
-                    if (quickText.trim()) {
-                      router.push(
-                        `/confess?text=${encodeURIComponent(quickText.trim())}`,
-                      );
-                    }
-                  }}
-                  className="relative flex-shrink-0 group"
+                  type="submit"
+                  className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-md shadow-black/10"
                 >
-                  <div className="absolute -inset-[2px] rounded-[14px] animate-gradient-border opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center gap-1.5 px-5 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl">
-                    <Send
-                      size={13}
-                      className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                    />
-                    Spill It
-                  </div>
+                  <Send
+                    size={12}
+                    className="group-hover:translate-x-0.5 transition-transform"
+                  />
+                  Spill
                 </button>
-              </div>
+              </form>
             </div>
-          </motion.div>
+          </div>
 
-        </motion.div>
+          {/* Mobile: clean CTA link (no cramped input — BottomNav handles quick confess) */}
+          <div className="hero-quick-confess mt-8 sm:hidden">
+            <Link
+              href="/confess"
+              className="group inline-flex items-center gap-2 text-[11px] font-bold text-black/30 hover:text-black/60 transition-colors"
+            >
+              <span>💭</span>
+              <span>or just confess anonymously →</span>
+            </Link>
+          </div>
+
+        </div>
       </section>
 
-      {/* ── MOOD MARQUEE (Enhanced with live context) ── */}
+      {/* ── MOOD MARQUEE — CSS animated (no framer-motion) ── */}
       <div className="py-6 overflow-hidden border-y border-black/[0.04] bg-white/50">
-        <motion.div
-          animate={{ x: ["0%", "-50%"] }}
-          transition={{ repeat: Infinity, duration: 35, ease: "linear" }}
-          className="flex gap-6 whitespace-nowrap"
+        <div
+          className="animate-css-marquee flex gap-6 whitespace-nowrap"
         >
           {(() => {
             const dynamicItems: Array<{
@@ -843,7 +1135,7 @@ export default function Home() {
               </div>
             ));
           })()}
-        </motion.div>
+        </div>
       </div>
 
       {/* ── STATS ── */}
@@ -2811,43 +3103,10 @@ export default function Home() {
 
       {/* Live activity toasts now handled by Sonner (see layout.tsx) */}
 
-      {/* ── STICKY BOTTOM CTA BAR (Mobile-focused) ── */}
-      <AnimatePresence>
-        {showStickyBar && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-[70] md:hidden"
-          >
-            <div className="bg-white/95 backdrop-blur-xl border-t border-black/5 px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
-              <div className="flex items-center gap-2.5 max-w-lg mx-auto">
-                <Link
-                  href="/create"
-                  className="flex-1 py-3 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-md shadow-black/10"
-                >
-                  <Plus size={13} />
-                  Create Board
-                </Link>
-                <Link
-                  href="/confess"
-                  className="flex-1 py-3 border border-black/8 text-[10px] text-black/50 font-bold uppercase tracking-widest rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
-                >
-                  <Send size={13} />
-                  Confess
-                </Link>
-                <Link
-                  href="/explore"
-                  className="w-11 h-11 rounded-xl border border-black/8 flex items-center justify-center text-black/40 active:scale-95 transition-transform flex-shrink-0"
-                >
-                  <Eye size={16} />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Sticky bottom CTA bar removed — BottomNav handles mobile navigation.
+         This eliminates the z-index conflict where both bars overlapped,
+         causing the "confess" label confusion on mobile. */}
+      </div>
+    </>
   );
 }

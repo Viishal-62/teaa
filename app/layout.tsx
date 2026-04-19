@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ConvexClientProvider from "./ConvexClientProvider";
 import { Analytics } from "@vercel/analytics/next";
 import BottomNav from "./components/BottomNav";
 import { Toaster } from "sonner";
 import { PushNotificationManager } from "./components/PushNotificationManager";
+import ViewportFix from "./components/ViewportFix";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.teaadrop.xyz"),
@@ -68,6 +69,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -90,6 +97,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -115,6 +126,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="min-h-full flex flex-col">
+        <ViewportFix />
         <ConvexClientProvider>
           {children}
           <PushNotificationManager />

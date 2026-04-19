@@ -266,7 +266,7 @@ export default function CreateBoard() {
         <div className="w-4" />
       </header>
 
-      <main className="max-w-lg mx-auto px-4 sm:px-5 py-6 sm:py-8">
+      <main className="max-w-lg mx-auto px-4 sm:px-5 pt-6 pb-28 sm:py-8">
         {/* Form card */}
         <div className="bg-white rounded-2xl border border-black/5 shadow-xl shadow-black/[0.03] overflow-hidden">
           {/* Theme preview header */}
