@@ -17,6 +17,7 @@
 
   /* Shared / Animation vars */
   --accent-rgb: 209, 61, 61;
+  --mobile-nav-clearance: calc(env(safe-area-inset-bottom, 0px) + 88px);
 }
 
 @theme inline {
@@ -44,6 +45,27 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: var(--mobile-nav-clearance);
+  }
+
+  .mobile-fixed-clear-nav {
+    bottom: var(--mobile-nav-clearance);
+  }
+
+  .mobile-fixed-clear-nav-lg {
+    bottom: calc(var(--mobile-nav-clearance) + 44px);
+  }
 }
 
 /* ── WCAG Color Contrast Overrides ──

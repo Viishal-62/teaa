@@ -9,6 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { CATEGORY_INFO, timeAgo } from "@/app/lib/utils";
 import {
   ArrowRight,
+  Compass,
   Plus,
   Mic,
   Headphones,
@@ -112,14 +113,19 @@ export default function Home() {
   );
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [quickText, setQuickText] = useState("");
+
 
   /* ── Engagement: Popup, Toasts ── */
   const [showEngagementPopup, setShowEngagementPopup] = useState(false);
   const [popupDismissed, setPopupDismissed] = useState(false);
 
+  const isDesktopViewport = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 768px)").matches;
+
   // Timed engagement popup — show after 6s on first visit
   useEffect(() => {
+    if (!isDesktopViewport()) return;
     if (popupDismissed) return;
     const seen = sessionStorage.getItem("teaaa_popup_seen");
     if (seen) { setPopupDismissed(true); return; }
@@ -133,6 +139,7 @@ export default function Home() {
 
   // Exit-intent detection (desktop only)
   useEffect(() => {
+    if (!isDesktopViewport()) return;
     if (popupDismissed) return;
     const handler = (e: MouseEvent) => {
       if (e.clientY <= 5 && !popupDismissed) {
@@ -148,6 +155,17 @@ export default function Home() {
     setPopupDismissed(true);
     sessionStorage.setItem("teaaa_popup_seen", "1");
   };
+
+  // Prevent background scroll while mobile drawers/popups are open
+  useEffect(() => {
+    const isDesktopPopupActive = showEngagementPopup && isDesktopViewport();
+    if (!isMobileMenuOpen && !isDesktopPopupActive) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isMobileMenuOpen, showEngagementPopup]);
 
   // Live activity toasts — continuously cycle through varied social proof
   useEffect(() => {
@@ -233,9 +251,347 @@ export default function Home() {
   const totalConfessions = (globalFeed?.length ?? 0) + (voiceFeed?.length ?? 0);
   const textConfessions =
     globalFeed?.filter((c: any) => c.type !== "voice") ?? [];
+  const mobileConfessions = textConfessions.slice(0, 5);
+  const mobileBoards = (publicBoards ?? []).slice(0, 8);
+  const mobileSpills = (recentSpills ?? []).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-black font-sans selection:bg-accent/10 overflow-x-hidden">
+    <>
+      <div className="md:hidden min-h-screen pb-28 text-black relative bg-[#f8f9fc] overflow-hidden">
+        {/* Background Blur Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[40%] rounded-full bg-rose-200/40 blur-[80px] pointer-events-none mix-blend-multiply" />
+        <div className="absolute top-[20%] right-[-20%] w-[70%] h-[50%] rounded-full bg-blue-200/40 blur-[100px] pointer-events-none mix-blend-multiply" />
+        <div className="absolute bottom-[-10%] left-[10%] w-[60%] h-[40%] rounded-full bg-amber-100/40 blur-[80px] pointer-events-none mix-blend-multiply" />
+
+        <header className="sticky top-0 z-40 px-5 pt-5 pb-4 bg-white/50 backdrop-blur-2xl border-b border-black/[0.03]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-black/40">
+                Unfiltered & Anonymous
+              </p>
+              <h1 className="text-[24px] font-black serif tracking-tight leading-tight">
+                Spill Your Truth
+              </h1>
+            </div>
+            <PwaInstallButton compact />
+          </div>
+          <div className="mt-4 flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1 mask-linear-right">
+            <Link
+              href="/explore"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Compass size={14} className="text-blue-500" />
+              Explore
+            </Link>
+            <Link
+              href="/explore/voice"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Mic size={14} className="text-rose-500" />
+              Voice
+            </Link>
+            <Link
+              href="/boards"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-white/70 backdrop-blur-md border border-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] px-3.5 py-2 text-[11px] font-bold text-black/70 hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Users size={14} className="text-amber-500" />
+              Boards
+            </Link>
+          </div>
+        </header>
+
+        <main className="px-5 pt-5 pb-10 space-y-6 relative z-10">
+          {/* Live Activity Hero - Premium Glossy Card */}
+          <section className="relative overflow-hidden rounded-[32px] bg-[#0a0a0a] text-white p-6 shadow-[0_20px_40px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#2a2a2a,transparent_70%)] opacity-60" />
+            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-rose-500/20 blur-[50px] pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-blue-500/20 blur-[50px] pointer-events-none" />
+            
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">
+                  Live activity
+                </p>
+              </div>
+              <h2 className="text-[36px] mt-1 leading-none font-black serif tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent drop-shadow-sm">
+                {totalConfessions > 0 ? totalConfessions : "0"}
+              </h2>
+              <p className="mt-1.5 text-[13px] text-white/50 font-medium tracking-wide">drops in the feed right now</p>
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Text</p>
+                  <p className="text-lg font-black leading-none">{textConfessions.length}</p>
+                </div>
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Voice</p>
+                  <p className="text-lg font-black leading-none">{voiceFeed?.length ?? 0}</p>
+                </div>
+                <div className="flex-1 rounded-2xl bg-white/[0.04] border border-white/[0.05] p-3 backdrop-blur-md">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Boards</p>
+                  <p className="text-lg font-black leading-none">{publicBoards?.length ?? 0}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Quick Confess Form - Frosted Glass */}
+          <section className="relative rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-black/5 flex items-center justify-center">
+                    <Zap size={12} className="text-amber-500" />
+                  </div>
+                  <p className="text-[13px] font-black tracking-wide text-black/80">Drop a Secret</p>
+                </div>
+                <Link href="/confess" className="text-[11px] text-black/40 font-bold hover:text-black transition-colors uppercase tracking-wider">
+                  Write more
+                </Link>
+              </div>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const text = (formData.get("quickText") as string) || "";
+                  if (text.trim()) {
+                    router.push(`/confess?text=${encodeURIComponent(text.trim())}`);
+                  } else {
+                    router.push("/confess");
+                  }
+                }}
+                className="flex items-center gap-2.5"
+              >
+                <input
+                  name="quickText"
+                  placeholder="Drop it here..."
+                  className="flex-1 h-12 rounded-[16px] border border-white/50 bg-white/50 px-4 text-[14px] font-medium placeholder:text-black/30 outline-none focus:border-black/20 focus:bg-white transition-all shadow-inner"
+                />
+                <button
+                  type="submit"
+                  className="h-12 w-12 rounded-[16px] bg-[#111] text-white flex items-center justify-center active:scale-95 transition-transform shadow-[0_4px_14px_rgba(0,0,0,0.15)] group"
+                  aria-label="Send confession draft"
+                >
+                  <Send size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </form>
+            </div>
+          </section>
+
+          {/* Action Grid - Meshed gradients & micro-animations */}
+          <section className="grid grid-cols-2 gap-3.5">
+            <Link href="/confess" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-rose-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-rose-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <MessageCircle size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Write</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Drop text instantly</p>
+            </Link>
+
+            <Link href="/explore/voice" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-sky-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-sky-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-sky-100 to-sky-50 text-sky-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <Mic size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Voice</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Listen & speak</p>
+            </Link>
+
+            <Link href="/create" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-violet-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-violet-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-violet-100 to-violet-50 text-violet-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <Plus size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Create</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Start your board</p>
+            </Link>
+
+            <Link href="/b/global/spill" className="group rounded-[24px] bg-white/60 backdrop-blur-xl border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] p-4 active:scale-[0.98] transition-all overflow-hidden relative">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-200/30 rounded-full blur-[20px] -mr-8 -mt-8 pointer-events-none group-hover:bg-amber-200/50 transition-colors" />
+              <div className="relative z-10 w-11 h-11 rounded-[14px] bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 flex items-center justify-center mb-4 shadow-sm group-hover:scale-105 transition-transform">
+                <BookOpen size={18} />
+              </div>
+              <p className="text-[16px] leading-tight font-black relative z-10">Spills</p>
+              <p className="text-[12px] font-medium text-black/40 mt-1 relative z-10">Read long stories</p>
+            </Link>
+          </section>
+
+          {/* Fresh Drops - Glassmorphism cards */}
+          <section>
+            <div className="flex items-center justify-between mb-4 px-1">
+              <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                Fresh Drops <span className="text-lg">💧</span>
+              </h3>
+              <Link href="/explore" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                View all
+                <ArrowRight size={12} />
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {mobileConfessions.length === 0 ? (
+                <div className="p-6 text-center rounded-[24px] bg-white/40 backdrop-blur-md border border-white/60">
+                   <p className="text-[13px] font-medium text-black/40">Loading confessions...</p>
+                </div>
+              ) : (
+                mobileConfessions.map((item: any, i: number) => (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    <Link
+                      href={item?.boardSlug ? `/b/${item.boardSlug}/c/${item._id}` : "/explore"}
+                      className="group block rounded-[24px] bg-white/70 backdrop-blur-xl border border-white shadow-[0_8px_20px_rgba(0,0,0,0.03)] p-4 active:scale-[0.99] transition-all relative overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative z-10">
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                          <span
+                            className="inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.15em] text-white shadow-sm"
+                            style={{
+                              background: CATEGORY_INFO[item?.category as keyof typeof CATEGORY_INFO]?.color ?? "#6b7280",
+                            }}
+                          >
+                            {CATEGORY_INFO[item?.category as keyof typeof CATEGORY_INFO]?.label ?? item?.category ?? "Confession"}
+                          </span>
+                          <span className="text-[10px] font-bold text-black/30 bg-black/5 px-2 py-0.5 rounded-md">{timeAgo(item._creationTime)}</span>
+                        </div>
+                        <p className="text-[15px] leading-[1.4] text-black/90 font-medium line-clamp-3 serif">
+                          {item.text || "Untitled confession"}
+                        </p>
+                        <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between text-[11px] font-semibold text-black/40">
+                          <span className="max-w-[70%] truncate group-hover:text-black/60 transition-colors">
+                            {item?.boardSlug ? `/${item.boardSlug}` : "Global Feed"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-black/5 group-hover:bg-black/10 px-2 py-1 rounded-md transition-colors text-black/60">
+                            <Eye size={12} />
+                            Read
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </section>
+
+          {/* Popular Boards - Squircle shape Carousel */}
+          <section className="relative -mx-5 px-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                Popular Boards <span className="text-lg">🔥</span>
+              </h3>
+              <Link href="/boards" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                Browse
+              </Link>
+            </div>
+            {/* The right mask for smoothly dying off scroll */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#f8f9fc] to-transparent z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#f8f9fc] to-transparent z-10 pointer-events-none" />
+            
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-4 -mb-4 snap-x snap-mandatory pr-6 pl-5 -ml-5">
+              {mobileBoards.map((board: any, i: number) => {
+                const colors = [
+                  "from-amber-100/80 to-amber-50/20",
+                  "from-sky-100/80 to-sky-50/20",
+                  "from-rose-100/80 to-rose-50/20",
+                  "from-emerald-100/80 to-emerald-50/20",
+                  "from-violet-100/80 to-violet-50/20"
+                ];
+                const gradient = colors[i % colors.length];
+
+                return (
+                  <Link
+                    key={board._id}
+                    href={board?.slug ? `/b/${board.slug}` : "/boards"}
+                    className={`shrink-0 snap-start w-[240px] rounded-[32px] bg-gradient-to-br ${gradient} bg-white/40 backdrop-blur-xl border border-white shadow-[0_8px_24px_rgba(0,0,0,0.04)] p-5 active:scale-[0.98] transition-transform relative overflow-hidden`}
+                  >
+                    <div className="absolute top-0 right-0 w-full h-full bg-[linear-gradient(135deg,rgba(255,255,255,0.4)_0%,rgba(255,255,255,0)_100%)] pointer-events-none" />
+                    <div className="relative z-10 flex flex-col h-full">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center shadow-sm">
+                           <span className="text-[14px]">🫖</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-black/50 bg-white/60 backdrop-blur-md px-2 py-1 rounded-lg">
+                          {(board?.totalConfessions ?? board?.count ?? 0)} drops
+                        </span>
+                      </div>
+                      <p className="text-[16px] font-black truncate text-black/90 mb-1">{board.name}</p>
+                      <p className="text-[12px] font-medium text-black/50 line-clamp-2 leading-snug mb-4 flex-1">
+                        {board.tagline || "Discover this anonymous space"}
+                      </p>
+                      <div className="inline-flex items-center justify-center bg-white/90 backdrop-blur-md text-[11px] font-bold text-black/80 px-3 py-1.5 rounded-xl truncate w-full shadow-sm">
+                        {board?.slug ? `b/${board.slug}` : "Open space"}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Top Spills - Editorial Layout */}
+          {mobileSpills.length > 0 && (
+            <section className="pt-2">
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-[18px] font-black tracking-tight serif flex items-center gap-2">
+                  Top Spills <span className="text-lg">📖</span>
+                </h3>
+                <Link href="/b/global/spill" className="text-[11px] text-black/40 font-bold uppercase tracking-widest inline-flex items-center gap-1 hover:text-black">
+                  Read More
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {mobileSpills.map((spill: any) => (
+                  <Link
+                    key={spill._id}
+                    href={`/b/${spill.boardSlug || "global"}/s/${spill._id}`}
+                    className="group block rounded-[28px] bg-white border border-white shadow-[0_12px_40px_rgba(0,0,0,0.06)] overflow-hidden active:scale-[0.99] transition-transform"
+                  >
+                    <div className="p-5">
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.15em] text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-100/50">
+                          Editor's Pick
+                        </span>
+                        <span className="text-[10px] font-bold text-black/30 flex items-center gap-1">
+                          <Eye size={10} />
+                          {spill?.views ?? 0}
+                        </span>
+                      </div>
+                      <h4 className="text-[18px] font-black serif leading-[1.2] mb-2 group-hover:text-amber-700 transition-colors">
+                        {spill.title}
+                      </h4>
+                      <p className="text-[13px] font-medium text-black/50 leading-relaxed line-clamp-3 relative">
+                        {spill.content || "Read the full spill directly inside..."}
+                        {/* Fade out text effect */}
+                        <span className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent" />
+                      </p>
+                    </div>
+                    <div className="bg-[#fafafa] px-5 py-3 border-t border-black/5 flex items-center justify-between">
+                       <span className="text-[11px] font-bold text-black/40 uppercase tracking-wide truncate max-w-[60%]">
+                        By {spill?.displayName || "Anonymous"}
+                      </span>
+                      <span className="text-[11px] font-bold text-black/70 flex items-center gap-1 bg-white border border-black/5 px-2 py-0.5 rounded-md shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                        <Flame size={12} className="text-orange-500" />
+                        {spill?.totalReactions ?? 0}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </main>
+      </div>
+
+      <div className="hidden md:block min-h-screen bg-[#faf8f5] text-black font-sans selection:bg-accent/10 overflow-x-hidden">
       {/* ── NAV ── */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
@@ -673,34 +1029,30 @@ export default function Home() {
             className="hero-quick-confess mt-10 w-full max-w-lg mx-auto hidden sm:block"
           >
             <div className="bg-white/70 backdrop-blur-2xl border border-white/60 rounded-2xl p-3 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.06)] transition-shadow duration-500">
-              <div className="flex items-center gap-2">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const text = (formData.get("quickText") as string) || "";
+                  if (text.trim()) {
+                    router.push(`/confess?text=${encodeURIComponent(text.trim())}`);
+                  } else {
+                    router.push("/confess");
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
                 <div className="w-9 h-9 rounded-xl bg-black/[0.03] flex items-center justify-center flex-shrink-0">
                   <span className="text-base">💭</span>
                 </div>
                 <input
                   type="text"
-                  value={quickText}
-                  onChange={(e) => setQuickText(e.target.value)}
+                  name="quickText"
                   placeholder="What's your secret? Drop it anonymously..."
                   className="flex-1 bg-transparent py-2.5 px-2 text-sm font-medium text-black/70 placeholder:text-black/25 outline-none serif"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && quickText.trim()) {
-                      router.push(
-                        `/confess?text=${encodeURIComponent(quickText.trim())}`,
-                      );
-                    }
-                  }}
                 />
                 <button
-                  onClick={() => {
-                    if (quickText.trim()) {
-                      router.push(
-                        `/confess?text=${encodeURIComponent(quickText.trim())}`,
-                      );
-                    } else {
-                      router.push("/confess");
-                    }
-                  }}
+                  type="submit"
                   className="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-md shadow-black/10"
                 >
                   <Send
@@ -709,7 +1061,7 @@ export default function Home() {
                   />
                   Spill
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 
@@ -2754,6 +3106,7 @@ export default function Home() {
       {/* Sticky bottom CTA bar removed — BottomNav handles mobile navigation.
          This eliminates the z-index conflict where both bars overlapped,
          causing the "confess" label confusion on mobile. */}
-    </div>
+      </div>
+    </>
   );
 }

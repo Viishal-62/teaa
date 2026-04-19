@@ -89,6 +89,7 @@ export default function BoardViewPage() {
   const [viewMode, setViewMode] = useState<"cards" | "polls">("cards");
   const [activePollIdx, setActivePollIdx] = useState(0);
   const pollSwipeStart = useRef<number | null>(null);
+  const [viewportWidth, setViewportWidth] = useState(1024);
 
   const board = useQuery(api.boards.getBySlug, { slug });
   const summarize = useAction(api.ai.summarizeBoard);
@@ -384,6 +385,14 @@ export default function BoardViewPage() {
     !isAdmirerMode &&
     board?.visibility === "public" &&
     (confessions?.length ?? 0) >= 10;
+  const isMobile = viewportWidth < 768;
+
+  useEffect(() => {
+    const updateViewport = () => setViewportWidth(window.innerWidth);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
 
   if (board === undefined) {
     return (
@@ -1262,89 +1271,114 @@ export default function BoardViewPage() {
               ) : (
                 <>
                   {/* Coverflow carousel */}
-                  <div
-                    ref={carouselRef}
-                    className="relative flex items-center justify-center -mx-5 py-4"
-                    style={{
-                      minHeight: "650px",
-                      perspective: "1200px",
-                    }}
-                  >
-                    {mixedItems.map((item, i) => {
-                      const offset = i - activeIndex;
-                      const absOffset = Math.abs(offset);
+                  {isMobile ? (
+                    <div className="relative w-full max-w-[360px] mx-auto py-2">
+                      {mixedItems[activeIndex] &&
+                        (mixedItems[activeIndex]._type === "spill" ? (
+                          <DeepSpillCard
+                            slug={slug}
+                            spill={mixedItems[activeIndex]}
+                          />
+                        ) : mixedItems[activeIndex].type === "canvas" ||
+                          mixedItems[activeIndex].canvasImageUrl ? (
+                          <DoodleConfessionCard
+                            confession={mixedItems[activeIndex]}
+                            boardSlug={slug}
+                            boardReactions={board.allowedReactions}
+                          />
+                        ) : (
+                          <ConfessionFlipCard
+                            confession={mixedItems[activeIndex]}
+                            boardSlug={slug}
+                            boardReactions={board.allowedReactions}
+                          />
+                        ))}
+                    </div>
+                  ) : (
+                    <div
+                      ref={carouselRef}
+                      className="relative flex items-center justify-center sm:-mx-5 py-4"
+                      style={{
+                        minHeight: "650px",
+                        perspective: "1200px",
+                      }}
+                    >
+                      {mixedItems.map((item, i) => {
+                        const offset = i - activeIndex;
+                        const absOffset = Math.abs(offset);
 
-                      if (absOffset > 4) return null;
+                        if (absOffset > 4) return null;
 
-                      const cardWidth = 280;
-                      const spacing = 160;
-                      const rotateAmount = 30;
+                        const cardWidth = 280;
+                        const spacing = 160;
+                        const rotateAmount = 30;
 
-                      const translateX = offset * spacing;
-                      const translateZ =
-                        absOffset === 0 ? 60 : -100 - absOffset * 40;
-                      const scale =
-                        absOffset === 0
-                          ? 1.05
-                          : Math.max(0.7 - absOffset * 0.05, 0.5);
-                      const opacity =
-                        absOffset === 0
-                          ? 1
-                          : Math.max(0.65 - absOffset * 0.12, 0.15);
-                      const rotateY =
-                        offset > 0
-                          ? -rotateAmount
-                          : offset < 0
-                            ? rotateAmount
-                            : 0;
-                      const zIndex = 20 - absOffset;
+                        const translateX = offset * spacing;
+                        const translateZ =
+                          absOffset === 0 ? 60 : -100 - absOffset * 40;
+                        const scale =
+                          absOffset === 0
+                            ? 1.05
+                            : Math.max(0.7 - absOffset * 0.05, 0.5);
+                        const opacity =
+                          absOffset === 0
+                            ? 1
+                            : Math.max(0.65 - absOffset * 0.12, 0.15);
+                        const rotateY =
+                          offset > 0
+                            ? -rotateAmount
+                            : offset < 0
+                              ? rotateAmount
+                              : 0;
+                        const zIndex = 20 - absOffset;
 
-                      return (
-                        <div
-                          key={item._id}
-                          className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                          style={{
-                            width: `${cardWidth}px`,
-                            transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                            opacity,
-                            zIndex,
-                          }}
-                          onClick={
-                            absOffset !== 0 ? () => scrollToCard(i) : undefined
-                          }
-                        >
+                        return (
                           <div
+                            key={item._id}
+                            className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
                             style={{
-                              pointerEvents: absOffset === 0 ? "auto" : "none",
+                              width: `${cardWidth}px`,
+                              transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                              opacity,
+                              zIndex,
                             }}
+                            onClick={
+                              absOffset !== 0 ? () => scrollToCard(i) : undefined
+                            }
                           >
-                            {item._type === "spill" ? (
-                              <DeepSpillCard slug={slug} spill={item} />
-                            ) : item.type === "canvas" ||
-                              item.canvasImageUrl ? (
-                              <DoodleConfessionCard
-                                confession={item}
-                                boardSlug={slug}
-                                boardReactions={board.allowedReactions}
-                              />
-                            ) : (
-                              <ConfessionFlipCard
-                                confession={item}
-                                boardSlug={slug}
-                                boardReactions={board.allowedReactions}
+                            <div
+                              style={{
+                                pointerEvents: absOffset === 0 ? "auto" : "none",
+                              }}
+                            >
+                              {item._type === "spill" ? (
+                                <DeepSpillCard slug={slug} spill={item} />
+                              ) : item.type === "canvas" ||
+                                item.canvasImageUrl ? (
+                                <DoodleConfessionCard
+                                  confession={item}
+                                  boardSlug={slug}
+                                  boardReactions={board.allowedReactions}
+                                />
+                              ) : (
+                                <ConfessionFlipCard
+                                  confession={item}
+                                  boardSlug={slug}
+                                  boardReactions={board.allowedReactions}
+                                />
+                              )}
+                            </div>
+                            {absOffset !== 0 && (
+                              <div
+                                className="absolute inset-0 cursor-pointer z-10"
+                                onClick={() => scrollToCard(i)}
                               />
                             )}
                           </div>
-                          {absOffset !== 0 && (
-                            <div
-                              className="absolute inset-0 cursor-pointer z-10"
-                              onClick={() => scrollToCard(i)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Hint */}
                   <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
@@ -1566,7 +1600,7 @@ export default function BoardViewPage() {
 
       {/* Floating Add Buttons */}
       {confessions && (
-        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <div className="fixed right-4 bottom-6 mobile-fixed-clear-nav sm:right-6 sm:bottom-6 flex flex-col gap-3 z-50">
           <Link
             href={`/b/${slug}/spill`}
             className="w-12 h-12 rounded-full bg-rose-900 border border-white/10 text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group"
@@ -1598,7 +1632,7 @@ export default function BoardViewPage() {
       {/* Real-time Toast */}
       {showToast && (
         <div
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full shadow-xl flex items-center gap-3 z-50 animate-[slideUp_0.3s_ease-out]"
+          className="fixed bottom-24 mobile-fixed-clear-nav-lg sm:bottom-24 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full shadow-xl flex items-center gap-3 z-50 animate-[slideUp_0.3s_ease-out]"
           style={{
             background: isAdmirerMode
               ? "linear-gradient(135deg, #9B3A5C, #7B2040)"
@@ -1634,7 +1668,7 @@ export default function BoardViewPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+            className="fixed bottom-6 mobile-fixed-clear-nav left-4 right-4 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
             style={{
               background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
               boxShadow: "0 20px 40px rgba(0,0,0,0.4)",

@@ -73,6 +73,7 @@ function ExplorePageContent() {
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
+  const [viewportWidth, setViewportWidth] = useState(1024);
 
   // Auto-apply filters from URL search params
   const hasInitRef = useRef(false);
@@ -91,6 +92,13 @@ function ExplorePageContent() {
     if (context) setSelectedContext(context);
     if (city || profession || context) setShowContextFilters(true);
   }, [searchParams]);
+
+  useEffect(() => {
+    const updateViewport = () => setViewportWidth(window.innerWidth);
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    return () => window.removeEventListener("resize", updateViewport);
+  }, []);
   const carouselRef = useRef<HTMLDivElement>(null);
   const scrollAccum = useRef(0);
   const scrollCooldown = useRef(false);
@@ -234,6 +242,17 @@ function ExplorePageContent() {
   };
 
   const hasEnoughForSummary = (globalFeed?.length ?? 0) >= 10;
+  const isMobile = viewportWidth < 768;
+
+  // Prevent background scroll while the mobile filter sheet is open
+  useEffect(() => {
+    if (!showContextFilters) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [showContextFilters]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -427,72 +446,106 @@ function ExplorePageContent() {
           ) : (
             <>
               {/* Coverflow carousel */}
-              <div
-                ref={carouselRef}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                className="relative flex items-center justify-center -mx-5 overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
-                style={{ height: "500px", perspective: "1200px" }}
-              >
-                {globalFeed.map((confession: any, i: any) => {
-                  const offset = i - activeIndex;
-                  const absOffset = Math.abs(offset);
+              {isMobile ? (
+                <div
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative w-full max-w-[360px] mx-auto"
+                >
+                  {globalFeed[activeIndex] &&
+                    (globalFeed[activeIndex].type === "canvas" ||
+                    globalFeed[activeIndex].canvasImageUrl ? (
+                      <DoodleConfessionCard
+                        confession={globalFeed[activeIndex] as any}
+                        boardSlug={globalFeed[activeIndex].boardSlug}
+                      />
+                    ) : (
+                      <ConfessionFlipCard
+                        confession={globalFeed[activeIndex] as any}
+                        boardSlug={globalFeed[activeIndex].boardSlug}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <div
+                  ref={carouselRef}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative flex items-center justify-center sm:-mx-5 overflow-hidden cursor-grab active:cursor-grabbing touch-pan-y"
+                  style={{
+                    height: "500px",
+                    perspective: "1200px",
+                  }}
+                >
+                  {globalFeed.map((confession: any, i: any) => {
+                    const offset = i - activeIndex;
+                    const absOffset = Math.abs(offset);
 
-                  if (absOffset > 4) return null;
+                    if (absOffset > 4) return null;
 
-                  const translateX = offset * 160;
-                  const translateZ =
-                    absOffset === 0 ? 60 : -100 - absOffset * 40;
-                  const scale =
-                    absOffset === 0
-                      ? 1.05
-                      : Math.max(0.7 - absOffset * 0.05, 0.5);
-                  const opacity =
-                    absOffset === 0
-                      ? 1
-                      : Math.max(0.65 - absOffset * 0.12, 0.15);
-                  const rotateY = offset > 0 ? -30 : offset < 0 ? 30 : 0;
-                  const zIndex = 20 - absOffset;
+                    const cardWidth = 280;
+                    const spacing = 160;
+                    const rotateAmount = 30;
 
-                  return (
-                    <div
-                      key={confession._id}
-                      className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
-                      style={{
-                        width: "280px",
-                        transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
-                        opacity,
-                        zIndex,
-                      }}
-                    >
+                    const translateX = offset * spacing;
+                    const translateZ =
+                      absOffset === 0 ? 60 : -100 - absOffset * 40;
+                    const scale =
+                      absOffset === 0
+                        ? 1.05
+                        : Math.max(0.7 - absOffset * 0.05, 0.5);
+                    const opacity =
+                      absOffset === 0
+                        ? 1
+                        : Math.max(0.65 - absOffset * 0.12, 0.15);
+                    const rotateY =
+                      offset > 0
+                        ? -rotateAmount
+                        : offset < 0
+                          ? rotateAmount
+                          : 0;
+                    const zIndex = 20 - absOffset;
+
+                    return (
                       <div
+                        key={confession._id}
+                        className="absolute transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
                         style={{
-                          pointerEvents: absOffset === 0 ? "auto" : "none",
+                          width: `${cardWidth}px`,
+                          transform: `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
+                          opacity,
+                          zIndex,
                         }}
                       >
-                        {confession.type === "canvas" ||
-                        confession.canvasImageUrl ? (
-                          <DoodleConfessionCard
-                            confession={confession as any}
-                            boardSlug={confession.boardSlug}
-                          />
-                        ) : (
-                          <ConfessionFlipCard
-                            confession={confession as any}
-                            boardSlug={confession.boardSlug}
+                        <div
+                          style={{
+                            pointerEvents: absOffset === 0 ? "auto" : "none",
+                          }}
+                        >
+                          {confession.type === "canvas" ||
+                          confession.canvasImageUrl ? (
+                            <DoodleConfessionCard
+                              confession={confession as any}
+                              boardSlug={confession.boardSlug}
+                            />
+                          ) : (
+                            <ConfessionFlipCard
+                              confession={confession as any}
+                              boardSlug={confession.boardSlug}
+                            />
+                          )}
+                        </div>
+                        {absOffset !== 0 && (
+                          <div
+                            className="absolute inset-0 cursor-pointer z-10"
+                            onClick={() => scrollToCard(i)}
                           />
                         )}
                       </div>
-                      {absOffset !== 0 && (
-                        <div
-                          className="absolute inset-0 cursor-pointer z-10"
-                          onClick={() => scrollToCard(i)}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Hint */}
               <p className="text-center text-[10px] text-black/20 font-medium mt-1 mb-2">
@@ -1039,7 +1092,7 @@ function ExplorePageContent() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-6 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+            className="fixed bottom-6 mobile-fixed-clear-nav left-4 right-4 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-[400px] z-[60] text-white rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
             style={{
               background: "linear-gradient(135deg, #111 0%, #1a1a1a 100%)",
               boxShadow: "0 20px 40px rgba(0,0,0,0.4)",

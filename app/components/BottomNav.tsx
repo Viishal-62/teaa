@@ -2,69 +2,88 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  Compass,
-  Plus,
-  Mic,
-  MessageSquare,
-  X,
-  PenTool,
-  ClipboardList,
-  BookOpen,
-} from "lucide-react";
+import { Home, Compass, Plus, Mic, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [isActionSheetOpen, setIsActionSheetOpen] = useState(false);
+  const lastScrollY = useRef(0);
+  const isTicking = useRef(false);
 
-  // Hide on certain unmounted routes or desktop
+  // Smooth hide/show behavior on mobile scroll
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false); // Hide on scroll down
-      } else {
-        setIsVisible(true); // Show on scroll up
-      }
-      setLastScrollY(currentScrollY);
+      if (isTicking.current) return;
+      isTicking.current = true;
+
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const delta = currentScrollY - lastScrollY.current;
+
+        if (currentScrollY <= 20) {
+          setIsVisible(true);
+        } else if (delta > 6) {
+          setIsVisible(false);
+        } else if (delta < -6) {
+          setIsVisible(true);
+        }
+
+        lastScrollY.current = currentScrollY;
+        isTicking.current = false;
+      });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
-  // Hide bottom nav on specific pages prioritizing full screen (like the actual confess input form)
-  // or if we detect an open keyboard (heuristic: small viewport height usually indicates keyboard)
+  // Mobile keyboard detection using visual viewport
   useEffect(() => {
     const handleResize = () => {
-      if (
-        window.visualViewport &&
-        window.visualViewport.height < window.innerHeight - 100
-      ) {
-        setIsVisible(false);
-      } else if (lastScrollY <= window.scrollY) {
-        // only show if not scrolling down fast
-        setIsVisible(true);
-      }
+      if (!window.visualViewport) return;
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      setIsKeyboardOpen(keyboardHeight > 220);
     };
 
+    handleResize();
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", handleResize);
       return () =>
         window.visualViewport?.removeEventListener("resize", handleResize);
     }
-  }, [lastScrollY]);
+  }, []);
+
+  // Ensure nav is visible when route changes
+  useEffect(() => {
+    setIsVisible(true);
+    lastScrollY.current = window.scrollY;
+  }, [pathname]);
+
+  // Lock background scroll while the action sheet is open
+  useEffect(() => {
+    if (!isActionSheetOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isActionSheetOpen]);
+
+  // Close sheet on route changes
+  useEffect(() => {
+    setIsActionSheetOpen(false);
+  }, [pathname]);
 
   if (
     pathname?.includes("/dashboard") ||
     pathname?.includes("/login") ||
-    pathname?.includes("/admin")
+    pathname?.includes("/admin") ||
+    pathname?.includes("/spill/create")
   ) {
     return null;
   }
@@ -77,18 +96,23 @@ export default function BottomNav() {
     { name: "Spills", href: "/b/global/spill", icon: BookOpen },
   ];
 
+  const shouldShowNav = isVisible && !isKeyboardOpen;
+
   return (
     <>
-      {/* Spacer to prevent content from hiding behind the absolute bottom nav */}
-      <div className="h-20 md:hidden pointer-events-none" />
+      {/* Spacer prevents mobile content from hiding behind nav */}
+      <div
+        className="md:hidden pointer-events-none"
+        style={{ height: "calc(72px + env(safe-area-inset-bottom, 0px))" }}
+      />
 
       <motion.nav
-        initial={{ y: 100 }}
-        animate={{ y: isVisible ? 0 : 100 }}
-        transition={{ duration: 0.3, ease: "anticipate" }}
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/80 backdrop-blur-xl border-t border-black/5 pb-safe pt-2 px-4 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]"
+        initial={{ y: 120 }}
+        animate={{ y: shouldShowNav ? 0 : 120 }}
+        transition={{ duration: 0.24, ease: "easeOut" }}
+        className="fixed bottom-0 left-0 right-0 z-[120] md:hidden bg-white/85 backdrop-blur-xl border-t border-black/5 pt-2 px-4 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]"
         style={{
-          paddingBottom: "env(safe-area-inset-bottom, 16px)",
+          paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)",
         }}
       >
         <div className="flex items-center justify-around h-14">
@@ -101,6 +125,7 @@ export default function BottomNav() {
                 <div key={item.name} className="relative -top-5">
                   <button
                     type="button"
+                    aria-label="Open quick actions"
                     onClick={() => {
                       if (navigator.vibrate) navigator.vibrate(50);
                       setIsActionSheetOpen(true);
